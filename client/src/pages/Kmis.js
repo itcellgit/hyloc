@@ -6,17 +6,30 @@ import '../styles/Kmis.css';
 
 const API_BASE_URL = 'http://localhost:5000/api';
 
+// Helper function to get current financial year
+const getInitialYear = () => {
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+  const fyStartYear = currentMonth >= 3 ? currentYear : currentYear - 1;
+  const endYear = fyStartYear + 1;
+  return `${fyStartYear}-${endYear.toString().slice(-2)}`;
+};
+
 function Kmis() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [kmis, setKmis] = useState([]);
+  const [financialYears, setFinancialYears] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(getInitialYear());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingKmi, setEditingKmi] = useState(null);
   const [formData, setFormData] = useState({
-    title: ''
+    title: '',
+    fin_year: ''
   });
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const dropdownRef = useRef(null);
@@ -47,24 +60,61 @@ function Kmis() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Generate financial years on component mount
   useEffect(() => {
-    fetchKmis();
+    const { years } = generateFinancialYears();
+    setFinancialYears(years);
   }, []);
 
-  const fetchKmis = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/kmis`);
-      setKmis(response.data.data);
-      setError('');
-    } catch (err) {
-      const errorMsg = 'Failed to load KMIs';
-      setError(errorMsg);
-      showNotification(errorMsg, 'error');
-      console.error(err);
-    } finally {
-      setLoading(false);
+  // Fetch KMIs when selected year changes
+  useEffect(() => {
+    const loadKmis = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get(`${API_BASE_URL}/kmis?fin_year=${selectedYear}`);
+        setKmis(response.data.data);
+        setError('');
+      } catch (err) {
+        const errorMsg = 'Failed to load KMIs';
+        setError(errorMsg);
+        showNotification(errorMsg, 'error');
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (selectedYear) {
+      loadKmis();
     }
+  }, [selectedYear]);
+
+  const generateFinancialYears = () => {
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth();
+
+    // Determine current financial year (April - March)
+    // If current month is April (3) or later, FY starts this year
+    // Otherwise, FY started last year
+    const fyStartYear = currentMonth >= 3 ? currentYear : currentYear - 1;
+    const currentFinYear = `${fyStartYear}-${(fyStartYear + 1).toString().slice(-2)}`;
+
+    const years = [];
+    // Previous 2 years
+    for (let i = 2; i >= 1; i--) {
+      const start = fyStartYear - i;
+      const end = start + 1;
+      years.push(`${start}-${end.toString().slice(-2)}`);
+    }
+    // Current year
+    years.push(currentFinYear);
+    // Next 1 year
+    const nextStart = fyStartYear + 1;
+    const nextEnd = nextStart + 1;
+    years.push(`${nextStart}-${nextEnd.toString().slice(-2)}`);
+
+    return { years, currentFinYear };
   };
 
   const handleLogout = async () => {
@@ -95,14 +145,18 @@ function Kmis() {
 
   const handleAddNew = () => {
     setEditingKmi(null);
-    setFormData({ title: '' });
+    setFormData({ 
+      title: '',
+      fin_year: selectedYear 
+    });
     setShowModal(true);
   };
 
   const handleEdit = (kmi) => {
     setEditingKmi(kmi);
     setFormData({
-      title: kmi.title || ''
+      title: kmi.title || '',
+      fin_year: kmi.fin_year || selectedYear
     });
     setShowModal(true);
   };
@@ -115,11 +169,15 @@ function Kmis() {
     try {
       await axios.delete(`${API_BASE_URL}/kmis/${id}`);
       showNotification('KMI deleted successfully!', 'success');
-      fetchKmis();
+      setSelectedYear(selectedYear); // Trigger reload
     } catch (err) {
       const errorMsg = 'Failed to delete KMI: ' + (err.response?.data?.error || err.message);
       showNotification(errorMsg, 'error');
     }
+  };
+
+  const handleView = (kmi) => {
+    navigate(`/kmis/${kmi.id}`, { state: { kmi } });
   };
 
   const handleSubmit = async (e) => {
@@ -134,7 +192,9 @@ function Kmis() {
         showNotification('KMI created successfully!', 'success');
       }
       setShowModal(false);
-      fetchKmis();
+      if (selectedYear) {
+        setSelectedYear(selectedYear); // Trigger reload
+      }
     } catch (err) {
       const errorMsg = 'Failed to save KMI: ' + (err.response?.data?.error || err.message);
       showNotification(errorMsg, 'error');
@@ -201,7 +261,7 @@ function Kmis() {
               <a
                 key={item.id}
                 href={item.path}
-                className={`nav-item ${item.id === 5 ? 'active' : ''}`}
+                className={`nav-item ${item.id === 4 ? 'active' : ''}`}
                 onClick={(e) => {
                   if (item.path !== '#') {
                     e.preventDefault();
@@ -226,7 +286,28 @@ function Kmis() {
           )}
 
           <div className="page-header">
-            <h2>Key Management Indicators (KMIs)</h2>
+            <div className="header-section">
+              <h2>Key Management Indicators (KMIs)</h2>
+              <div className="year-filter">
+                <label htmlFor="financial-year">Financial Year:</label>
+                <select
+                  id="financial-year"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(e.target.value)}
+                  className="year-dropdown"
+                >
+                  {financialYears.length === 0 ? (
+                    <option value="">No financial years available</option>
+                  ) : (
+                    financialYears.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+            </div>
             <button className="btn-primary" onClick={handleAddNew}>
               <span>+</span> Add KMI
             </button>
@@ -243,21 +324,26 @@ function Kmis() {
                   <tr>
                     <th>S.No</th>
                     <th>Title</th>
+                    <th>Financial Year</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {kmis.length === 0 ? (
                     <tr>
-                      <td colSpan="3" className="no-data">No KMIs found</td>
+                      <td colSpan="4" className="no-data">No KMIs found</td>
                     </tr>
                   ) : (
                     kmis.map((kmi, index) => (
                       <tr key={kmi.id}>
                         <td>{index + 1}</td>
                         <td>{kmi.title}</td>
+                        <td>{kmi.fin_year}</td>
                         <td>
                           <div className="action-buttons">
+                            <button className="btn-view" onClick={() => handleView(kmi)}>
+                              👁️ View
+                            </button>
                             <button className="btn-edit" onClick={() => handleEdit(kmi)}>
                               ✏️ Edit
                             </button>
@@ -284,6 +370,23 @@ function Kmis() {
               <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
             </div>
             <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Financial Year *</label>
+                <select
+                  name="fin_year"
+                  value={formData.fin_year}
+                  onChange={handleChange}
+                  required
+                  className="fin-year-select"
+                >
+                  <option value="">Select Financial Year</option>
+                  {financialYears.map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="form-group">
                 <label>KMI Title *</label>
                 <input

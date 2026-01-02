@@ -5,6 +5,7 @@ import Departments from './pages/Departments';
 import Users from './pages/Users';
 import Posts from './pages/Posts';
 import Kmis from './pages/Kmis';
+import KmiDetail from './pages/KmiDetail';
 import Login from './pages/Login';
 import { authService } from './services/auth';
 import './styles/App.css';
@@ -68,6 +69,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Kmis />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/kmis/:id" 
+            element={
+              <ProtectedRoute>
+                <KmiDetail />
               </ProtectedRoute>
             } 
           />

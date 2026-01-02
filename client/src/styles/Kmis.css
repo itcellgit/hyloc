@@ -114,12 +114,80 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.header-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .page-header h2 {
   font-size: 32px;
   color: #000080;
   margin: 0;
+}
+
+.year-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.year-filter label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+.year-dropdown {
+  padding: 10px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.year-dropdown:hover {
+  border-color: #41aafe;
+  box-shadow: 0 2px 6px rgba(65, 170, 254, 0.2);
+}
+
+.year-dropdown:focus {
+  outline: none;
+  border-color: #41aafe;
+  box-shadow: 0 0 0 3px rgba(65, 170, 254, 0.1);
+}
+
+.fin-year-select {
+  padding: 10px 12px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+}
+
+.fin-year-select:hover {
+  border-color: #41aafe;
+  box-shadow: 0 2px 6px rgba(65, 170, 254, 0.2);
+}
+
+.fin-year-select:focus {
+  outline: none;
+  border-color: #41aafe;
+  box-shadow: 0 0 0 3px rgba(65, 170, 254, 0.1);
 }
 
 /* Buttons */
@@ -232,24 +300,54 @@
   font-weight: 500;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.action-buttons button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.btn-view {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-view:hover {
+  background: #2563eb;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
 .btn-edit {
-  background: #17a2b8;
+  background: #f59e0b;
   color: white;
 }
 
 .btn-edit:hover {
-  background: #138496;
-  transform: translateY(-1px);
+  background: #d97706;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
 }
 
 .btn-delete {
-  background: #dc3545;
+  background: #ef4444;
   color: white;
 }
 
 .btn-delete:hover {
-  background: #c82333;
-  transform: translateY(-1px);
+  background: #dc2626;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
 }
 
 /* Modal */

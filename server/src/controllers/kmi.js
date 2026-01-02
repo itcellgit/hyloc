@@ -3,7 +3,8 @@ import { Kmi } from '../models/kmi.js';
 export class KmiController {
   static async getAll(req, res) {
     try {
-      const kmis = await Kmi.getAll();
+      const finYear = req.query.fin_year;
+      const kmis = await Kmi.getAll(finYear);
       res.json({ success: true, data: kmis });
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
