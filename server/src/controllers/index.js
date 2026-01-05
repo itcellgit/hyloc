@@ -101,6 +101,40 @@ export class UserController {
       res.status(500).json({ success: false, error: error.message });
     }
   }
+
+  static async changePassword(req, res) {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const userId = req.params.id;
+
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Current password and new password are required' 
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'New password must be at least 6 characters' 
+        });
+      }
+
+      const result = await User.changePassword(userId, currentPassword, newPassword);
+      
+      if (!result.success) {
+        return res.status(400).json({ 
+          success: false, 
+          error: result.error 
+        });
+      }
+
+      res.json({ success: true, message: 'Password changed successfully' });
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  }
 }
 
 export class PostController {

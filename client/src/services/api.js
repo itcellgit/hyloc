@@ -16,6 +16,7 @@ export const userService = {
   create: (userData) => api.post('/users', userData),
   update: (id, userData) => api.put(`/users/${id}`, userData),
   delete: (id) => api.delete(`/users/${id}`),
+  changePassword: (id, passwordData) => api.put(`/users/${id}/password`, passwordData),
 };
 
 // Post endpoints

@@ -85,6 +85,39 @@ export class User {
     const result = await pool.query('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
     return result.rows[0];
   }
+
+  static async changePassword(userId, currentPassword, newPassword) {
+    const bcrypt = await import('bcrypt');
+    
+    // Get current user with password
+    const userResult = await pool.query(
+      'SELECT id, password FROM users WHERE id = $1',
+      [userId]
+    );
+
+    const user = userResult.rows[0];
+    if (!user) {
+      return { success: false, error: 'User not found' };
+    }
+
+    // Verify current password
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      return { success: false, error: 'Current password is incorrect' };
+    }
+
+    // Hash new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update password
+    await pool.query(
+      'UPDATE users SET password = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [hashedPassword, userId]
+    );
+
+    return { success: true };
+  }
 }
 
 export class Post {

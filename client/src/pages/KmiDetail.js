@@ -20,8 +20,6 @@ function KmiDetail() {
     { id: 2, label: 'Departments', icon: '🏢', path: '/departments' },
     { id: 3, label: 'Users', icon: '👥', path: '/users' },
     { id: 4, label: 'KMIs', icon: '📈', path: '/kmis' },
-    { id: 5, label: "KPI's", icon: '🎯', path: '#' },
-    { id: 6, label: "KAI's", icon: '⭐', path: '#' },
   ];
 
   const kpiTypes = [
@@ -123,7 +121,7 @@ function KmiDetail() {
                     </div>
                   </div>
                   <div className="dropdown-divider"></div>
-                  <button className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                  <button className="dropdown-item" onClick={() => { setDropdownOpen(false); navigate('/profile'); }}>
                     <span className="dropdown-item-icon">👤</span>
                     View Profile
                   </button>

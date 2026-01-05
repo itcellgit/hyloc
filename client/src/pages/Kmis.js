@@ -40,8 +40,6 @@ function Kmis() {
     { id: 2, label: 'Departments', icon: '🏢', path: '/departments' },
     { id: 3, label: 'Users', icon: '👥', path: '/users' },
     { id: 4, label: 'KMIs', icon: '📈', path: '/kmis' },
-    { id: 5, label: "KPI's", icon: '🎯', path: '#' },
-    { id: 6, label: "KAI's", icon: '⭐', path: '#' },
   ];
 
   useEffect(() => {
@@ -234,7 +232,7 @@ function Kmis() {
                     </div>
                   </div>
                   <div className="dropdown-divider"></div>
-                  <button className="dropdown-item" onClick={() => setDropdownOpen(false)}>
+                  <button className="dropdown-item" onClick={() => { setDropdownOpen(false); navigate('/profile'); }}>
                     <span className="dropdown-item-icon">👤</span>
                     View Profile
                   </button>
@@ -324,21 +322,19 @@ function Kmis() {
                   <tr>
                     <th>S.No</th>
                     <th>Title</th>
-                    <th>Financial Year</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {kmis.length === 0 ? (
                     <tr>
-                      <td colSpan="4" className="no-data">No KMIs found</td>
+                      <td colSpan="3" className="no-data">No KMIs found</td>
                     </tr>
                   ) : (
                     kmis.map((kmi, index) => (
                       <tr key={kmi.id}>
                         <td>{index + 1}</td>
                         <td>{kmi.title}</td>
-                        <td>{kmi.fin_year}</td>
                         <td>
                           <div className="action-buttons">
                             <button className="btn-view" onClick={() => handleView(kmi)}>
