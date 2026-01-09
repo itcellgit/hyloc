@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth';
 import axios from 'axios';
@@ -20,7 +20,9 @@ function Kmis() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [kmis, setKmis] = useState([]);
+  const [kpis, setKpis] = useState([]);
+  const [kpiTree, setKpiTree] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [financialYears, setFinancialYears] = useState([]);
   const [selectedYear, setSelectedYear] = useState(getInitialYear());
   const [loading, setLoading] = useState(true);
@@ -29,17 +31,21 @@ function Kmis() {
   const [editingKmi, setEditingKmi] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
-    fin_year: ''
+    fin_year: '',
+    category_id: '',
+    parent_kpi_id: null
   });
+  const [expandedNodes, setExpandedNodes] = useState(new Set());
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   const menuItems = [
-    { id: 1, label: 'Dashboard', icon: '📊', path: '/' },
-    { id: 2, label: 'Departments', icon: '🏢', path: '/departments' },
-    { id: 3, label: 'Users', icon: '👥', path: '/users' },
-    { id: 4, label: 'KMIs', icon: '📈', path: '/kmis' },
+    { id: 1, label: 'Dashboard', icon: '📊', path: '/', roles: ['Admin'] },
+    { id: 2, label: 'Departments', icon: '🏢', path: '/departments', roles: ['Admin'] },
+    { id: 3, label: 'Users', icon: '👥', path: '/users', roles: ['Admin'] },
+    { id: 4, label: 'KMIs', icon: '📈', path: '/kmis', roles: ['Admin'] },
+    { id: 5, label: 'Roles', icon: '🎭', path: '/roles', roles: ['Admin'] },
   ];
 
   useEffect(() => {
@@ -64,28 +70,81 @@ function Kmis() {
     setFinancialYears(years);
   }, []);
 
-  // Fetch KMIs when selected year changes
+  // Fetch categories once
   useEffect(() => {
-    const loadKmis = async () => {
+    const loadCategories = async () => {
       try {
-        setLoading(true);
-        const response = await axios.get(`${API_BASE_URL}/kmis?fin_year=${selectedYear}`);
-        setKmis(response.data.data);
-        setError('');
+        const response = await axios.get(`${API_BASE_URL}/categories`);
+        setCategories(response.data.data || []);
       } catch (err) {
-        const errorMsg = 'Failed to load KMIs';
-        setError(errorMsg);
-        showNotification(errorMsg, 'error');
-        console.error(err);
-      } finally {
-        setLoading(false);
+        console.error('Failed to load categories', err);
       }
     };
-    
-    if (selectedYear) {
-      loadKmis();
+
+    loadCategories();
+  }, []);
+
+  // Ensure form picks a sensible default category when categories load
+  useEffect(() => {
+    if (categories.length === 0) return;
+    const defaultId = getDefaultCategoryId(categories);
+    setFormData((prev) => ({
+      ...prev,
+      category_id: prev.category_id || defaultId,
+    }));
+  }, [categories]);
+
+  const buildTree = (list, year) => {
+    const filtered = year ? list.filter((kpi) => kpi.fin_year === year) : list;
+    const map = new Map();
+    filtered.forEach((kpi) => {
+      map.set(kpi.id, { ...kpi, children: [] });
+    });
+
+    map.forEach((node) => {
+      if (node.parent_kpi_id && map.has(node.parent_kpi_id)) {
+        map.get(node.parent_kpi_id).children.push(node);
+      }
+    });
+
+    const roots = Array.from(map.values())
+      .filter((node) => !node.parent_kpi_id)
+      .sort((a, b) => a.title.localeCompare(b.title));
+
+    const sortChildren = (node) => {
+      node.children.sort((a, b) => a.title.localeCompare(b.title));
+      node.children.forEach(sortChildren);
+    };
+    roots.forEach(sortChildren);
+    return roots;
+  };
+
+  const loadKpis = async (year = selectedYear) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${API_BASE_URL}/kpis`);
+      const data = response.data.data || [];
+      const tree = buildTree(data, year);
+      setKpis(data);
+      setKpiTree(tree);
+      setExpandedNodes(new Set(tree.map((node) => node.id)));
+      setError('');
+    } catch (err) {
+      const errorMsg = 'Failed to load KMIs';
+      setError(errorMsg);
+      showNotification(errorMsg, 'error');
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
+  };
+
+  // Fetch KPIs when selected year changes
+  useEffect(() => {
+    loadKpis(selectedYear);
   }, [selectedYear]);
+
+  const categoryOrder = useMemo(() => [6, 1, 2, 3, 4, 5], []);
 
   const generateFinancialYears = () => {
     const currentDate = new Date();
@@ -141,11 +200,31 @@ function Kmis() {
     }, 4000);
   };
 
+  const getDefaultCategoryId = (cats) => (
+    cats.find((c) => c.category_name === 'KMI / GLOBAL OBJECTIVES')?.id ||
+    cats[0]?.id ||
+    ''
+  );
+
+  const getCategoryName = (categoryId) => (
+    categories.find((c) => c.id === categoryId)?.category_name || ''
+  );
+
+  const getNextCategoryId = (parentCategoryId) => {
+    if (!parentCategoryId) return getDefaultCategoryId(categories);
+    const idx = categoryOrder.indexOf(parentCategoryId);
+    if (idx === -1) return getDefaultCategoryId(categories);
+    const nextIdx = Math.min(idx + 1, categoryOrder.length - 1);
+    return categoryOrder[nextIdx];
+  };
+
   const handleAddNew = () => {
     setEditingKmi(null);
     setFormData({ 
       title: '',
-      fin_year: selectedYear 
+      fin_year: selectedYear,
+      category_id: getDefaultCategoryId(categories),
+      parent_kpi_id: null
     });
     setShowModal(true);
   };
@@ -154,9 +233,23 @@ function Kmis() {
     setEditingKmi(kmi);
     setFormData({
       title: kmi.title || '',
-      fin_year: kmi.fin_year || selectedYear
+      fin_year: kmi.fin_year || selectedYear,
+      category_id: kmi.category_id || getDefaultCategoryId(categories),
+      parent_kpi_id: kmi.parent_kpi_id || null
     });
     setShowModal(true);
+  };
+
+  const handleAddChild = (parent) => {
+    setEditingKmi(null);
+    setFormData({
+      title: '',
+      fin_year: parent.fin_year || selectedYear,
+      category_id: getNextCategoryId(parent.category_id),
+      parent_kpi_id: parent.id
+    });
+    setShowModal(true);
+    setExpandedNodes((prev) => new Set(prev).add(parent.id));
   };
 
   const handleDelete = async (id) => {
@@ -165,11 +258,11 @@ function Kmis() {
     }
 
     try {
-      await axios.delete(`${API_BASE_URL}/kmis/${id}`);
+      await axios.delete(`${API_BASE_URL}/kpis/${id}`);
       showNotification('KMI deleted successfully!', 'success');
-      setSelectedYear(selectedYear); // Trigger reload
+      loadKpis(selectedYear);
     } catch (err) {
-      const errorMsg = 'Failed to delete KMI: ' + (err.response?.data?.error || err.message);
+      const errorMsg = 'Failed to delete :KMI ' + (err.response?.data?.error || err.message);
       showNotification(errorMsg, 'error');
     }
   };
@@ -183,16 +276,14 @@ function Kmis() {
     
     try {
       if (editingKmi) {
-        await axios.put(`${API_BASE_URL}/kmis/${editingKmi.id}`, formData);
-        showNotification('KMI updated successfully!', 'success');
+        await axios.put(`${API_BASE_URL}/kpis/${editingKmi.id}`, formData);
+        showNotification('KPI updated successfully!', 'success');
       } else {
-        await axios.post(`${API_BASE_URL}/kmis`, formData);
+        await axios.post(`${API_BASE_URL}/kpis`, formData);
         showNotification('KMI created successfully!', 'success');
       }
       setShowModal(false);
-      if (selectedYear) {
-        setSelectedYear(selectedYear); // Trigger reload
-      }
+      loadKpis(selectedYear);
     } catch (err) {
       const errorMsg = 'Failed to save KMI: ' + (err.response?.data?.error || err.message);
       showNotification(errorMsg, 'error');
@@ -201,6 +292,57 @@ function Kmis() {
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const toggleExpand = (id) => {
+    setExpandedNodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const getCategoryNameById = (id) => categories.find((c) => c.id === id)?.category_name || 'Category';
+
+  const renderNode = (node, depth = 0) => {
+    const isExpanded = expandedNodes.has(node.id);
+    const hasChildren = (node.children || []).length > 0;
+    return (
+      <div key={node.id} className="kpi-node" style={{ marginLeft: depth * 16 }}>
+        <div className="kpi-node-header">
+          <button
+            className={`accordion-toggle ${hasChildren ? '' : 'empty'}`}
+            onClick={() => hasChildren && toggleExpand(node.id)}
+            aria-label={hasChildren ? 'Toggle children' : 'No children'}
+            type="button"
+          >
+            {hasChildren ? (isExpanded ? '▼' : '▶') : '•'}
+          </button>
+          <div className="kpi-node-body">
+            <div className="kpi-node-title">{node.title}</div>
+            <div className="kpi-node-meta">
+              <span className="badge">{getCategoryNameById(node.category_id)}</span>
+              {node.fin_year && <span className="pill">FY {node.fin_year}</span>}
+            </div>
+          </div>
+          <div className="kpi-node-actions">
+            <button className="btn-ghost" type="button" onClick={() => handleView(node)}>👁️</button>
+            <button className="btn-ghost" type="button" onClick={() => handleAddChild(node)}>➕</button>
+            <button className="btn-ghost" type="button" onClick={() => handleEdit(node)}>✏️</button>
+            <button className="btn-ghost danger" type="button" onClick={() => handleDelete(node.id)}>🗑️</button>
+          </div>
+        </div>
+        {hasChildren && isExpanded && (
+          <div className="kpi-children">
+            {node.children.map((child) => renderNode(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -316,43 +458,12 @@ function Kmis() {
           {loading ? (
             <div className="loading">Loading KMIs...</div>
           ) : (
-            <div className="table-container">
-              <table className="kmis-table">
-                <thead>
-                  <tr>
-                    <th>S.No</th>
-                    <th>Title</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {kmis.length === 0 ? (
-                    <tr>
-                      <td colSpan="3" className="no-data">No KMIs found</td>
-                    </tr>
-                  ) : (
-                    kmis.map((kmi, index) => (
-                      <tr key={kmi.id}>
-                        <td>{index + 1}</td>
-                        <td>{kmi.title}</td>
-                        <td>
-                          <div className="action-buttons">
-                            <button className="btn-view" onClick={() => handleView(kmi)}>
-                              👁️ View
-                            </button>
-                            <button className="btn-edit" onClick={() => handleEdit(kmi)}>
-                              ✏️ Edit
-                            </button>
-                            <button className="btn-delete" onClick={() => handleDelete(kmi.id)}>
-                              🗑️ Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+            <div className="tree-container">
+              {kpiTree.length === 0 ? (
+                <div className="no-data">No KPIs found for the selected year</div>
+              ) : (
+                kpiTree.map((node) => renderNode(node))
+              )}
             </div>
           )}
         </main>
@@ -382,6 +493,29 @@ function Kmis() {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="form-group">
+                <label>Category *</label>
+                <select
+                  name="category_id"
+                  value={formData.category_id}
+                  onChange={handleChange}
+                  required
+                  className="fin-year-select"
+                >
+                  <option value="">Select Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>{cat.category_name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>Parent KPI</label>
+                <input
+                  type="text"
+                  value={formData.parent_kpi_id ? (kpis.find((k) => k.id === formData.parent_kpi_id)?.title || `ID ${formData.parent_kpi_id}`) : 'None (Top-level KMI)'}
+                  readOnly
+                />
               </div>
               <div className="form-group">
                 <label>KMI Title *</label>

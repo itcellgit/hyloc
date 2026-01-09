@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { userService } from '../services/api';
-import { authService } from '../services/auth';
-import '../styles/Users.css';
+import { userService, departmentService } from '../../services/api';
+import { authService } from '../../services/auth';
+import '../../styles/admin/Users.css';
 
 function Users() {
   const [users, setUsers] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -13,6 +14,8 @@ function Users() {
   const [user, setUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     empid: '',
     firstname: '',
@@ -22,17 +25,20 @@ function Users() {
     phone: '',
     bloodgroup: '',
     address: '',
-    password: ''
+    department_id: '',
+    password: 'Password@123',
+    confirmPassword: 'Password@123'
   });
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   const menuItems = [
-    { id: 1, label: 'Dashboard', icon: '📊', path: '/' },
-    { id: 2, label: 'Departments', icon: '🏢', path: '/departments' },
-    { id: 3, label: 'Users', icon: '👥', path: '/users' },
-    { id: 4, label: 'KMIs', icon: '📈', path: '/kmis' },
+    { id: 1, label: 'Dashboard', icon: '📊', path: '/', roles: ['Admin'] },
+    { id: 2, label: 'Departments', icon: '🏢', path: '/departments', roles: ['Admin'] },
+    { id: 3, label: 'Users', icon: '👥', path: '/users', roles: ['Admin'] },
+    { id: 4, label: 'KMIs', icon: '📈', path: '/kmis', roles: ['Admin'] },
+    { id: 5, label: 'Roles', icon: '🎭', path: '/roles', roles: ['Admin'] },
   ];
 
   useEffect(() => {
@@ -53,6 +59,7 @@ function Users() {
 
   useEffect(() => {
     fetchUsers();
+    fetchDepartments();
   }, []);
 
   const fetchUsers = async () => {
@@ -65,6 +72,15 @@ function Users() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await departmentService.getAll();
+      setDepartments(response.data.data || []);
+    } catch (err) {
+      console.error('Failed to fetch departments:', err);
     }
   };
 
@@ -87,6 +103,11 @@ function Users() {
     return `${user.firstname} ${user.lastname}`;
   };
 
+  const getDepartmentName = (departmentId) => {
+    const dept = departments.find((d) => d.id === departmentId);
+    return dept ? dept.name : '-';
+  };
+
   const showNotification = (message, type = 'success') => {
     setNotification({ show: true, message, type });
     setTimeout(() => {
@@ -96,6 +117,8 @@ function Users() {
 
   const handleAddNew = () => {
     setEditingUser(null);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     setFormData({
       empid: '',
       firstname: '',
@@ -105,13 +128,17 @@ function Users() {
       phone: '',
       bloodgroup: '',
       address: '',
-      password: ''
+      department_id: '',
+      password: 'Password@123',
+      confirmPassword: 'Password@123'
     });
     setShowModal(true);
   };
 
   const handleEdit = (userToEdit) => {
     setEditingUser(userToEdit);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
     setFormData({
       empid: userToEdit.empid || '',
       firstname: userToEdit.firstname || '',
@@ -121,7 +148,9 @@ function Users() {
       phone: userToEdit.phone || '',
       bloodgroup: userToEdit.bloodgroup || '',
       address: userToEdit.address || '',
-      password: ''
+      department_id: userToEdit.department_id || '',
+      password: '',
+      confirmPassword: ''
     });
     setShowModal(true);
   };
@@ -145,6 +174,12 @@ function Users() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate passwords match for new users
+    if (!editingUser && formData.password !== formData.confirmPassword) {
+      showNotification('Password and Confirm Password do not match!', 'error');
+      return;
+    }
     
     try {
       if (editingUser) {
@@ -269,13 +304,14 @@ function Users() {
                     <th>Phone Number</th>
                     <th>Email</th>
                     <th>Blood Group</th>
+                    <th>Department</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.length === 0 ? (
                     <tr>
-                      <td colSpan="7" className="no-data">No users found</td>
+                      <td colSpan="8" className="no-data">No users found</td>
                     </tr>
                   ) : (
                     users.map((u, index) => (
@@ -286,6 +322,7 @@ function Users() {
                         <td>{u.phone || '-'}</td>
                         <td>{u.email}</td>
                         <td>{u.bloodgroup || '-'}</td>
+                        <td>{getDepartmentName(u.department_id)}</td>
                         <td>
                           <div className="action-buttons">
                             <button className="btn-edit" onClick={() => handleEdit(u)}>
@@ -387,21 +424,95 @@ function Users() {
                 </div>
               </div>
               {!editingUser && (
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Password *</label>
-                    <input
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      required
-                      placeholder="Enter password"
-                    />
+                <>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Password *</label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          name="password"
+                          value={formData.password}
+                          onChange={handleChange}
+                          required
+                          placeholder="Enter password"
+                          style={{ paddingRight: '40px' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          style={{
+                            position: 'absolute',
+                            right: '10px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '18px',
+                            padding: '0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          {showPassword ? '👁️' : '👁️‍🗨️'}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="form-group">
+                      <label>Confirm Password *</label>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          name="confirmPassword"
+                          value={formData.confirmPassword}
+                          onChange={handleChange}
+                          required
+                          placeholder="Confirm password"
+                          style={{ paddingRight: '40px' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          style={{
+                            position: 'absolute',
+                            right: '10px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            fontSize: '18px',
+                            padding: '0',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                </>
               )}
               <div className="form-row">
+                <div className="form-group">
+                  <label>Department</label>
+                  <select
+                    name="department_id"
+                    value={formData.department_id}
+                    onChange={handleChange}
+                  >
+                    <option value="">Select department</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div className="form-group">
                   <label>Blood Group</label>
                   <select
@@ -420,6 +531,8 @@ function Users() {
                     <option value="O-">O-</option>
                   </select>
                 </div>
+              </div>
+              <div className="form-row">
                 <div className="form-group">
                   <label>Address</label>
                   <textarea

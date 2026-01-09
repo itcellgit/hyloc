@@ -1,4 +1,5 @@
 import { Department } from '../models/department.js';
+import { logError } from '../utils/logger.js';
 
 export class DepartmentController {
   static async getAll(req, res) {
@@ -6,6 +7,7 @@ export class DepartmentController {
       const departments = await Department.getAll();
       res.json({ success: true, data: departments });
     } catch (error) {
+      await logError(error, 'DepartmentController.getAll', req.user?.id);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -18,6 +20,7 @@ export class DepartmentController {
       }
       res.json({ success: true, data: department });
     } catch (error) {
+      await logError(error, 'DepartmentController.getById', req.user?.id);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -27,6 +30,7 @@ export class DepartmentController {
       const department = await Department.create(req.body);
       res.status(201).json({ success: true, data: department });
     } catch (error) {
+      await logError(error, 'DepartmentController.create', req.user?.id);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -39,6 +43,7 @@ export class DepartmentController {
       }
       res.json({ success: true, data: department });
     } catch (error) {
+      await logError(error, 'DepartmentController.update', req.user?.id);
       res.status(500).json({ success: false, error: error.message });
     }
   }
@@ -48,6 +53,7 @@ export class DepartmentController {
       await Department.delete(req.params.id);
       res.json({ success: true, message: 'Department deleted successfully' });
     } catch (error) {
+      await logError(error, 'DepartmentController.delete', req.user?.id);
       res.status(500).json({ success: false, error: error.message });
     }
   }
