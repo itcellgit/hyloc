@@ -37,6 +37,7 @@ function Kmis() {
   });
   const [expandedNodes, setExpandedNodes] = useState(new Set());
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [searchQuery, setSearchQuery] = useState('');
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -45,7 +46,9 @@ function Kmis() {
     { id: 2, label: 'Departments', icon: '🏢', path: '/departments', roles: ['Admin'] },
     { id: 3, label: 'Users', icon: '👥', path: '/users', roles: ['Admin'] },
     { id: 4, label: 'KMIs', icon: '📈', path: '/kmis', roles: ['Admin'] },
+    { id: 6, label: 'Pillers', icon: '🏛️', path: '/pillers', roles: ['Admin'] },
     { id: 5, label: 'Roles', icon: '🎭', path: '/roles', roles: ['Admin'] },
+    { id: 7, label: 'User Roles', icon: '🔐', path: '/user-roles', roles: ['Admin'] },
   ];
 
   useEffect(() => {
@@ -308,6 +311,59 @@ function Kmis() {
 
   const getCategoryNameById = (id) => categories.find((c) => c.id === id)?.category_name || 'Category';
 
+  // Function to check if a node or its children match the search query
+  const isNodeMatching = (node) => {
+    if (node.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+      return true;
+    }
+    if (node.children && node.children.length > 0) {
+      return node.children.some(child => isNodeMatching(child));
+    }
+    return false;
+  };
+
+  // Filter tree based on search query
+  const getFilteredTree = () => {
+    if (!searchQuery.trim()) {
+      return kpiTree;
+    }
+
+    const filterNode = (node) => {
+      const matchesQuery = node.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const children = node.children || [];
+      const filteredChildren = children
+        .map(child => filterNode(child))
+        .filter(child => child !== null);
+
+      if (matchesQuery || filteredChildren.length > 0) {
+        return {
+          ...node,
+          children: filteredChildren
+        };
+      }
+      return null;
+    };
+
+    return kpiTree
+      .map(node => filterNode(node))
+      .filter(node => node !== null);
+  };
+
+  // Auto-expand nodes when search is active
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const nodesToExpand = new Set();
+      const collectNodeIds = (node) => {
+        nodesToExpand.add(node.id);
+        if (node.children && node.children.length > 0) {
+          node.children.forEach(child => collectNodeIds(child));
+        }
+      };
+      getFilteredTree().forEach(node => collectNodeIds(node));
+      setExpandedNodes(nodesToExpand);
+    }
+  }, [searchQuery]);
+
   const renderNode = (node, depth = 0) => {
     const isExpanded = expandedNodes.has(node.id);
     const hasChildren = (node.children || []).length > 0;
@@ -354,7 +410,7 @@ function Kmis() {
           </button>
           <div className="header-logo-section">
             <img src="/hyloc-logo.png" alt="Hyloc Logo" className="header-logo" />
-            <h1 className="header-title">Hyloc Hydro technic Pvt Ltd</h1>
+            <h1 className="header-title">Hyloc Hydrotechnic Pvt Ltd.</h1>
           </div>
           <div className="header-actions">
             <div className="user-profile" ref={dropdownRef}>
@@ -426,8 +482,16 @@ function Kmis() {
           )}
 
           <div className="page-header">
-            <div className="header-section">
+            <div className="heading-section">
               <h2>Key Management Indicators (KMIs)</h2>
+              <button className="btn-primary" onClick={handleAddNew}>
+                <span>+</span> Add KMI
+              </button>
+            </div>
+          </div>
+
+          <div className="filters-block">
+            <div className="filters-group">
               <div className="year-filter">
                 <label htmlFor="financial-year">Financial Year:</label>
                 <select
@@ -447,10 +511,28 @@ function Kmis() {
                   )}
                 </select>
               </div>
+              <div className="search-filter">
+                <label htmlFor="search-kmi">Search KMI:</label>
+                <input
+                  id="search-kmi"
+                  type="text"
+                  placeholder="Search by title..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="search-input"
+                />
+                {searchQuery && (
+                  <button
+                    className="clear-search"
+                    onClick={() => setSearchQuery('')}
+                    type="button"
+                    title="Clear search"
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
             </div>
-            <button className="btn-primary" onClick={handleAddNew}>
-              <span>+</span> Add KMI
-            </button>
           </div>
 
           {error && <div className="error-message">{error}</div>}
@@ -461,8 +543,10 @@ function Kmis() {
             <div className="tree-container">
               {kpiTree.length === 0 ? (
                 <div className="no-data">No KPIs found for the selected year</div>
+              ) : getFilteredTree().length === 0 ? (
+                <div className="no-data">No KPIs match your search: <strong>"{searchQuery}"</strong></div>
               ) : (
-                kpiTree.map((node) => renderNode(node))
+                getFilteredTree().map((node) => renderNode(node))
               )}
             </div>
           )}

@@ -9,6 +9,7 @@ function Home() {
     { id: 2, label: 'Departments', icon: '🏢' },
     { id: 3, label: 'Users', icon: '👥' },
     { id: 4, label: 'KMIs', icon: '📈' },
+    { id: 7, label: 'Pillers', icon: '🏛️' },
     { id: 5, label: "KPI's", icon: '🎯' },
     { id: 6, label: "KAI's", icon: '🔑' },
   ];

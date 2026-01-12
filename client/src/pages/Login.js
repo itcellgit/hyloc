@@ -8,6 +8,8 @@ function Login() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     empid: '',
     firstname: '',
@@ -68,8 +70,21 @@ function Login() {
 
       if (response.data.success) {
         authService.setToken(response.data.data.token);
-        localStorage.setItem('user', JSON.stringify(response.data.data.user));
-        navigate('/dashboard');
+        const user = response.data.data.user;
+        localStorage.setItem('user', JSON.stringify(user));
+        
+        // Role-based redirect
+        const userRoles = user.roles || [];
+        const hasAdminRole = userRoles.some(r => r.role_name && r.role_name.toLowerCase() === 'admin');
+        const hasEmployeeRole = userRoles.some(r => r.role_name && r.role_name.toLowerCase() === 'employee');
+        
+        if (hasAdminRole) {
+          navigate('/dashboard');
+        } else if (hasEmployeeRole) {
+          navigate('/employee-dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setError(response.data.error || 'An error occurred');
       }
@@ -206,27 +221,65 @@ function Login() {
 
           <div className="form-group">
             <label>Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              disabled={loading}
-            />
+            <div className="password-input-wrapper" style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                disabled={loading}
+                style={{ width: '100%', paddingRight: '40px' }}
+              />
+              <span
+                onClick={() => !loading && setShowPassword((prev) => !prev)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  cursor: loading ? 'default' : 'pointer',
+                  fontSize: '20px',
+                  userSelect: 'none',
+                  opacity: loading ? 0.5 : 1
+                }}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </span>
+            </div>
           </div>
 
           {!isLogin && (
             <div className="form-group">
               <label>Confirm Password</label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm your password"
-                disabled={loading}
-              />
+              <div className="password-input-wrapper" style={{ position: 'relative' }}>
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm your password"
+                  disabled={loading}
+                  style={{ width: '100%', paddingRight: '40px' }}
+                />
+                <span
+                  onClick={() => !loading && setShowConfirmPassword((prev) => !prev)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    cursor: loading ? 'default' : 'pointer',
+                    fontSize: '20px',
+                    userSelect: 'none',
+                    opacity: loading ? 0.5 : 1
+                  }}
+                  aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
+                >
+                  {showConfirmPassword ? '🙈' : '👁️'}
+                </span>
+              </div>
             </div>
           )}
 

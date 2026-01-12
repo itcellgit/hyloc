@@ -33,8 +33,8 @@ export class RoleController {
         return res.status(400).json({ success: false, error: 'role_name is required' });
       }
 
-      const role = await Role.create({ role_name });
-      res.status(201).json({ success: true, data: role });
+      const roleData = await Role.create({ role_name });
+      res.status(201).json({ success: true, data: roleData });
     } catch (error) {
       await logError(error, 'RoleController.create', req.user?.id);
       res.status(500).json({ success: false, error: error.message });
@@ -49,11 +49,11 @@ export class RoleController {
         return res.status(400).json({ success: false, error: 'role_name is required' });
       }
 
-      const role = await Role.update(req.params.id, { role_name });
-      if (!role) {
+      const roleData = await Role.update(req.params.id, { role_name });
+      if (!roleData) {
         return res.status(404).json({ success: false, error: 'Role not found' });
       }
-      res.json({ success: true, data: role });
+      res.json({ success: true, data: roleData });
     } catch (error) {
       await logError(error, 'RoleController.update', req.user?.id);
       res.status(500).json({ success: false, error: error.message });

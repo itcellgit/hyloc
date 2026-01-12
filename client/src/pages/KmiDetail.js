@@ -11,16 +11,30 @@ function KmiDetail() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [selectedKpiType, setSelectedKpiType] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [parentKpis, setParentKpis] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [users, setUsers] = useState([]);
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const [formData, setFormData] = useState({
     title: '',
     fin_year: '',
     kpi_type: 'Plant KPI',
     parent_kpi_id: id || ''
+  });
+  const [kpiValues, setKpiValues] = useState([]);
+  const [showValueModal, setShowValueModal] = useState(false);
+  const [editingValue, setEditingValue] = useState(null);
+  const [units, setUnits] = useState([]);
+  const [pillers, setPillers] = useState([]);
+  const [valueFormData, setValueFormData] = useState({
+    kpi_id: '',
+    data: '',
+    data_operator: '',
+    target_required: true,
+    uom: '',
+    kpi_type: 'manual',
+    piller_id: ''
   });
   const dropdownRef = useRef(null);
 
@@ -31,44 +45,9 @@ function KmiDetail() {
     { id: 2, label: 'Departments', icon: '🏢', path: '/departments' },
     { id: 3, label: 'Users', icon: '👥', path: '/users' },
     { id: 4, label: 'KMIs', icon: '📈', path: '/kmis' },
-  ];
-
-  const kpiTypes = [
-    {
-      id: 1,
-      name: 'Plant KPI',
-      color: '#3b82f6',
-      icon: '🏭',
-      description: 'Overall plant performance metrics'
-    },
-    {
-      id: 2,
-      name: 'Department KPI',
-      color: '#ec4899',
-      icon: '📋',
-      description: 'Department-specific performance metrics'
-    },
-    {
-      id: 3,
-       name: 'Pillar KPI',
-      color: '#8b5cf6',
-      icon: '🏛️',
-      description: 'Key pillar-based performance indicators'
-    },
-    {
-      id: 4,
-      name: 'Employee KPI',
-      color: '#f59e0b',
-      icon: '👤',
-      description: 'Individual employee performance metrics'
-    },
-    {
-      id: 5,
-      name: 'KAI',
-      color: '#10b981',
-      icon: '🎯',
-      description: 'Key Activity Indicators for specific tasks'
-    }
+    { id: 5, label: 'Pillers', icon: '🏛️', path: '/pillers' },
+    { id: 6, label: 'Roles', icon: '🎭', path: '/roles' },
+    { id: 7, label: 'User Roles', icon: '🔐', path: '/user-roles' },
   ];
 
   React.useEffect(() => {
@@ -102,6 +81,26 @@ function KmiDetail() {
     loadParentKpis();
   }, [loadParentKpis]);
 
+  const loadKpiValues = React.useCallback(async (kpiId) => {
+    if (!kpiId) return;
+    try {
+      const response = await api.get(`/kpi-values?kpi_id=${kpiId}`);
+      const values = response.data?.data || [];
+      console.log('Loaded KPI Values:', values);
+      setKpiValues(values);
+    } catch (err) {
+      console.error('Failed to load KPI values', err);
+      setKpiValues([]);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    // Load KPI values for the current KPI (from URL params)
+    if (id) {
+      loadKpiValues(id);
+    }
+  }, [id, loadKpiValues]);
+
   React.useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -112,8 +111,107 @@ function KmiDetail() {
       }
     };
 
+    const loadUsers = async () => {
+      try {
+        console.log('Fetching users...');
+        const response = await api.get('/users');
+        console.log('Users response:', response.data);
+        setUsers(response.data?.data || []);
+      } catch (err) {
+        console.error('Failed to load users', err);
+      }
+    };
+
+    const loadUnits = async () => {
+      try {
+        const response = await api.get('/unit-master');
+        setUnits(response.data?.data || []);
+      } catch (err) {
+        console.error('Failed to load units', err);
+      }
+    };
+
+    const loadPillers = async () => {
+      try {
+        const response = await api.get('/pillers');
+        setPillers(response.data?.data || []);
+      } catch (err) {
+        console.error('Failed to load pillers', err);
+      }
+    };
+
     loadCategories();
+    loadUsers();
+    loadUnits();
+    loadPillers();
   }, []);
+
+  const handleEditValue = (value) => {
+    setEditingValue(value);
+    setValueFormData({
+      kpi_id: value.kpi_id,
+      data: value.data || '',
+      // Backend returns column as "data operator" (with space), so normalize here
+      data_operator:
+        value.data_operator != null
+          ? String(value.data_operator)
+          : value['data operator'] != null
+          ? String(value['data operator'])
+          : '',
+      target_required: value.target_required !== undefined ? value.target_required : true,
+      uom: value.uom ? String(value.uom) : '',
+      kpi_type: value.kpi_type || 'manual',
+      piller_id: value.piller_id ? String(value.piller_id) : ''
+    });
+    setShowValueModal(true);
+  };
+
+  const handleDeleteValue = async (valueId) => {
+    if (!window.confirm('Are you sure you want to delete this KPI value?')) return;
+    
+    try {
+      await api.delete(`/kpi-values/${valueId}`);
+      await loadKpiValues(id);
+      showNotification('KPI value deleted successfully!', 'success');
+    } catch (err) {
+      console.error('Failed to delete KPI value', err);
+      showNotification('Failed to delete KPI value', 'error');
+    }
+  };
+
+  const handleValueChange = (e) => {
+    const { name, value } = e.target;
+    setValueFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleValueSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const payload = {
+        kpi_id: valueFormData.kpi_id,
+        data: valueFormData.data,
+        data_operator: valueFormData.data_operator || null,
+        target_required: valueFormData.target_required,
+        uom: valueFormData.uom ? parseInt(valueFormData.uom) : null,
+        kpi_type: valueFormData.kpi_type,
+        piller_id: valueFormData.piller_id ? parseInt(valueFormData.piller_id) : null
+      };
+
+      if (editingValue) {
+        await api.put(`/kpi-values/${editingValue.id}`, payload);
+        showNotification('KPI value updated successfully!', 'success');
+      } else {
+        await api.post('/kpi-values', payload);
+        showNotification('KPI value created successfully!', 'success');
+      }
+
+      await loadKpiValues(id);
+      setShowValueModal(false);
+    } catch (err) {
+      console.error('Failed to save KPI value', err);
+      showNotification(err.response?.data?.error || 'Failed to save KPI value', 'error');
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -141,15 +239,11 @@ function KmiDetail() {
     }, 4000);
   };
 
-  const handleKpiTypeClick = (kpiType) => {
-    setSelectedKpiType(selectedKpiType?.id === kpiType.id ? null : kpiType);
-  };
-
   const handleAddNew = () => {
     setFormData({
       title: '',
       fin_year: kmi.fin_year || '',
-      kpi_type: selectedKpiType?.name || 'Plant KPI',
+      kpi_type: 'Plant KPI',
       parent_kpi_id: id || ''
     });
     setShowModal(true);
@@ -202,7 +296,7 @@ function KmiDetail() {
           </button>
           <div className="header-logo-section">
             <img src="/hyloc-logo.png" alt="Hyloc Logo" className="header-logo" />
-            <h1 className="header-title">Hyloc Hydro technic Pvt Ltd</h1>
+            <h1 className="header-title">Hyloc Hydrotechnic Pvt Ltd</h1>
           </div>
           <div className="header-actions">
             <div className="user-profile" ref={dropdownRef}>
@@ -288,50 +382,236 @@ function KmiDetail() {
             </div>
           </div>
 
-          <div className="kpi-types-container">
-            <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 className="section-title" style={{ marginBottom: 0 }}>Select KPI Type</h3>
-              <button className="btn-primary" onClick={handleAddNew} style={{ marginLeft: '16px' }}>
-                <span>+</span> Add KPI
+          <div className="kpi-details-section">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 className="section-title">KPI Values</h3>
+              <button className="btn-primary" onClick={() => {
+                setEditingValue(null);
+                setValueFormData({
+                  kpi_id: id,
+                  data: '',
+                  data_operator: '',
+                  target_required: true,
+                  uom: '',
+                  kpi_type: 'manual',
+                  piller_id: ''
+                });
+                setShowValueModal(true);
+              }}>
+                <span>+</span> Add Value
               </button>
             </div>
-            <div style={{ height: '12px' }}></div>
-            <div
-              className="kpi-blocks-grid"
-              style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}
-            >
-              {kpiTypes.map((kpiType) => (
-                <div
-                  key={kpiType.id}
-                  className={`kpi-block ${selectedKpiType?.id === kpiType.id ? 'active' : ''}`}
-                  style={{
-                    backgroundColor: selectedKpiType?.id === kpiType.id ? kpiType.color : `${kpiType.color}15`,
-                    borderColor: kpiType.color
-                  }}
-                  onClick={() => handleKpiTypeClick(kpiType)}
-                >
-                  <div className="kpi-icon">{kpiType.icon}</div>
-                  <h4 className="kpi-name" style={{ color: selectedKpiType?.id === kpiType.id ? '#fff' : kpiType.color }}>
-                    {kpiType.name}
-                  </h4>
-                  <p className="kpi-description" style={{ color: selectedKpiType?.id === kpiType.id ? '#fff' : '#666' }}>
-                    {kpiType.description}
-                  </p>
-                </div>
-              ))}
-            </div>
+
+            {kpiValues.length === 0 ? (
+              <div className="details-placeholder" style={{ textAlign: 'center', padding: '40px', background: '#f9fafb', borderRadius: '8px' }}>
+                <p style={{ fontSize: '16px', color: '#666' }}>No values recorded yet.</p>
+                <p className="details-note" style={{ fontSize: '14px', color: '#999' }}>Click "Add Value" to record target and achieved values for this KPI.</p>
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="kpi-values-table" style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', borderRadius: '8px', overflow: 'hidden' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f5f5f5' }}>
+                      <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd', fontWeight: '600' }}>Type</th>
+                      <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd', fontWeight: '600' }}>Data</th>
+                      <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd', fontWeight: '600' }}>Data Operator</th>
+                      <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd', fontWeight: '600' }}>Unit of Measurement</th>
+                      <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #ddd', fontWeight: '600' }}>Piller</th>
+                      <th style={{ padding: '12px', textAlign: 'center', borderBottom: '2px solid #ddd', fontWeight: '600' }}>Target Required</th>
+                      <th style={{ padding: '12px', textAlign: 'center', borderBottom: '2px solid #ddd', fontWeight: '600' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {kpiValues.map((val) => {
+                      const dataOperator = val.data_operator ?? val['data operator'];
+                      const operator = users.find((u) =>
+                        dataOperator != null && String(u.empid) === String(dataOperator)
+                      );
+                      const unit = units.find(u => u.id === val.uom);
+                      const piller = pillers.find(p => p.id === val.piller_id);
+                      const typeLabel = (val.kpi_type ? String(val.kpi_type) : 'manual');
+                      return (
+                        <tr key={val.id} style={{ borderBottom: '1px solid #eee' }}>
+                          <td style={{ padding: '12px' }}>
+                            <span style={{ 
+                              padding: '4px 8px', 
+                              borderRadius: '4px', 
+                              fontSize: '12px',
+                              background: '#f5f5f5',
+                              color: '#666',
+                              fontWeight: '500'
+                            }}>
+                              {typeLabel}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            {val.data ?? '-'}
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            {operator ? `${operator.firstname} ${operator.lastname} (${operator.empid})` : '-'}
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            {unit ? unit.unit_name : '-'}
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            {piller ? piller.short_name : '-'}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>
+                            {val.target_required ? '✓' : '✗'}
+                          </td>
+                          <td style={{ padding: '12px', textAlign: 'center' }}>
+                            <button
+                              onClick={() => handleEditValue(val)}
+                              style={{
+                                padding: '6px 12px',
+                                marginRight: '8px',
+                                border: 'none',
+                                borderRadius: '4px',
+                                background: '#2196f3',
+                                color: '#fff',
+                                cursor: 'pointer'
+                              }}
+                              title="Edit"
+                            >
+                              ✏️
+                            </button>
+                            <button
+                              onClick={() => handleDeleteValue(val.id)}
+                              style={{
+                                padding: '6px 12px',
+                                border: 'none',
+                                borderRadius: '4px',
+                                background: '#f44336',
+                                color: '#fff',
+                                cursor: 'pointer'
+                              }}
+                              title="Delete"
+                            >
+                              🗑️
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
-          {selectedKpiType && (
-            <div className="kpi-details-section">
-              <h3 className="section-title" style={{ color: selectedKpiType.color }}>
-                {selectedKpiType.name} Details for "{kmi.title}"
-              </h3>
-              <div className="kpi-details-content">
-                <div className="details-placeholder">
-                  <p>No KPI data available yet for this KMI and type.</p>
-                  <p className="details-note">KPI values will be displayed here once they are created in the system.</p>
+          {showValueModal && (
+            <div className="modal-overlay" onClick={() => setShowValueModal(false)}>
+              <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h3>{editingValue ? 'Edit KPI Value' : 'Add KPI Value'}</h3>
+                  <button className="modal-close" onClick={() => setShowValueModal(false)}>×</button>
                 </div>
+                <form onSubmit={handleValueSubmit}>
+                  <div className="form-group">
+                    <label>KPI Type *</label>
+                    <select
+                      name="kpi_type"
+                      value={valueFormData.kpi_type}
+                      onChange={handleValueChange}
+                      required
+                    >
+                      <option value="manual">Manual</option>
+                      <option value="computed">Computed</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Data *</label>
+                    <input
+                      type="text"
+                      name="data"
+                      value={valueFormData.data}
+                      onChange={handleValueChange}
+                      required
+                      placeholder="Enter data value"
+                    />
+                  </div>
+                  {/* No formula input: schema does not include formula */}
+
+                  <div className="form-group">
+                    <label>Assign Data Operator</label>
+                    <select
+                      name="data_operator"
+                      value={valueFormData.data_operator}
+                      onChange={handleValueChange}
+                    >
+                      <option value="">Select User / Operator</option>
+                      {users.length === 0 ? (
+                        <option disabled>No users available</option>
+                      ) : (
+                        users.map((u) => (
+                          <option key={u.empid} value={u.empid}>
+                            {u.firstname} {u.lastname} ({u.empid})
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Unit of Measurement</label>
+                    <select
+                      name="uom"
+                      value={valueFormData.uom}
+                      onChange={handleValueChange}
+                    >
+                      <option value="">Select Unit</option>
+                      {units.length === 0 ? (
+                        <option disabled>No units available</option>
+                      ) : (
+                        units.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.unit_name}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label>Piller</label>
+                    <select
+                      name="piller_id"
+                      value={valueFormData.piller_id}
+                      onChange={handleValueChange}
+                    >
+                      <option value="">Select Piller (Optional)</option>
+                      {pillers.length === 0 ? (
+                        <option disabled>No pillers available</option>
+                      ) : (
+                        pillers.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.piller_name} ({p.short_name})
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <div className="toggle-label-group">
+                      <label>Target Required</label>
+                      <span className="toggle-value">{valueFormData.target_required ? 'Yes' : 'No'}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className={`slider-toggle ${valueFormData.target_required ? 'on' : 'off'}`}
+                      onClick={() => setValueFormData((prev) => ({ ...prev, target_required: !prev.target_required }))}
+                    >
+                      <span className="slider-thumb"></span>
+                    </button>
+                  </div>
+                  <div className="modal-actions">
+                    <button type="button" className="btn-secondary" onClick={() => setShowValueModal(false)}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn-primary">
+                      {editingValue ? 'Update' : 'Save'}
+                    </button>
+                  </div>
+                </form>
               </div>
             </div>
           )}
@@ -368,9 +648,9 @@ function KmiDetail() {
                   <div className="form-group">
                     <label>KPI Type</label>
                     <select name="kpi_type" value={formData.kpi_type} onChange={handleChange}>
-                      {kpiTypes.map((t) => (
-                        <option key={t.id} value={t.name}>
-                          {t.name}
+                      {categories.map((c) => (
+                        <option key={c.id} value={c.category_name}>
+                          {c.category_name}
                         </option>
                       ))}
                     </select>

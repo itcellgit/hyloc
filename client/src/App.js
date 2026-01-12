@@ -5,11 +5,13 @@ import Departments from './pages/Departments';
 import Users from './pages/admin/Users';
 import Kmis from './pages/Kmis';
 import KmiDetail from './pages/KmiDetail';
+import Pillers from './pages/Pillers';
 import Profile from './pages/Profile';
 import Roles from './pages/Roles';
 import UserRoles from './pages/admin/UserRoles';
 import Unauthorized from './pages/Unauthorized';
 import Login from './pages/Login';
+import EmployeeDashboard from './pages/EmployeeDashboard';
 import { authService } from './services/auth';
 import './styles/App.css';
 
@@ -45,6 +47,14 @@ function App() {
             } 
           />
           <Route 
+            path="/employee-dashboard" 
+            element={
+              <ProtectedRoute>
+                <EmployeeDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/departments" 
             element={
               <ProtectedRoute>
@@ -65,6 +75,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Kmis />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/pillers" 
+            element={
+              <ProtectedRoute>
+                <Pillers />
               </ProtectedRoute>
             } 
           />

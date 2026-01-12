@@ -1,33 +1,34 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth';
-import api from '../services/api';
-import '../styles/Departments.css';
+import { pillerService } from '../services/api';
+import '../styles/Pillers.css';
 
-function Departments() {
+function Pillers() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [user, setUser] = useState(null);
-  const [departments, setDepartments] = useState([]);
+  const [pillers, setPillers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
-  const [editingDepartment, setEditingDepartment] = useState(null);
+  const [editingPiller, setEditingPiller] = useState(null);
   const [formData, setFormData] = useState({
-    name: ''
+    piller_name: '',
+    short_name: ''
   });
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   const menuItems = [
-    { id: 1, label: 'Dashboard', icon: '📊', path: '/', roles: ['Admin'] },
-    { id: 2, label: 'Departments', icon: '🏢', path: '/departments', roles: ['Admin'] },
-    { id: 3, label: 'Users', icon: '👥', path: '/users', roles: ['Admin'] },
-    { id: 4, label: 'KMIs', icon: '📈', path: '/kmis', roles: ['Admin'] },
-    { id: 6, label: 'Pillers', icon: '🏛️', path: '/pillers', roles: ['Admin'] },
-    { id: 5, label: 'Roles', icon: '🎭', path: '/roles', roles: ['Admin'] },
-    { id: 7, label: 'User Roles', icon: '🔐', path: '/user-roles', roles: ['Admin'] },
+    { id: 1, label: 'Dashboard', icon: '📊', path: '/dashboard' },
+    { id: 2, label: 'Departments', icon: '🏢', path: '/departments' },
+    { id: 3, label: 'Users', icon: '👥', path: '/users' },
+    { id: 4, label: 'KMIs', icon: '📈', path: '/kmis' },
+    { id: 5, label: 'Pillers', icon: '🏛️', path: '/pillers' },
+    { id: 6, label: 'Roles', icon: '🎭', path: '/roles' },
+    { id: 7, label: 'User Roles', icon: '🧩', path: '/user-roles' },
   ];
 
   const showNotification = (message, type = 'success') => {
@@ -54,20 +55,19 @@ function Departments() {
   }, []);
 
   useEffect(() => {
-    fetchDepartments();
+    fetchPillers();
   }, []);
 
-  const fetchDepartments = async () => {
+  const fetchPillers = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/departments');
-      setDepartments(response.data.data);
+      const response = await pillerService.getAll();
+      setPillers(response.data.data || []);
       setError('');
     } catch (err) {
-      const errorMsg = 'Failed to load departments';
+      const errorMsg = 'Failed to load pillers';
       setError(errorMsg);
       showNotification(errorMsg, 'error');
-      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -80,7 +80,6 @@ function Departments() {
       localStorage.removeItem('user');
       navigate('/login');
     } catch (error) {
-      console.error('Logout error:', error);
       authService.removeToken();
       localStorage.removeItem('user');
       navigate('/login');
@@ -93,49 +92,50 @@ function Departments() {
   };
 
   const handleAddNew = () => {
-    setEditingDepartment(null);
-    setFormData({ name: '' });
+    setEditingPiller(null);
+    setFormData({ piller_name: '', short_name: '' });
     setShowModal(true);
   };
 
-  const handleEdit = (department) => {
-    setEditingDepartment(department);
+  const handleEdit = (pillar) => {
+    setEditingPiller(pillar);
     setFormData({
-      name: department.name || department.department_name
+      piller_name: pillar.piller_name || '',
+      short_name: pillar.short_name || ''
     });
     setShowModal(true);
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this department?')) {
+    if (!window.confirm('Are you sure you want to delete this piller?')) {
       return;
     }
 
     try {
-      await api.delete(`/departments/${id}`);
-      showNotification('Department deleted successfully!', 'success');
-      fetchDepartments();
+      await pillerService.delete(id);
+      showNotification('Piller deleted successfully!', 'success');
+      fetchPillers();
     } catch (err) {
-      const errorMsg = 'Failed to delete department: ' + (err.response?.data?.error || err.message);
+      const errorMsg = 'Failed to delete piller: ' + (err.response?.data?.error || err.message);
       showNotification(errorMsg, 'error');
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     try {
-      if (editingDepartment) {
-        await api.put(`/departments/${editingDepartment.id}`, formData);
-        showNotification('Department updated successfully!', 'success');
+      if (editingPiller) {
+        await pillerService.update(editingPiller.id, formData);
+        showNotification('Piller updated successfully!', 'success');
       } else {
-        await api.post('/departments', formData);
-        showNotification('Department created successfully!', 'success');
+        await pillerService.create(formData);
+        showNotification('Piller created successfully!', 'success');
       }
       setShowModal(false);
-      fetchDepartments();
+      fetchPillers();
     } catch (err) {
-      const errorMsg = 'Failed to save department: ' + (err.response?.data?.error || err.message);
+      const errorMsg = 'Failed to save piller: ' + (err.response?.data?.error || err.message);
       showNotification(errorMsg, 'error');
     }
   };
@@ -145,7 +145,7 @@ function Departments() {
   };
 
   return (
-    <div className="departments-layout">
+    <div className="pillars-layout">
       <header className="header">
         <div className="header-content">
           <button className="menu-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
@@ -162,7 +162,7 @@ function Departments() {
                 <span className="profile-name">{getUserDisplayName()}</span>
                 <span className="dropdown-arrow">{dropdownOpen ? '▲' : '▼'}</span>
               </button>
-              
+
               {dropdownOpen && (
                 <div className="dropdown-menu">
                   <div className="dropdown-header">
@@ -199,8 +199,8 @@ function Departments() {
             {menuItems.map((item) => (
               <a
                 key={item.id}
-                href="#"
-                className={`nav-item ${item.id === 2 ? 'active' : ''}`}
+                href={item.path}
+                className={`nav-item ${item.path === '/pillers' ? 'active' : ''}`}
                 onClick={(e) => {
                   e.preventDefault();
                   navigate(item.path);
@@ -223,42 +223,44 @@ function Departments() {
           )}
 
           <div className="page-header">
-            <h2>Departments</h2>
+            <h2>Pillers</h2>
             <button className="btn-primary" onClick={handleAddNew}>
-              <span>+</span> Add Department
+              <span>+</span> Add Piller
             </button>
           </div>
 
           {error && <div className="error-message">{error}</div>}
 
           {loading ? (
-            <div className="loading">Loading departments...</div>
+            <div className="loading">Loading pillers...</div>
           ) : (
             <div className="table-container">
-              <table className="departments-table">
+              <table className="pillars-table">
                 <thead>
                   <tr>
                     <th>ID</th>
                     <th>Name</th>
+                    <th>Description</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {departments.length === 0 ? (
+                  {pillers.length === 0 ? (
                     <tr>
-                      <td colSpan="3" className="no-data">No departments found</td>
+                      <td colSpan="4" className="no-data">No pillers found</td>
                     </tr>
                   ) : (
-                    departments.map((dept) => (
-                      <tr key={dept.id}>
-                        <td>{dept.id}</td>
-                        <td>{dept.name || dept.department_name}</td>
+                    pillers.map((piller) => (
+                      <tr key={piller.id}>
+                        <td>{piller.id}</td>
+                        <td>{piller.piller_name}</td>
+                        <td>{piller.short_name}</td>
                         <td>
                           <div className="action-buttons">
-                            <button className="btn-edit" onClick={() => handleEdit(dept)}>
+                            <button className="btn-edit" onClick={() => handleEdit(piller)}>
                               ✏️ Edit
                             </button>
-                            <button className="btn-delete" onClick={() => handleDelete(dept.id)}>
+                            <button className="btn-delete" onClick={() => handleDelete(piller.id)}>
                               🗑️ Delete
                             </button>
                           </div>
@@ -277,19 +279,30 @@ function Departments() {
         <div className="modal-overlay" onClick={() => setShowModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>{editingDepartment ? 'Edit Department' : 'Add New Department'}</h3>
+              <h3>{editingPiller ? 'Edit Piller' : 'Add New Piller'}</h3>
               <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
             </div>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
-                <label>Department Name *</label>
+                <label>Piller Name *</label>
                 <input
                   type="text"
-                  name="name"
-                  value={formData.name}
+                  name="piller_name"
+                  value={formData.piller_name}
                   onChange={handleChange}
                   required
-                  placeholder="Enter department name"
+                  placeholder="Enter piller name"
+                />
+              </div>
+              <div className="form-group">
+                <label>Short Name *</label>
+                <input
+                  type="text"
+                  name="short_name"
+                  value={formData.short_name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Enter short name"
                 />
               </div>
               <div className="modal-actions">
@@ -297,7 +310,7 @@ function Departments() {
                   Cancel
                 </button>
                 <button type="submit" className="btn-primary">
-                  {editingDepartment ? 'Update' : 'Create'}
+                  {editingPiller ? 'Update' : 'Create'}
                 </button>
               </div>
             </form>
@@ -308,4 +321,4 @@ function Departments() {
   );
 }
 
-export default Departments;
+export default Pillers;

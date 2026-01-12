@@ -73,7 +73,8 @@ export class UserController {
         middlename,
         lastname,
         email,
-        bloodgroup
+        bloodgroup,
+        password
       } = req.body;
 
       const user = await User.update(req.params.id, {
@@ -84,7 +85,8 @@ export class UserController {
         middlename: middlename || null,
         lastname: lastname || null,
         email: email || null,
-        bloodgroup: bloodgroup || null
+        bloodgroup: bloodgroup || null,
+        password: password || null
       });
 
       if (!user) {

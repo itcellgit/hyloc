@@ -1,4 +1,5 @@
 import pool from '../config/database.js';
+import bcrypt from 'bcrypt';
 
 export class User {
   static async findAll() {
@@ -42,11 +43,15 @@ export class User {
       password
     } = user;
 
+    // Hash password before storing
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
     const result = await pool.query(
       `INSERT INTO users (empid, department_id, phone, address, firstname, middlename, lastname, email, bloodgroup, password)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
        RETURNING id, empid, department_id, phone, address, firstname, middlename, lastname, email, bloodgroup, created_at, updated_at`,
-      [empid, department_id, phone, address, firstname, middlename, lastname, email, bloodgroup, password]
+      [empid, department_id, phone, address, firstname, middlename, lastname, email, bloodgroup, hashedPassword]
     );
     return result.rows[0];
   }
@@ -60,23 +65,35 @@ export class User {
       middlename,
       lastname,
       email,
-      bloodgroup
+      bloodgroup,
+      password
     } = user;
 
-    const result = await pool.query(
-      `UPDATE users
-       SET department_id = COALESCE($1, department_id),
+    let updateFields = `department_id = COALESCE($1, department_id),
            phone = COALESCE($2, phone),
            address = COALESCE($3, address),
            firstname = COALESCE($4, firstname),
            middlename = COALESCE($5, middlename),
            lastname = COALESCE($6, lastname),
            email = COALESCE($7, email),
-           bloodgroup = COALESCE($8, bloodgroup),
+           bloodgroup = COALESCE($8, bloodgroup)`;
+    let params = [department_id, phone, address, firstname, middlename, lastname, email, bloodgroup, id];
+
+    // Hash password if provided
+    if (password && password.trim() !== '') {
+      const saltRounds = 10;
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+      updateFields += `, password = $9`;
+      params = [department_id, phone, address, firstname, middlename, lastname, email, bloodgroup, hashedPassword, id];
+    }
+
+    const result = await pool.query(
+      `UPDATE users
+       SET ${updateFields},
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $9
+       WHERE id = ${password && password.trim() !== '' ? '$10' : '$9'}
        RETURNING id, empid, department_id, phone, address, firstname, middlename, lastname, email, bloodgroup, created_at, updated_at`,
-      [department_id, phone, address, firstname, middlename, lastname, email, bloodgroup, id]
+      params
     );
     return result.rows[0];
   }

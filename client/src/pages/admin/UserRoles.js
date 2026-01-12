@@ -10,7 +10,7 @@ function UserRoles() {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -29,6 +29,7 @@ function UserRoles() {
     { id: 2, label: 'Departments', icon: '🏢', path: '/departments', roles: ['Admin'] },
     { id: 3, label: 'Users', icon: '👥', path: '/users', roles: ['Admin'] },
     { id: 4, label: 'KMIs', icon: '📈', path: '/kmis', roles: ['Admin'] },
+    { id: 7, label: 'Pillers', icon: '🏛️', path: '/pillers', roles: ['Admin'] },
     { id: 5, label: 'Roles', icon: '🎭', path: '/roles', roles: ['Admin'] },
     { id: 6, label: 'User Roles', icon: '🔐', path: '/user-roles', roles: ['Admin'] },
   ];
@@ -45,8 +46,21 @@ function UserRoles() {
       }
     };
 
+    const handleWindowResize = () => {
+      if (window.innerWidth > 768) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    window.addEventListener('resize', handleWindowResize);
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('resize', handleWindowResize);
+    };
   }, []);
 
   useEffect(() => {
@@ -179,7 +193,7 @@ function UserRoles() {
 
   const getRoleName = (roleId) => {
     const role = roles.find(r => r.id === roleId);
-    return role ? role.role : 'Unknown Role';
+    return role ? role.role_name : 'Unknown Role';
   };
 
   return (
@@ -237,8 +251,12 @@ function UserRoles() {
             {menuItems.map((item) => (
               <a
                 key={item.id}
-                href={item.path}
+                href="#"
                 className={`nav-item ${item.id === 6 ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(item.path);
+                }}
               >
                 <span className="nav-icon">{item.icon}</span>
                 <span className="nav-label">{item.label}</span>
@@ -360,7 +378,7 @@ function UserRoles() {
                     <option value="">Select role</option>
                     {roles.map((r) => (
                       <option key={r.id} value={r.id}>
-                        {r.role}
+                        {r.role_name}
                       </option>
                     ))}
                   </select>

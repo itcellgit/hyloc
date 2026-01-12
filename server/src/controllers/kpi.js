@@ -37,7 +37,7 @@ export class KPIController {
 
   static async create(req, res) {
     try {
-      const { title, category_id, parent_kpi_id, data_entry_emp_id, unit_id, fin_year } = req.body;
+      const { title, category_id, parent_kpi_id, fin_year } = req.body;
       
       if (!title || !category_id) {
         return res.status(400).json({ success: false, error: 'title and category_id are required' });
@@ -47,8 +47,6 @@ export class KPIController {
         title,
         category_id,
         parent_kpi_id: parent_kpi_id || null,
-        data_entry_emp_id: data_entry_emp_id || null,
-        unit_id: unit_id || null,
         fin_year: fin_year || null
       });
       res.status(201).json({ success: true, data: kpi });
@@ -60,14 +58,12 @@ export class KPIController {
 
   static async update(req, res) {
     try {
-      const { title, category_id, parent_kpi_id, data_entry_emp_id, unit_id, fin_year } = req.body;
+      const { title, category_id, parent_kpi_id, fin_year } = req.body;
 
       const kpi = await KPI.update(req.params.id, {
         title,
         category_id,
         parent_kpi_id,
-        data_entry_emp_id,
-        unit_id,
         fin_year
       });
       if (!kpi) {

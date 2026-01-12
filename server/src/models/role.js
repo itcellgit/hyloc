@@ -19,23 +19,23 @@ export class Role {
     return result.rows[0];
   }
 
-  static async create(role) {
+  static async create(roleData) {
     const result = await pool.query(
       `INSERT INTO roles (role_name)
        VALUES ($1)
        RETURNING id, role_name`,
-      [role.role_name]
+      [roleData.role_name]
     );
     return result.rows[0];
   }
 
-  static async update(id, role) {
+  static async update(id, roleData) {
     const result = await pool.query(
       `UPDATE roles
        SET role_name = $1
        WHERE id = $2
        RETURNING id, role_name`,
-      [role.role_name, id]
+      [roleData.role_name, id]
     );
     return result.rows[0];
   }

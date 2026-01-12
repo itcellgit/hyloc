@@ -44,3 +44,14 @@ CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_empid ON users(empid);
 CREATE INDEX idx_departments_name ON departments(name);
 CREATE INDEX idx_users_department_id ON users(department_id);
+
+-- Pillers master (aligned with provided schema)
+CREATE TABLE IF NOT EXISTS pillers (
+  id SERIAL PRIMARY KEY,
+  piller_name VARCHAR(256) NOT NULL,
+  short_name VARCHAR(30) NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_pillers_name ON pillers(piller_name);

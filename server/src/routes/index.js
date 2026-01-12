@@ -12,6 +12,8 @@ import { KPIDepartmentController } from '../controllers/kpi-department.js';
 import { KPIEmployeeController } from '../controllers/kpi-employee.js';
 import { LogController } from '../controllers/log.js';
 import { UserRoleController } from '../controllers/user-role.js';
+import { PillarController } from '../controllers/pillar.js';
+import { EmployeeKPIController } from '../controllers/employee-kpi.js';
 
 const router = express.Router();
 
@@ -49,8 +51,16 @@ router.post('/roles', RoleController.create);
 router.put('/roles/:id', RoleController.update);
 router.delete('/roles/:id', RoleController.delete);
 
+// Pillers routes
+router.get('/pillers', PillarController.getAll);
+router.get('/pillers/:id', PillarController.getById);
+router.post('/pillers', PillarController.create);
+router.put('/pillers/:id', PillarController.update);
+router.delete('/pillers/:id', PillarController.delete);
+
 // Unit Master routes
 router.get('/units', UnitMasterController.getAll);
+router.get('/unit-master', UnitMasterController.getAll);
 router.get('/units/:id', UnitMasterController.getById);
 router.post('/units', UnitMasterController.create);
 router.put('/units/:id', UnitMasterController.update);
@@ -68,7 +78,6 @@ router.delete('/kpis/:id', KPIController.delete);
 router.get('/kpi-values', KPIValueController.getAll);
 router.get('/kpi-values/:id', KPIValueController.getById);
 router.get('/kpis/:kpiId/values', KPIValueController.getByKPI);
-router.get('/kpis/:kpiId/values/:monthYear', KPIValueController.getByKPIAndMonth);
 router.post('/kpi-values', KPIValueController.create);
 router.put('/kpi-values/:id', KPIValueController.update);
 router.delete('/kpi-values/:id', KPIValueController.delete);
@@ -97,6 +106,13 @@ router.get('/roles/:roleId/users', UserRoleController.getByRole);
 router.post('/user-roles', UserRoleController.create);
 router.put('/user-roles/:id', UserRoleController.update);
 router.delete('/user-roles/:id', UserRoleController.delete);
+
+// Employee KPI routes
+router.get('/employees/:empId/kpi-values', EmployeeKPIController.getEmployeeKPIValues);
+router.get('/employees/:empId/kpis', EmployeeKPIController.getEmployeeKPIs);
+router.get('/employees/:empId/kpis/:kpiId/values', EmployeeKPIController.getKPIValueForEmployee);
+router.post('/employees/kpi-data', EmployeeKPIController.submitKPIData);
+router.get('/kpi-values/:kpiValueId/monthly-data/:year', EmployeeKPIController.getMonthlyData);
 
 // Log routes
 router.get('/logs', LogController.getAll);

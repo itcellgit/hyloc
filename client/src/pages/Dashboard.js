@@ -53,6 +53,7 @@ function Dashboard() {
     { id: 2, label: 'Departments', icon: '🏢', path: '/departments' },
     { id: 3, label: 'Users', icon: '👥', path: '/users' },
     { id: 4, label: 'KMIs', icon: '📈', path: '/kmis' },
+    { id: 7, label: 'Pillers', icon: '🏛️', path: '/pillers' },
     { id: 5, label: 'Roles', icon: '🔐', path: '/roles' },
     { id: 6, label: 'User Roles', icon: '🧩', path: '/user-roles' },
   ];
@@ -173,7 +174,7 @@ function Dashboard() {
           </button>
           <div className="header-logo-section">
             <img src="/hyloc-logo.png" alt="Hyloc Logo" className="header-logo" />
-            <h1 className="header-title">Hyloc Hydro technic Pvt Ltd</h1>
+            <h1 className="header-title">Hyloc Hydrotechnic Pvt Ltd</h1>
           </div>
           <div className="header-actions">
             <div className="user-profile" ref={dropdownRef}>
@@ -223,8 +224,12 @@ function Dashboard() {
             {menuItems.map((item) => (
               <a
                 key={item.id}
-                href={item.path}
+                href="#"
                 className={`nav-item ${item.id === 1 ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(item.path);
+                }}
               >
                 <span className="nav-icon">{item.icon}</span>
                 <span className="nav-label">{item.label}</span>

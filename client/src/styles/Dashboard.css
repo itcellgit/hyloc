@@ -9,7 +9,7 @@
 /* Header */
 .header {
   background: #41aafe;
-  padding: 15px 20px;
+  padding: 10px 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
@@ -21,38 +21,48 @@
   align-items: center;
   justify-content: space-between;
   max-width: 100%;
+  gap: 10px;
 }
 
 .header-logo-section {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 15px;
+  gap: 12px;
   flex: 1;
 }
 
 .header-logo {
-  height: 45px;
+  height: 40px;
   width: auto;
   object-fit: contain;
 }
 
 .header-title {
-  font-size: 28px;
+  font-size: 24px;
   color: white;
   margin: 0;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .menu-toggle {
   background: rgba(255, 255, 255, 0.2);
   border: none;
   color: white;
-  font-size: 24px;
-  padding: 8px 12px;
+  font-size: 20px;
+  padding: 6px 10px;
   cursor: pointer;
   border-radius: 4px;
   transition: background 0.3s ease;
+  min-width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .menu-toggle:hover {
@@ -605,9 +615,31 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .header-title {
-    font-size: 20px;
+    font-size: 18px;
+  }
+
+  .header-logo {
+    height: 35px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 8px 12px;
+  }
+
+  .header-title {
+    font-size: 16px;
+  }
+
+  .header-logo {
+    height: 32px;
+  }
+
+  .header-logo-section {
+    gap: 8px;
   }
 
   .stats-grid {
@@ -623,8 +655,9 @@
     font-size: 14px;
   }
 
-  .header-logo {
-    height: 35px;
+  .menu-toggle {
+    font-size: 18px;
+    padding: 4px 8px;
   }
 
   .dropdown-menu {

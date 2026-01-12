@@ -4,8 +4,8 @@ import bcrypt from 'bcrypt';
 export class Auth {
   static async login(empid, password) {
     const result = await pool.query(
-      `SELECT id, empid, department_id, phone, address, firstname, middlename, lastname, email, bloodgroup, password
-       FROM users WHERE empid = $1`,
+      `SELECT u.id, u.empid, u.department_id, u.phone, u.address, u.firstname, u.middlename, u.lastname, u.email, u.bloodgroup, u.password
+       FROM users u WHERE u.empid = $1`,
       [empid]
     );
 
@@ -21,7 +21,17 @@ export class Auth {
       return null;
     }
 
+    // Fetch user roles
+    const rolesResult = await pool.query(
+      `SELECT ur.role_id, r.role_name 
+       FROM user_roles ur
+       JOIN roles r ON r.id = ur.role_id
+       WHERE ur.user_id = $1 AND ur.status = 'active'`,
+      [user.id]
+    );
+
     const { password: _, ...safeUser } = user;
+    safeUser.roles = rolesResult.rows;
     return safeUser;
   }
 

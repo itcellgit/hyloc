@@ -110,25 +110,38 @@
 
 /* Page Header */
 .page-header {
+  margin-bottom: 20px;
+}
+
+.heading-section {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
-  flex-wrap: wrap;
   gap: 20px;
-}
-
-.header-section {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-wrap: wrap;
+  width: 100%;
 }
 
 .page-header h2 {
   font-size: 32px;
   color: #000080;
   margin: 0;
+  flex: 1;
+}
+
+/* Filters Block */
+.filters-block {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.filters-group {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .year-filter {
@@ -167,21 +180,67 @@
   box-shadow: 0 0 0 3px rgba(65, 170, 254, 0.1);
 }
 
-.fin-year-select {
-  padding: 10px 12px;
-  border: 2px solid #ddd;
+/* Search Filter */
+.search-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.search-filter label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+}
+
+.search-input {
+  padding: 10px 16px;
+  padding-right: 36px;
+  border: 2px solid #e0e0e0;
   border-radius: 6px;
   font-size: 14px;
   background: white;
   color: #333;
-  cursor: pointer;
+  min-width: 250px;
   transition: all 0.3s ease;
-  width: 100%;
 }
 
-.fin-year-select:hover {
+.search-input::placeholder {
+  color: #999;
+}
+
+.search-input:hover {
   border-color: #41aafe;
   box-shadow: 0 2px 6px rgba(65, 170, 254, 0.2);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #41aafe;
+  box-shadow: 0 0 0 3px rgba(65, 170, 254, 0.1);
+}
+
+.clear-search {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  width: 24px;
+  height: 24px;
+}
+
+.clear-search:hover {
+  color: #333;
 }
 
 .fin-year-select:focus {

@@ -38,7 +38,9 @@ function Users() {
     { id: 2, label: 'Departments', icon: '🏢', path: '/departments', roles: ['Admin'] },
     { id: 3, label: 'Users', icon: '👥', path: '/users', roles: ['Admin'] },
     { id: 4, label: 'KMIs', icon: '📈', path: '/kmis', roles: ['Admin'] },
+    { id: 6, label: 'Pillers', icon: '🏛️', path: '/pillers', roles: ['Admin'] },
     { id: 5, label: 'Roles', icon: '🎭', path: '/roles', roles: ['Admin'] },
+    { id: 7, label: 'User Roles', icon: '🔐', path: '/user-roles', roles: ['Admin'] },
   ];
 
   useEffect(() => {
@@ -263,8 +265,12 @@ function Users() {
             {menuItems.map((item) => (
               <a
                 key={item.id}
-                href={item.path}
+                href="#"
                 className={`nav-item ${item.id === 3 ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(item.path);
+                }}
               >
                 <span className="nav-icon">{item.icon}</span>
                 <span className="nav-label">{item.label}</span>
