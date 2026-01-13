@@ -30,6 +30,9 @@ function Users() {
     confirmPassword: 'Password@123'
   });
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -210,6 +213,79 @@ function Users() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Search and filter logic
+  const filteredUsers = users.filter(user => {
+    if (!searchTerm) return true;
+    
+    const search = searchTerm.toLowerCase();
+    const fullName = `${user.firstname || ''} ${user.middlename || ''} ${user.lastname || ''}`.toLowerCase();
+    const departmentName = getDepartmentName(user.department_id).toLowerCase();
+    
+    return (
+      (user.empid && user.empid.toLowerCase().includes(search)) ||
+      fullName.includes(search) ||
+      (user.email && user.email.toLowerCase().includes(search)) ||
+      (user.phone && user.phone.toLowerCase().includes(search)) ||
+      (user.bloodgroup && user.bloodgroup.toLowerCase().includes(search)) ||
+      departmentName.includes(search)
+    );
+  });
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentUsers = filteredUsers.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pageNumbers.push(i);
+        }
+        pageNumbers.push('...');
+        pageNumbers.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pageNumbers.push(1);
+        pageNumbers.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pageNumbers.push(i);
+        }
+      } else {
+        pageNumbers.push(1);
+        pageNumbers.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pageNumbers.push(i);
+        }
+        pageNumbers.push('...');
+        pageNumbers.push(totalPages);
+      }
+    }
+    
+    return pageNumbers;
+  };
+
   return (
     <div className="users-layout">
       <header className="header">
@@ -300,51 +376,119 @@ function Users() {
           {loading ? (
             <div className="loading">Loading users...</div>
           ) : (
-            <div className="table-container">
-              <table className="users-table">
-                <thead>
-                  <tr>
-                    <th>S.No</th>
-                    <th>Employee ID</th>
-                    <th>Name</th>
-                    <th>Phone Number</th>
-                    <th>Email</th>
-                    <th>Blood Group</th>
-                    <th>Department</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {users.length === 0 ? (
-                    <tr>
-                      <td colSpan="8" className="no-data">No users found</td>
-                    </tr>
-                  ) : (
-                    users.map((u, index) => (
-                      <tr key={u.id}>
-                        <td>{index + 1}</td>
-                        <td>{u.empid}</td>
-                        <td>{u.firstname && u.lastname ? `${u.firstname} ${u.middlename ? u.middlename + ' ' : ''}${u.lastname}`.trim() : '-'}</td>
-                        <td>{u.phone || '-'}</td>
-                        <td>{u.email}</td>
-                        <td>{u.bloodgroup || '-'}</td>
-                        <td>{getDepartmentName(u.department_id)}</td>
-                        <td>
-                          <div className="action-buttons">
-                            <button className="btn-edit" onClick={() => handleEdit(u)}>
-                              ✏️ Edit
-                            </button>
-                            <button className="btn-delete" onClick={() => handleDelete(u.id)}>
-                              🗑️ Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+            <>
+              <div className="table-controls">
+                <div className="items-per-page">
+                  <label>Show </label>
+                  <select value={itemsPerPage} onChange={handleItemsPerPageChange}>
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <label> entries</label>
+                </div>
+                <div className="search-container">
+                  <input
+                    type="text"
+                    className="search-input"
+                    placeholder="Search by name, employee ID, email, phone, blood group, or department..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                  />
+                  {searchTerm && (
+                    <button className="clear-search" onClick={() => setSearchTerm('')}>
+                      ✕
+                    </button>
                   )}
-                </tbody>
-              </table>
-            </div>
+                </div>
+                <div className="table-info">
+                  Showing {filteredUsers.length === 0 ? 0 : indexOfFirstItem + 1} to {Math.min(indexOfLastItem, filteredUsers.length)} of {filteredUsers.length} users
+                  {searchTerm && ` (filtered from ${users.length} total)`}
+                </div>
+              </div>
+
+              <div className="table-container">
+                <table className="users-table">
+                  <thead>
+                    <tr>
+                      <th>S.No</th>
+                      <th>Employee ID</th>
+                      <th>Name</th>
+                      <th>Phone Number</th>
+                      <th>Email</th>
+                      <th>Blood Group</th>
+                      <th>Department</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan="8" className="no-data">No users found</td>
+                      </tr>
+                    ) : (
+                      currentUsers.map((u, index) => (
+                        <tr key={u.id}>
+                          <td>{indexOfFirstItem + index + 1}</td>
+                          <td>{u.empid}</td>
+                          <td>{u.firstname && u.lastname ? `${u.firstname} ${u.middlename ? u.middlename + ' ' : ''}${u.lastname}`.trim() : '-'}</td>
+                          <td>{u.phone || '-'}</td>
+                          <td>{u.email}</td>
+                          <td>{u.bloodgroup || '-'}</td>
+                          <td>{getDepartmentName(u.department_id)}</td>
+                          <td>
+                            <div className="action-buttons">
+                              <button className="btn-edit" onClick={() => handleEdit(u)}>
+                                ✏️ Edit
+                              </button>
+                              <button className="btn-delete" onClick={() => handleDelete(u.id)}>
+                                🗑️ Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {filteredUsers.length > 0 && totalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    className="pagination-btn" 
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  
+                  {getPageNumbers().map((pageNum, index) => (
+                    pageNum === '...' ? (
+                      <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                    ) : (
+                      <button
+                        key={pageNum}
+                        className={`pagination-btn ${currentPage === pageNum ? 'active' : ''}`}
+                        onClick={() => handlePageChange(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                  ))}
+                  
+                  <button 
+                    className="pagination-btn" 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>

@@ -95,53 +95,90 @@ export class EmployeeKPIController {
     }
   }
 
-  // Submit KPI data entry (monthly data)
+  // Submit KPI data entry (to kpi_data_value table)
   static async submitKPIData(req, res) {
     try {
       const { kpiId, empId, month, year, targetValue, actualValue, kpiValueId } = req.body;
 
-      if (!kpiId || !empId || !month || !year) {
+      if (!kpiId || !empId || !month || !year || !kpiValueId) {
         return res.status(400).json({ 
           success: false, 
-          error: 'kpiId, empId, month, and year are required' 
+          error: 'kpiId, empId, month, year, and kpiValueId are required' 
         });
       }
 
-      // Check if entry already exists for this month/year
-      const existingEntry = await pool.query(
-        `SELECT id FROM kpi_monthly_data 
-         WHERE kpi_value_id = $1 AND month = $2 AND year = $3`,
-        [kpiValueId, month, year]
-      );
+      const results = [];
 
-      let result;
-      if (existingEntry.rows.length > 0) {
-        // Update existing entry
-        result = await pool.query(
-          `UPDATE kpi_monthly_data
-           SET target_value = $1, actual_value = $2, updated_at = CURRENT_TIMESTAMP
-           WHERE id = $3
-           RETURNING *`,
-          [targetValue || null, actualValue || null, existingEntry.rows[0].id]
+      // Handle target value
+      if (targetValue !== null && targetValue !== undefined && targetValue !== '') {
+        // Check if target entry exists
+        const existingTarget = await pool.query(
+          `SELECT id FROM kpi_data_value 
+           WHERE kpi_value_id = $1 AND month = $2 AND year = $3 AND value_type = $4`,
+          [kpiValueId, month, year, 'target']
         );
-      } else {
-        // Insert new entry
-        result = await pool.query(
-          `INSERT INTO kpi_monthly_data (kpi_value_id, month, year, target_value, actual_value)
-           VALUES ($1, $2, $3, $4, $5)
-           RETURNING *`,
-          [kpiValueId, month, year, targetValue || null, actualValue || null]
-        );
+
+        if (existingTarget.rows.length > 0) {
+          // Update existing target
+          const targetResult = await pool.query(
+            `UPDATE kpi_data_value
+             SET value = $1, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $2
+             RETURNING *`,
+            [parseFloat(targetValue), existingTarget.rows[0].id]
+          );
+          results.push(targetResult.rows[0]);
+        } else {
+          // Insert new target
+          const targetResult = await pool.query(
+            `INSERT INTO kpi_data_value (kpi_value_id, value, value_type, month, year)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING *`,
+            [kpiValueId, parseFloat(targetValue), 'target', month, year]
+          );
+          results.push(targetResult.rows[0]);
+        }
       }
 
-      res.json({ success: true, data: result.rows[0] });
+      // Handle actual value
+      if (actualValue !== null && actualValue !== undefined && actualValue !== '') {
+        // Check if actual entry exists
+        const existingActual = await pool.query(
+          `SELECT id FROM kpi_data_value 
+           WHERE kpi_value_id = $1 AND month = $2 AND year = $3 AND value_type = $4`,
+          [kpiValueId, month, year, 'actual']
+        );
+
+        if (existingActual.rows.length > 0) {
+          // Update existing actual
+          const actualResult = await pool.query(
+            `UPDATE kpi_data_value
+             SET value = $1, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $2
+             RETURNING *`,
+            [parseFloat(actualValue), existingActual.rows[0].id]
+          );
+          results.push(actualResult.rows[0]);
+        } else {
+          // Insert new actual
+          const actualResult = await pool.query(
+            `INSERT INTO kpi_data_value (kpi_value_id, value, value_type, month, year)
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING *`,
+            [kpiValueId, parseFloat(actualValue), 'actual', month, year]
+          );
+          results.push(actualResult.rows[0]);
+        }
+      }
+
+      res.json({ success: true, data: results });
     } catch (error) {
       await logError(error, 'EmployeeKPIController.submitKPIData', req.user?.id);
       res.status(500).json({ success: false, error: error.message });
     }
   }
 
-  // Get monthly data for a KPI value
+  // Get monthly data for a KPI value (from kpi_data_value table)
   static async getMonthlyData(req, res) {
     try {
       const { kpiValueId, year } = req.params;
@@ -153,9 +190,16 @@ export class EmployeeKPIController {
         });
       }
 
+      // Get both target and actual values
       const dataResult = await pool.query(
-        `SELECT * FROM kpi_monthly_data
+        `SELECT 
+           month,
+           year,
+           MAX(CASE WHEN value_type = 'target' THEN value END) as target_value,
+           MAX(CASE WHEN value_type = 'actual' THEN value END) as actual_value
+         FROM kpi_data_value
          WHERE kpi_value_id = $1 AND year = $2
+         GROUP BY month, year
          ORDER BY month`,
         [kpiValueId, year]
       );

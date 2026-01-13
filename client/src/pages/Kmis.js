@@ -130,7 +130,7 @@ function Kmis() {
       const tree = buildTree(data, year);
       setKpis(data);
       setKpiTree(tree);
-      setExpandedNodes(new Set(tree.map((node) => node.id)));
+      setExpandedNodes(new Set());
       setError('');
     } catch (err) {
       const errorMsg = 'Failed to load KMIs';

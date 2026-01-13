@@ -21,6 +21,8 @@ function UserRoles() {
     status: 'active'
   });
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -196,6 +198,56 @@ function UserRoles() {
     return role ? role.role_name : 'Unknown Role';
   };
 
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentUserRoles = userRoles.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(userRoles.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pageNumbers.push(i);
+        }
+        pageNumbers.push('...');
+        pageNumbers.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pageNumbers.push(1);
+        pageNumbers.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pageNumbers.push(i);
+        }
+      } else {
+        pageNumbers.push(1);
+        pageNumbers.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pageNumbers.push(i);
+        }
+        pageNumbers.push('...');
+        pageNumbers.push(totalPages);
+      }
+    }
+    
+    return pageNumbers;
+  };
+
   return (
     <div className="user-roles-layout">
       <header className="header">
@@ -286,55 +338,108 @@ function UserRoles() {
           {loading ? (
             <div className="loading">Loading user roles...</div>
           ) : (
-            <div className="table-container">
-              <table className="user-roles-table">
-                <thead>
-                  <tr>
-                    <th>S.No</th>
-                    <th>User</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Assigned At</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {userRoles.length === 0 ? (
+            <>
+              <div className="table-controls">
+                <div className="items-per-page">
+                  <label>Show </label>
+                  <select value={itemsPerPage} onChange={handleItemsPerPageChange}>
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <label> entries</label>
+                </div>
+                <div className="table-info">
+                  Showing {userRoles.length === 0 ? 0 : indexOfFirstItem + 1} to {Math.min(indexOfLastItem, userRoles.length)} of {userRoles.length} role assignments
+                </div>
+              </div>
+
+              <div className="table-container">
+                <table className="user-roles-table">
+                  <thead>
                     <tr>
-                      <td colSpan="6" className="no-data">No role assignments found</td>
+                      <th>S.No</th>
+                      <th>User</th>
+                      <th>Role</th>
+                      <th>Status</th>
+                      <th>Assigned At</th>
+                      <th>Actions</th>
                     </tr>
-                  ) : (
-                    userRoles.map((ur, index) => (
-                      <tr key={ur.id}>
-                        <td>{index + 1}</td>
-                        <td>{getUserName(ur.user_id)}</td>
-                        <td>
-                          <span className={`role-badge role-${getRoleName(ur.role_id).toLowerCase()}`}>
-                            {getRoleName(ur.role_id)}
-                          </span>
-                        </td>
-                        <td>
-                          <span className={`status-badge status-${ur.status || 'active'}`}>
-                            {ur.status || 'active'}
-                          </span>
-                        </td>
-                        <td>{ur.created_at ? new Date(ur.created_at).toLocaleDateString() : '-'}</td>
-                        <td>
-                          <div className="action-buttons">
-                            <button className="btn-edit" onClick={() => handleEdit(ur)}>
-                              ✏️ Edit
-                            </button>
-                            <button className="btn-delete" onClick={() => handleDelete(ur.id)}>
-                              🗑️ Remove
-                            </button>
-                          </div>
-                        </td>
+                  </thead>
+                  <tbody>
+                    {currentUserRoles.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="no-data">No role assignments found</td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ) : (
+                      currentUserRoles.map((ur, index) => (
+                        <tr key={ur.id}>
+                          <td>{indexOfFirstItem + index + 1}</td>
+                          <td>{getUserName(ur.user_id)}</td>
+                          <td>
+                            <span className={`role-badge role-${getRoleName(ur.role_id).toLowerCase()}`}>
+                              {getRoleName(ur.role_id)}
+                            </span>
+                          </td>
+                          <td>
+                            <span className={`status-badge status-${ur.status || 'active'}`}>
+                              {ur.status || 'active'}
+                            </span>
+                          </td>
+                          <td>{ur.created_at ? new Date(ur.created_at).toLocaleDateString() : '-'}</td>
+                          <td>
+                            <div className="action-buttons">
+                              <button className="btn-edit" onClick={() => handleEdit(ur)}>
+                                ✏️ Edit
+                              </button>
+                              <button className="btn-delete" onClick={() => handleDelete(ur.id)}>
+                                🗑️ Remove
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {userRoles.length > 0 && totalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    className="pagination-btn" 
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  
+                  {getPageNumbers().map((pageNum, index) => (
+                    pageNum === '...' ? (
+                      <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                    ) : (
+                      <button
+                        key={pageNum}
+                        className={`pagination-btn ${currentPage === pageNum ? 'active' : ''}`}
+                        onClick={() => handlePageChange(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                  ))}
+                  
+                  <button 
+                    className="pagination-btn" 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>

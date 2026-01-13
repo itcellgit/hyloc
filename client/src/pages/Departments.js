@@ -17,6 +17,8 @@ function Departments() {
     name: ''
   });
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -144,6 +146,56 @@ function Departments() {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentDepartments = departments.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(departments.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setCurrentPage(1);
+  };
+
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pageNumbers.push(i);
+        }
+        pageNumbers.push('...');
+        pageNumbers.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pageNumbers.push(1);
+        pageNumbers.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pageNumbers.push(i);
+        }
+      } else {
+        pageNumbers.push(1);
+        pageNumbers.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pageNumbers.push(i);
+        }
+        pageNumbers.push('...');
+        pageNumbers.push(totalPages);
+      }
+    }
+    
+    return pageNumbers;
+  };
+
   return (
     <div className="departments-layout">
       <header className="header">
@@ -234,41 +286,94 @@ function Departments() {
           {loading ? (
             <div className="loading">Loading departments...</div>
           ) : (
-            <div className="table-container">
-              <table className="departments-table">
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Name</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {departments.length === 0 ? (
+            <>
+              <div className="table-controls">
+                <div className="items-per-page">
+                  <label>Show </label>
+                  <select value={itemsPerPage} onChange={handleItemsPerPageChange}>
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                  <label> entries</label>
+                </div>
+                <div className="table-info">
+                  Showing {departments.length === 0 ? 0 : indexOfFirstItem + 1} to {Math.min(indexOfLastItem, departments.length)} of {departments.length} departments
+                </div>
+              </div>
+
+              <div className="table-container">
+                <table className="departments-table">
+                  <thead>
                     <tr>
-                      <td colSpan="3" className="no-data">No departments found</td>
+                      <th>ID</th>
+                      <th>Name</th>
+                      <th>Actions</th>
                     </tr>
-                  ) : (
-                    departments.map((dept) => (
-                      <tr key={dept.id}>
-                        <td>{dept.id}</td>
-                        <td>{dept.name || dept.department_name}</td>
-                        <td>
-                          <div className="action-buttons">
-                            <button className="btn-edit" onClick={() => handleEdit(dept)}>
-                              ✏️ Edit
-                            </button>
-                            <button className="btn-delete" onClick={() => handleDelete(dept.id)}>
-                              🗑️ Delete
-                            </button>
-                          </div>
-                        </td>
+                  </thead>
+                  <tbody>
+                    {currentDepartments.length === 0 ? (
+                      <tr>
+                        <td colSpan="3" className="no-data">No departments found</td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    ) : (
+                      currentDepartments.map((dept, index) => (
+                        <tr key={dept.id}>
+                          <td>{indexOfFirstItem + index + 1}</td>
+                          <td>{dept.name || dept.department_name}</td>
+                          <td>
+                            <div className="action-buttons">
+                              <button className="btn-edit" onClick={() => handleEdit(dept)}>
+                                ✏️ Edit
+                              </button>
+                              <button className="btn-delete" onClick={() => handleDelete(dept.id)}>
+                                🗑️ Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {departments.length > 0 && totalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    className="pagination-btn" 
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  
+                  {getPageNumbers().map((pageNum, index) => (
+                    pageNum === '...' ? (
+                      <span key={`ellipsis-${index}`} className="pagination-ellipsis">...</span>
+                    ) : (
+                      <button
+                        key={pageNum}
+                        className={`pagination-btn ${currentPage === pageNum ? 'active' : ''}`}
+                        onClick={() => handlePageChange(pageNum)}
+                      >
+                        {pageNum}
+                      </button>
+                    )
+                  ))}
+                  
+                  <button 
+                    className="pagination-btn" 
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>
