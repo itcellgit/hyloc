@@ -8,14 +8,13 @@ if (!API_BASE_URL) {
   // Get the API server from environment or construct from current origin
   const protocol = window.location.protocol;
   const hostname = window.location.hostname;
-  const port = window.location.port ? `:${window.location.port}` : '';
   
-  // If running on localhost:3000, API is on localhost:5000
+  // If running on localhost:3000 (development), API is on localhost:5000
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     API_BASE_URL = `${protocol}//localhost:5000/api`;
   } else {
-    // For other hosts (intranet IPs), use same host with port 5000
-    API_BASE_URL = `${protocol}//${hostname}:5000/api`;
+    // For production/other hosts, use same host with /api path (nginx proxy)
+    API_BASE_URL = `${protocol}//${hostname}/api`;
   }
 }
 
