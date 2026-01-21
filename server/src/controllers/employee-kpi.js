@@ -1,5 +1,6 @@
 import pool from '../config/database.js';
 import { logError } from '../utils/logger.js';
+import { KPICalculationService } from '../services/kpiCalculationService.js';
 
 export class EmployeeKPIController {
   // Get all KPI values assigned to an employee as data operator
@@ -16,7 +17,8 @@ export class EmployeeKPIController {
 
       const valuesResult = await pool.query(
         `SELECT kv.id, kv.data, kv.kpi_id, kv."data operator", kv.target_required, 
-                kv.uom, kv.kpi_type, kv.piller_id, kv.created_at, kv.updated_at,
+                kv.uom, kv.kpi_type, kv.piller_id, kv.formula, kv.source_kpi_value_ids,
+                kv.created_at, kv.updated_at,
                 k.title as kpi_title, u.unit_name
          FROM kpi_values kv
          JOIN kpis k ON k.id = kv.kpi_id
@@ -78,7 +80,8 @@ export class EmployeeKPIController {
 
       const valuesResult = await pool.query(
         `SELECT kv.id, kv.data, kv.kpi_id, kv."data operator", kv.target_required, 
-                kv.uom, kv.kpi_type, kv.piller_id, kv.created_at, kv.updated_at,
+                kv.uom, kv.kpi_type, kv.piller_id, kv.formula, kv.source_kpi_value_ids,
+                kv.created_at, kv.updated_at,
                 k.title as kpi_title, u.unit_name
          FROM kpi_values kv
          JOIN kpis k ON k.id = kv.kpi_id
@@ -168,6 +171,19 @@ export class EmployeeKPIController {
             [kpiValueId, parseFloat(actualValue), 'actual', month, year]
           );
           results.push(actualResult.rows[0]);
+        }
+
+        // After saving actual value, recalculate dependent computed KPIs
+        try {
+          await KPICalculationService.recalculateDependentKPIs(
+            parseInt(kpiValueId),
+            parseInt(month),
+            parseInt(year),
+            parseInt(empId)
+          );
+        } catch (calcError) {
+          console.error('Error recalculating dependent KPIs:', calcError);
+          // Don't fail the request if calculation fails
         }
       }
 

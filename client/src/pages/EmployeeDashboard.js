@@ -365,9 +365,12 @@ function EmployeeDashboard() {
                   <p className="kpi-meta">
                     Type: <span className="badge">{kpiValue.kpi_type}</span>
                     {kpiValue.unit_name && <> | Unit: <span className="badge">{kpiValue.unit_name}</span></>}
+                    {kpiValue.kpi_type === 'computed' && kpiValue.formula && (
+                      <> | Formula: <code className="formula-display">{kpiValue.formula}</code></>
+                    )}
                   </p>
 
-                  {kpiValue.kpi_type === 'manual' && (
+                  {kpiValue.kpi_type === 'manual' ? (
                     <div className="monthly-data-grid">
                       {months.map((month, index) => {
                         const monthData = getMonthData(kpiValue.id, index);
@@ -382,6 +385,29 @@ function EmployeeDashboard() {
                             initialActual={monthData.actual_value || ''}
                             onSubmit={handleDataSubmit}
                           />
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="monthly-data-grid">
+                      {months.map((month, index) => {
+                        const monthData = getMonthData(kpiValue.id, index);
+                        return (
+                          <div key={index} className="month-card computed">
+                            <h4>{month}</h4>
+                            <div className="data-display">
+                              {kpiValue.target_required && (
+                                <p className="data-row">
+                                  <strong>Target:</strong> {monthData.target_value || '-'}
+                                </p>
+                              )}
+                              <p className="data-row">
+                                <strong>Calculated:</strong> 
+                                <span className="computed-value">{monthData.actual_value || '-'}</span>
+                              </p>
+                              <p className="computed-note">\u2699\uFE0F Auto-calculated</p>
+                            </div>
+                          </div>
                         );
                       })}
                     </div>

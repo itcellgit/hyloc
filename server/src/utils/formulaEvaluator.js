@@ -33,13 +33,15 @@ class FormulaEvaluator {
    * Replace vXX references with actual numeric values
    */
   replaceKpiReferences(formula) {
-    return formula.replace(/v(\d+)/g, (match, kpiId) => {
-      const value = this.values[parseInt(kpiId)];
-      if (value === undefined || value === null) {
-        console.warn(`KPI ${kpiId} not found in values map`);
+    return formula.replace(/v(\d+)/g, (match, kpiValueId) => {
+      const value = this.values[parseInt(kpiValueId)];
+      if (value === undefined || value === null || value === '') {
+        console.warn(`KPI Value ${kpiValueId} not found or empty in values map`);
         return '0'; // Default to 0 for missing values
       }
-      return String(value);
+      // Handle non-numeric values
+      const numValue = parseFloat(value);
+      return isNaN(numValue) ? '0' : String(numValue);
     });
   }
 
@@ -47,6 +49,17 @@ class FormulaEvaluator {
    * Replace Excel-like functions with JavaScript equivalents
    */
   replaceFunctions(expr) {
+    // ROUND(value, decimals) -> Math.round(value * 10^decimals) / 10^decimals
+    expr = expr.replace(/ROUND\(([^,]+),\s*(\d+)\)/gi, (match, value, decimals) => {
+      const multiplier = Math.pow(10, parseInt(decimals));
+      return `(Math.round((${value}) * ${multiplier}) / ${multiplier})`;
+    });
+
+    // ROUND(value) with no decimals -> Math.round(value)
+    expr = expr.replace(/ROUND\(([^)]+)\)/gi, (match, value) => {
+      return `Math.round(${value})`;
+    });
+
     // AVERAGE(a,b,c) -> (a+b+c)/3
     expr = expr.replace(/AVERAGE\(([^)]+)\)/gi, (match, args) => {
       const parts = args.split(',').map(s => s.trim());
@@ -70,15 +83,21 @@ class FormulaEvaluator {
       return `Math.max(${args})`;
     });
 
+    // ABS(a) -> Math.abs(a)
+    expr = expr.replace(/ABS\(([^)]+)\)/gi, (match, arg) => {
+      return `Math.abs(${arg})`;
+    });
+
     // IF(condition, trueVal, falseVal) -> (condition ? trueVal : falseVal)
     expr = expr.replace(/IF\(([^,]+),([^,]+),([^)]+)\)/gi, (match, cond, trueVal, falseVal) => {
       return `((${cond}) ? (${trueVal}) : (${falseVal || 0}))`;
     });
 
-    // Handle >= <= != operators
+    // Handle comparison operators
     expr = expr.replace(/≥/g, '>=');
     expr = expr.replace(/≤/g, '<=');
-    expr = expr.replace(/=/g, '==');
+    // Be careful with = to == conversion - avoid replacing inside existing ==
+    expr = expr.replace(/([^=!<>])=([^=])/g, '$1==$2');
 
     return expr;
   }
@@ -89,7 +108,7 @@ class FormulaEvaluator {
   safeEval(expr) {
     try {
       // Remove any non-mathematical characters for safety
-      if (!/^[\d\s+\-*/.(),?:><!=&|]+$/.test(expr.replace(/Math\.(min|max)/g, ''))) {
+      if (!/^[\d\s+\-*/.(),%?:><!=&|]+$/.test(expr.replace(/Math\.(min|max|abs|round)/g, ''))) {
         throw new Error('Formula contains invalid characters');
       }
 
@@ -98,20 +117,22 @@ class FormulaEvaluator {
       
       // Handle division by zero, NaN, Infinity
       if (!isFinite(result)) {
+        console.warn('Formula result is not finite, returning 0');
         return 0;
       }
       
       return Number(result);
     } catch (error) {
       console.error('Formula evaluation error:', error);
+      console.error('Expression:', expr);
       throw new Error(`Failed to evaluate formula: ${error.message}`);
     }
   }
 
   /**
-   * Extract KPI IDs referenced in a formula
+   * Extract KPI Value IDs referenced in a formula
    * @param {string} formula
-   * @returns {number[]} array of KPI IDs
+   * @returns {number[]} array of KPI Value IDs
    */
   static extractSourceKpiIds(formula) {
     if (!formula) return [];
@@ -130,6 +151,8 @@ class FormulaEvaluator {
    */
   static validateFormula(formula) {
     try {
+      if (!formula) return false;
+
       // Check for balanced parentheses
       let count = 0;
       for (let char of formula) {
@@ -139,9 +162,14 @@ class FormulaEvaluator {
       }
       if (count !== 0) return false;
 
-      // Check for valid function names
-      const validFunctions = /^[v\d\s+\-*/.(),AVERAGESUMMINMAXIF≥≤=<>!&|]+$/i;
-      if (!validFunctions.test(formula)) return false;
+      // Check for valid function names and syntax
+      const validPattern = /^[v\d\s+\-*/.(),%AVERAGESUMMINMAXIFROUNDABS≥≤=<>!&|]+$/i;
+      if (!validPattern.test(formula)) return false;
+
+      // Check for valid variable references (v followed by digits)
+      const varPattern = /v\d+/g;
+      const vars = formula.match(varPattern);
+      if (!vars || vars.length === 0) return false;
 
       return true;
     } catch (error) {

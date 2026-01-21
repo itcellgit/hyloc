@@ -1,13 +1,33 @@
 import axios from 'axios';
 import { authService } from './auth';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// Determine API URL based on current origin
+let API_BASE_URL = process.env.REACT_APP_API_URL;
+
+if (!API_BASE_URL) {
+  // Get the API server from environment or construct from current origin
+  const protocol = window.location.protocol;
+  const hostname = window.location.hostname;
+  const port = window.location.port ? `:${window.location.port}` : '';
+  
+  // If running on localhost:3000, API is on localhost:5000
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    API_BASE_URL = `${protocol}//localhost:5000/api`;
+  } else {
+    // For other hosts (intranet IPs), use same host with port 5000
+    API_BASE_URL = `${protocol}//${hostname}:5000/api`;
+  }
+}
+
+console.log('API Base URL:', API_BASE_URL); // Debug log
+console.log('Current hostname:', window.location.hostname);
 
 const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true,
 });
 
 // Add authentication token to all requests

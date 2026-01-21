@@ -4,7 +4,7 @@ export class KPIValue {
   static async findAll() {
     const result = await pool.query(
       `SELECT id, data, kpi_id, "data operator", target_required, uom, 
-              kpi_type, piller_id, created_at, updated_at
+              kpi_type, piller_id, formula, source_kpi_value_ids, default_target_value, created_at, updated_at
        FROM kpi_values
        ORDER BY created_at DESC`
     );
@@ -14,7 +14,7 @@ export class KPIValue {
   static async findById(id) {
     const result = await pool.query(
       `SELECT id, data, kpi_id, "data operator", target_required, uom,
-              kpi_type, piller_id, created_at, updated_at
+              kpi_type, piller_id, formula, source_kpi_value_ids, default_target_value, created_at, updated_at
        FROM kpi_values WHERE id = $1`,
       [id]
     );
@@ -24,7 +24,7 @@ export class KPIValue {
   static async findByKPI(kpiId) {
     const result = await pool.query(
       `SELECT id, data, kpi_id, "data operator", target_required, uom,
-              kpi_type, piller_id, created_at, updated_at
+              kpi_type, piller_id, formula, source_kpi_value_ids, default_target_value, created_at, updated_at
        FROM kpi_values WHERE kpi_id = $1
        ORDER BY created_at DESC`,
       [kpiId]
@@ -34,9 +34,9 @@ export class KPIValue {
 
   static async create(kpiValue) {
     const result = await pool.query(
-      `INSERT INTO kpi_values (data, kpi_id, "data operator", target_required, uom, kpi_type, piller_id)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       RETURNING id, data, kpi_id, "data operator", target_required, uom, kpi_type, piller_id, created_at, updated_at`,
+      `INSERT INTO kpi_values (data, kpi_id, "data operator", target_required, uom, kpi_type, piller_id, formula, source_kpi_value_ids, default_target_value)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+       RETURNING id, data, kpi_id, "data operator", target_required, uom, kpi_type, piller_id, formula, source_kpi_value_ids, default_target_value, created_at, updated_at`,
       [
         kpiValue.data,
         kpiValue.kpi_id,
@@ -44,7 +44,10 @@ export class KPIValue {
         kpiValue.target_required !== undefined ? kpiValue.target_required : true,
         kpiValue.uom || null,
         kpiValue.kpi_type || 'manual',
-        kpiValue.piller_id || null
+        kpiValue.piller_id || null,
+        kpiValue.formula || null,
+        kpiValue.source_kpi_value_ids || null,
+        kpiValue.default_target_value || null
       ]
     );
     return result.rows[0];
@@ -55,14 +58,17 @@ export class KPIValue {
       `UPDATE kpi_values
        SET data = COALESCE($1, data),
            kpi_id = COALESCE($2, kpi_id),
-           "data operator" = COALESCE($3, "data operator"),
+           "data operator" = $3,
            target_required = COALESCE($4, target_required),
-           uom = COALESCE($5, uom),
+           uom = $5,
            kpi_type = COALESCE($6, kpi_type),
-           piller_id = CASE WHEN $7::boolean THEN $8 ELSE piller_id END,
+           piller_id = $7,
+           formula = $8,
+           source_kpi_value_ids = $9,
+           default_target_value = $10,
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $9
-       RETURNING id, data, kpi_id, "data operator", target_required, uom, kpi_type, piller_id, created_at, updated_at`,
+       WHERE id = $11
+       RETURNING id, data, kpi_id, "data operator", target_required, uom, kpi_type, piller_id, formula, source_kpi_value_ids, default_target_value, created_at, updated_at`,
       [
         kpiValue.data || null,
         kpiValue.kpi_id || null,
@@ -70,8 +76,10 @@ export class KPIValue {
         kpiValue.target_required !== undefined ? kpiValue.target_required : null,
         kpiValue.uom || null,
         kpiValue.kpi_type || null,
-        kpiValue.piller_id !== undefined,
         kpiValue.piller_id || null,
+        kpiValue.formula || null,
+        kpiValue.source_kpi_value_ids || null,
+        kpiValue.default_target_value || null,
         id
       ]
     );

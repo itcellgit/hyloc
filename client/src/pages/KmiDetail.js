@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import api from '../services/api';
 import { authService } from '../services/auth';
 import '../styles/KmiDetail.css';
+import '../styles/FormulaStyles.css';
 
 function KmiDetail() {
   const { id } = useParams();
@@ -23,6 +24,11 @@ function KmiDetail() {
     parent_kpi_id: id || ''
   });
   const [kpiValues, setKpiValues] = useState([]);
+  const [allKpiValues, setAllKpiValues] = useState([]);
+  const [allKpis, setAllKpis] = useState([]);
+  const [formulaVars, setFormulaVars] = useState([]); // e.g., ['v1','v2','v3'] in order
+  const [varSelections, setVarSelections] = useState({}); // { v1: 123, v2: 456 }
+  const [varSearchQueries, setVarSearchQueries] = useState({}); // { v1: 'availability', v2: '' }
   const [showValueModal, setShowValueModal] = useState(false);
   const [editingValue, setEditingValue] = useState(null);
   const [units, setUnits] = useState([]);
@@ -34,7 +40,10 @@ function KmiDetail() {
     target_required: true,
     uom: '',
     kpi_type: 'manual',
-    piller_id: ''
+    piller_id: '',
+    formula: '',
+    source_kpi_value_ids: [],
+    default_target_value: ''
   });
   const dropdownRef = useRef(null);
 
@@ -101,6 +110,30 @@ function KmiDetail() {
     }
   }, [id, loadKpiValues]);
 
+  // Load all KPI values and KPIs so we can filter by financial year and allow cross-KPI refs
+  React.useEffect(() => {
+    const loadAllKpiValues = async () => {
+      try {
+        const response = await api.get('/kpi-values');
+        setAllKpiValues(response.data?.data || []);
+      } catch (err) {
+        console.error('Failed to load all KPI values', err);
+        setAllKpiValues([]);
+      }
+    };
+    const loadAllKpis = async () => {
+      try {
+        const response = await api.get('/kpis');
+        setAllKpis(response.data?.data || []);
+      } catch (err) {
+        console.error('Failed to load KPIs', err);
+        setAllKpis([]);
+      }
+    };
+    loadAllKpiValues();
+    loadAllKpis();
+  }, []);
+
   React.useEffect(() => {
     const loadCategories = async () => {
       try {
@@ -148,6 +181,39 @@ function KmiDetail() {
 
   const handleEditValue = (value) => {
     setEditingValue(value);
+    
+    // Parse formula to extract variables and set up selections
+    const formula = value.formula || '';
+    const sourceIds = Array.isArray(value.source_kpi_value_ids)
+      ? value.source_kpi_value_ids
+      : (typeof value.source_kpi_value_ids === 'string'
+          ? value.source_kpi_value_ids.split(',').map((x) => Number(x)).filter((n) => !Number.isNaN(n))
+          : []);
+    
+    // Extract variables from formula
+    const tokens = [];
+    const seen = new Set();
+    const regex = /v(\d+)/g;
+    let match;
+    while ((match = regex.exec(formula)) !== null) {
+      const token = `v${match[1]}`;
+      if (!seen.has(token)) {
+        seen.add(token);
+        tokens.push(token);
+      }
+    }
+    setFormulaVars(tokens);
+    
+    // Build variable selections map from the actual IDs in the formula
+    const selections = {};
+    tokens.forEach((tok) => {
+      const idNum = parseInt(tok.substring(1));
+      if (sourceIds.includes(idNum)) {
+        selections[tok] = idNum;
+      }
+    });
+    setVarSelections(selections);
+    
     setValueFormData({
       kpi_id: value.kpi_id,
       data: value.data || '',
@@ -161,7 +227,10 @@ function KmiDetail() {
       target_required: value.target_required !== undefined ? value.target_required : true,
       uom: value.uom ? String(value.uom) : '',
       kpi_type: value.kpi_type || 'manual',
-      piller_id: value.piller_id ? String(value.piller_id) : ''
+      piller_id: value.piller_id ? String(value.piller_id) : '',
+      formula: formula,
+      source_kpi_value_ids: sourceIds,
+      default_target_value: value.default_target_value ? String(value.default_target_value) : ''
     });
     setShowValueModal(true);
   };
@@ -182,11 +251,75 @@ function KmiDetail() {
   const handleValueChange = (e) => {
     const { name, value } = e.target;
     setValueFormData((prev) => ({ ...prev, [name]: value }));
+
+    // If formula changed, parse variables like v1, v2, v3
+    if (name === 'formula') {
+      const tokens = [];
+      const seen = new Set();
+      const regex = /v(\d+)/g;
+      let match;
+      while ((match = regex.exec(value)) !== null) {
+        const token = `v${match[1]}`;
+        if (!seen.has(token)) {
+          seen.add(token);
+          tokens.push(token);
+        }
+      }
+      setFormulaVars(tokens);
+      // Drop selections for variables no longer present
+      setVarSelections((prev) => {
+        const next = {};
+        tokens.forEach(t => { if (prev[t] != null) next[t] = prev[t]; });
+        return next;
+      });
+    }
+  };
+
+  // Helper: get KPI title and fin year by kpi_id
+  const getKpiMeta = (kpiId) => {
+    const k = allKpis.find(k => String(k.id) === String(kpiId));
+    return { title: k?.title || `KPI #${kpiId}`, fin_year: k?.fin_year || '' };
+  };
+
+  // Options filtered by current KMI financial year
+  const allowedValuesForYear = React.useMemo(() => {
+    const year = kmi.fin_year;
+    if (!year) return [];
+    return allKpiValues.filter(kv => getKpiMeta(kv.kpi_id).fin_year === year);
+  }, [allKpiValues, allKpis, kmi.fin_year]);
+
+  // Replace placeholders v1/v2/... with actual v<ID> selections
+  const resolveFormulaWithSelections = (formula) => {
+    let resolved = formula || '';
+    formulaVars.forEach((tok) => {
+      const sel = varSelections[tok];
+      if (sel) {
+        const safeTok = tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const re = new RegExp(safeTok, 'g');
+        resolved = resolved.replace(re, `v${sel}`);
+      }
+    });
+    return resolved;
   };
 
   const handleValueSubmit = async (e) => {
     e.preventDefault();
     try {
+      // If computed, ensure variable selections are complete and build resolved formula + deps
+      if (valueFormData.kpi_type === 'computed') {
+        if (!valueFormData.formula || valueFormData.formula.trim() === '') {
+          showNotification('Formula is required for computed KPI', 'error');
+          return;
+        }
+        // Require selections for each variable present
+        for (const tok of formulaVars) {
+          if (!varSelections[tok]) {
+            showNotification(`Select a KPI value for ${tok}`, 'error');
+            return;
+          }
+        }
+      }
+
       const payload = {
         kpi_id: valueFormData.kpi_id,
         data: valueFormData.data,
@@ -194,8 +327,17 @@ function KmiDetail() {
         target_required: valueFormData.target_required,
         uom: valueFormData.uom ? parseInt(valueFormData.uom) : null,
         kpi_type: valueFormData.kpi_type,
-        piller_id: valueFormData.piller_id ? parseInt(valueFormData.piller_id) : null
+        piller_id: valueFormData.piller_id ? parseInt(valueFormData.piller_id) : null,
+        formula: valueFormData.kpi_type === 'computed'
+          ? resolveFormulaWithSelections(valueFormData.formula)
+          : null,
+        source_kpi_value_ids: valueFormData.kpi_type === 'computed'
+          ? formulaVars.map(tok => Number(varSelections[tok])).filter(n => !Number.isNaN(n))
+          : null,
+        default_target_value: valueFormData.default_target_value ? parseInt(valueFormData.default_target_value) : null
       };
+
+      console.log('DEBUG handleValueSubmit payload:', payload);
 
       if (editingValue) {
         await api.put(`/kpi-values/${editingValue.id}`, payload);
@@ -394,8 +536,14 @@ function KmiDetail() {
                   target_required: true,
                   uom: '',
                   kpi_type: 'manual',
-                  piller_id: ''
+                  piller_id: '',
+                  formula: '',
+                  source_kpi_value_ids: [],
+                  default_target_value: ''
                 });
+                setFormulaVars([]);
+                setVarSelections({});
+                setVarSearchQueries({});
                 setShowValueModal(true);
               }}>
                 <span>+</span> Add Value
@@ -531,7 +679,149 @@ function KmiDetail() {
                       placeholder="Enter data value"
                     />
                   </div>
-                  {/* No formula input: schema does not include formula */}
+
+                  {valueFormData.kpi_type === 'computed' && (
+                    <>
+                      <div className="reference-panel">
+                        <h4>📋 Available KPI Values (for formula reference)</h4>
+                        <div className="reference-table-container">
+                          <table className="reference-table">
+                            <thead>
+                              <tr>
+                                <th>Use in Formula</th>
+                                <th>KPI Value Name</th>
+                                <th>Type</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {kpiValues
+                                .filter(kv => kv.id !== editingValue?.id)
+                                .map((kv) => (
+                                  <tr key={kv.id}>
+                                    <td className="formula-ref">
+                                      <code>v{kv.id}</code>
+                                    </td>
+                                    <td>{kv.data}</td>
+                                    <td>
+                                      <span className="type-badge">{kv.kpi_type}</span>
+                                    </td>
+                                  </tr>
+                                ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+
+                      <div className="form-group">
+                        <label>Formula *</label>
+                        <input
+                          type="text"
+                          name="formula"
+                          value={valueFormData.formula || ''}
+                          onChange={handleValueChange}
+                          required
+                          placeholder="e.g., v1*v2+v3 or AVERAGE(v1,v2,v3)"
+                          className="formula-input"
+                        />
+                        {formulaVars.length > 0 && (
+                          <div className="formula-var-mapping" style={{ marginTop: '10px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+                            <strong>Assign values for:</strong>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px' }}>
+                              {formulaVars.map((tok) => {
+                                const searchQuery = varSearchQueries[tok] || '';
+                                const filteredOptions = allowedValuesForYear.filter((kv) => {
+                                  if (!searchQuery) return true;
+                                  const meta = getKpiMeta(kv.kpi_id);
+                                  const label = `v${kv.id} ${kv.data} ${meta.title}`.toLowerCase();
+                                  return label.includes(searchQuery.toLowerCase());
+                                });
+                                const selectedKv = allowedValuesForYear.find(kv => kv.id === varSelections[tok]);
+                                const selectedLabel = selectedKv 
+                                  ? `v${selectedKv.id} - ${selectedKv.data} (${getKpiMeta(selectedKv.kpi_id).title})`
+                                  : '';
+                                
+                                return (
+                                  <div key={tok} style={{ background: '#f9f9f9', padding: '10px', borderRadius: '4px' }}>
+                                    <label style={{ fontWeight: '600', marginBottom: '4px', display: 'block' }}>
+                                      {tok} {selectedLabel && <span style={{ fontWeight: 'normal', color: '#666' }}>→ {selectedLabel}</span>}
+                                    </label>
+                                    <input
+                                      type="text"
+                                      list={`datalist-${tok}`}
+                                      placeholder={`Type to search or select ${tok}...`}
+                                      value={searchQuery}
+                                      onChange={(e) => {
+                                        setVarSearchQueries((prev) => ({ ...prev, [tok]: e.target.value }));
+                                        // Check if typed value matches an option exactly
+                                        const match = allowedValuesForYear.find(kv => {
+                                          const meta = getKpiMeta(kv.kpi_id);
+                                          const label = `v${kv.id} - ${kv.data} (${meta.title})`;
+                                          return label === e.target.value;
+                                        });
+                                        if (match) {
+                                          setVarSelections((prev) => ({ ...prev, [tok]: match.id }));
+                                        }
+                                      }}
+                                      onBlur={(e) => {
+                                        // On blur, if a selection was made, set the display text
+                                        const selectedKv = allowedValuesForYear.find(kv => kv.id === varSelections[tok]);
+                                        if (selectedKv) {
+                                          const meta = getKpiMeta(selectedKv.kpi_id);
+                                          setVarSearchQueries((prev) => ({ 
+                                            ...prev, 
+                                            [tok]: `v${selectedKv.id} - ${selectedKv.data} (${meta.title})` 
+                                          }));
+                                        }
+                                      }}
+                                      onFocus={(e) => {
+                                        // Clear search to show all options
+                                        setVarSearchQueries((prev) => ({ ...prev, [tok]: '' }));
+                                      }}
+                                      style={{ 
+                                        width: '100%', 
+                                        padding: '8px 10px', 
+                                        border: '1px solid #ddd', 
+                                        borderRadius: '4px',
+                                        fontSize: '14px',
+                                        background: 'white'
+                                      }}
+                                    />
+                                    <datalist id={`datalist-${tok}`}>
+                                      {filteredOptions.map((kv) => {
+                                        const meta = getKpiMeta(kv.kpi_id);
+                                        return (
+                                          <option 
+                                            key={kv.id} 
+                                            value={`v${kv.id} - ${kv.data} (${meta.title})`}
+                                          />
+                                        );
+                                      })}
+                                    </datalist>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <div style={{ marginTop: '8px', color: '#666' }}>
+                              Resolved preview: <code>{resolveFormulaWithSelections(valueFormData.formula)}</code>
+                            </div>
+                          </div>
+                        )}
+                        <div className="formula-help">
+                          <p><strong>Formula Syntax:</strong></p>
+                          <ul>
+                            <li><code>v1, v2, v3</code> - Reference other KPI values by ID</li>
+                            <li><code>v1 + v2 - v3</code> - Basic arithmetic (+, -, *, /, %)</li>
+                            <li><code>AVERAGE(v1, v2, v3)</code> - Calculate average</li>
+                            <li><code>SUM(v1, v2, v3)</code> - Calculate sum</li>
+                            <li><code>MIN(v1, v2)</code> / <code>MAX(v1, v2)</code> - Min/Max</li>
+                            <li><code>ROUND(v1, 2)</code> - Round to decimals</li>
+                            <li><code>IF(v1 {'>'} 100, v2, v3)</code> - Conditional logic</li>
+                          </ul>
+                          <p><strong>Example:</strong> <code>v2*100/v1</code> (Percentage of v2 to v1)</p>
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   <div className="form-group">
                     <label>Assign Data Operator</label>
@@ -603,6 +893,18 @@ function KmiDetail() {
                       <span className="slider-thumb"></span>
                     </button>
                   </div>
+                  {valueFormData.target_required && (
+                    <div className="form-group">
+                      <label>Default Target Value</label>
+                      <input
+                        type="number"
+                        name="default_target_value"
+                        value={valueFormData.default_target_value}
+                        onChange={handleValueChange}
+                        placeholder="Enter target value (optional)"
+                      />
+                    </div>
+                  )}
                   <div className="modal-actions">
                     <button type="button" className="btn-secondary" onClick={() => setShowValueModal(false)}>
                       Cancel
