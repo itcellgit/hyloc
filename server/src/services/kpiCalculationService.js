@@ -3,6 +3,46 @@ import FormulaEvaluator from '../utils/formulaEvaluator.js';
 
 export class KPICalculationService {
   /**
+   * Compute cumulative sum for a base KPI value from April to the given month within fiscal year.
+   * Fiscal year: Apr (4) .. Dec (12) of previous calendar year + Jan (1) .. Mar (3) of current calendar year.
+   * @param {number} sourceKpiValueId
+   * @param {number} month - calendar month (1-12)
+   * @param {number} year - calendar year of the target month
+   * @returns {Promise<number>}
+   */
+  static async computeCumulativeSumForSource(sourceKpiValueId, month, year) {
+    // Build query conditions for fiscal range
+    let query;
+    let params;
+    if (month >= 4) {
+      // April..target month in same calendar year
+      query = `SELECT COALESCE(SUM(value::numeric), 0) AS total
+               FROM kpi_data_value
+               WHERE kpi_value_id = $1
+                 AND value_type = 'actual'
+                 AND year = $2
+                 AND month BETWEEN 4 AND $3`;
+      params = [sourceKpiValueId, year, month];
+    } else {
+      // April..December of previous year + January..target month of current year
+      query = `SELECT COALESCE(SUM(value::numeric), 0) AS total
+               FROM kpi_data_value
+               WHERE kpi_value_id = $1
+                 AND value_type = 'actual'
+                 AND (
+                   (year = $2 AND month BETWEEN 4 AND 12)
+                   OR (year = $3 AND month BETWEEN 1 AND $4)
+                 )`;
+      params = [sourceKpiValueId, year - 1, year, month];
+    }
+
+    const result = await pool.query(query, params);
+    const total = result.rows?.[0]?.total;
+    const num = parseFloat(total);
+    return isNaN(num) ? 0 : num;
+  }
+
+  /**
    * Calculate a computed KPI value for a specific month/year
    * @param {number} kpiValueId - The computed KPI value ID
    * @param {number} month - Month (1-12)
@@ -65,9 +105,35 @@ export class KPICalculationService {
         }
       }
 
-      // Evaluate the formula
+      // Pre-process CUMSUM(v<ID>) expressions to concrete numeric values
+      let processedFormula = kpiValue.formula;
+      const cumsumRegex = /CUMSUM\(\s*v(\d+)\s*\)/gi;
+      const cumsumMatches = processedFormula.match(cumsumRegex) || [];
+      if (cumsumMatches.length > 0) {
+        processedFormula = await (async () => {
+          let expr = processedFormula;
+          const seen = new Set();
+          for (const m of cumsumMatches) {
+            const idMatch = /v(\d+)/i.exec(m);
+            if (!idMatch) continue;
+            const sourceId = parseInt(idMatch[1]);
+            if (Number.isNaN(sourceId)) continue;
+            // Avoid duplicate queries for same sourceId in formula
+            if (!seen.has(sourceId)) {
+              seen.add(sourceId);
+              const cumVal = await KPICalculationService.computeCumulativeSumForSource(sourceId, month, year);
+              // Replace all occurrences of this exact CUMSUM(v<id>) token with computed value
+              const tokenRegex = new RegExp(`CUMSUM\\(\\s*v${sourceId}\\s*\\)`, 'gi');
+              expr = expr.replace(tokenRegex, String(cumVal));
+            }
+          }
+          return expr;
+        })();
+      }
+
+      // Evaluate the (possibly preprocessed) formula
       const evaluator = new FormulaEvaluator(valuesMap);
-      const result = evaluator.evaluate(kpiValue.formula);
+      const result = evaluator.evaluate(processedFormula);
 
       console.log(`Calculated ${kpiValue.data}: ${result} (month: ${month}, year: ${year})`);
       return result;

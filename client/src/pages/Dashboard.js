@@ -1,12 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth';
+import api, { userService, departmentService } from '../services/api';
 import '../styles/Dashboard.css';
 
 function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [user, setUser] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [totalUsers, setTotalUsers] = useState(null);
+  const [departmentsCount, setDepartmentsCount] = useState(null);
+  const [activeKpiCount, setActiveKpiCount] = useState(null);
+  const [avgPerformance, setAvgPerformance] = useState(null);
+  const [departmentData, setDepartmentData] = useState({ labels: [], values: [] });
+  const [kpiAchievementData, setKpiAchievementData] = useState({ labels: [], values: [] });
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -31,6 +39,91 @@ function Dashboard() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    // Fetch stats and charts
+    const fetchStats = async () => {
+      try {
+        setLoadingStats(true);
+
+        const [usersRes, departmentsRes, kpiValuesRes] = await Promise.all([
+          userService.getAll(),
+          departmentService.getAll(),
+          api.get('/kpi-values'),
+        ]);
+
+        const users = usersRes.data?.data || [];
+        const departments = departmentsRes.data?.data || [];
+        const kpiValues = kpiValuesRes.data?.data || [];
+
+        setTotalUsers(users.length);
+        setDepartmentsCount(departments.length);
+
+        // Active KPIs = distinct KPI IDs that have at least one value
+        const distinctKpiIds = Array.from(new Set(kpiValues.map((kv) => kv.kpi_id))).filter((id) => id != null);
+        setActiveKpiCount(distinctKpiIds.length);
+
+        // Employees by Department chart
+        const deptIdToName = new Map();
+        departments.forEach((d) => deptIdToName.set(d.id, d.name || d.department_name || `Dept ${d.id}`));
+        const deptCounts = new Map();
+        users.forEach((u) => {
+          const deptName = deptIdToName.get(u.department_id) || 'Unassigned';
+          deptCounts.set(deptName, (deptCounts.get(deptName) || 0) + 1);
+        });
+        const deptLabels = Array.from(deptCounts.keys());
+        const deptValues = Array.from(deptCounts.values());
+        setDepartmentData({ labels: deptLabels, values: deptValues });
+
+        // Compute KPI achievement for current month/year
+        const now = new Date();
+        const currentMonth = now.getMonth() + 1; // 1-12
+        const currentYear = now.getFullYear();
+
+        // Limit how many KPI values we query for monthly data to avoid overload
+        const MAX_KPI_VALUES = 30;
+        const kpiValuesSample = kpiValues.slice(0, MAX_KPI_VALUES);
+
+        const monthlyDataResponses = await Promise.all(
+          kpiValuesSample.map((kv) => api.get(`/kpi-values/${kv.id}/monthly-data/${currentYear}`))
+        );
+
+        const achievements = [];
+        const kpiAchievementPairs = [];
+
+        monthlyDataResponses.forEach((resp, idx) => {
+          const rows = resp.data?.data || [];
+          const monthRow = rows.find((r) => Number(r.month) === currentMonth);
+          if (monthRow) {
+            const target = Number(monthRow.target_value || 0);
+            const actual = Number(monthRow.actual_value || 0);
+            if (target > 0) {
+              const pct = Math.min(100, Math.max(0, (actual / target) * 100));
+              achievements.push(pct);
+              const label = kpiValuesSample[idx]?.data || `KPI ${kpiValuesSample[idx]?.id}`;
+              kpiAchievementPairs.push({ label, value: Math.round(pct) });
+            }
+          }
+        });
+
+        const avg = achievements.length > 0
+          ? Math.round(achievements.reduce((a, b) => a + b, 0) / achievements.length)
+          : null;
+        setAvgPerformance(avg);
+
+        // Take top 5 KPI achievements for chart
+        kpiAchievementPairs.sort((a, b) => b.value - a.value);
+        const top = kpiAchievementPairs.slice(0, 5);
+        setKpiAchievementData({ labels: top.map((t) => t.label), values: top.map((t) => t.value) });
+      } catch (err) {
+        console.error('Failed to fetch dashboard stats:', err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchStats();
   }, []);
 
   const handleLogout = async () => {
@@ -58,20 +151,10 @@ function Dashboard() {
     { id: 6, label: 'User Roles', icon: '🧩', path: '/user-roles' },
   ];
 
-  // Sample data for charts
-  const departmentData = {
-    labels: ['Sales', 'HR', 'IT', 'Finance', 'Marketing'],
-    values: [45, 30, 50, 25, 35],
-  };
-
+  // Placeholder for quarterly performance until aggregated endpoint is available
   const performanceData = {
     labels: ['Q1', 'Q2', 'Q3', 'Q4'],
-    values: [65, 72, 58, 80],
-  };
-
-  const kpiData = {
-    labels: ['KPI 1', 'KPI 2', 'KPI 3', 'KPI 4', 'KPI 5'],
-    values: [85, 72, 90, 78, 88],
+    values: [0, 0, 0, 0],
   };
 
   // Chart component
@@ -105,20 +188,70 @@ function Dashboard() {
     );
   };
 
+  // Horizontal Bar Chart (better for many categories)
+  const HorizontalBarChart = ({ title, data, color, maxItems = 10 }) => {
+    const [showAll, setShowAll] = useState(false);
+    if (!data || !data.labels || !data.values || data.labels.length === 0) {
+      return (
+        <div className="chart-card">
+          <h3>{title}</h3>
+          <div className="hbar-empty">No Data</div>
+        </div>
+      );
+    }
+
+    // Zip labels and values, sort by value desc
+    const items = data.labels.map((label, i) => ({ label, value: Number(data.values[i]) || 0 }));
+    items.sort((a, b) => b.value - a.value);
+
+    const visibleItems = showAll ? items : items.slice(0, maxItems);
+    const maxValue = Math.max(...items.map((it) => it.value), 1);
+
+    return (
+      <div className="chart-card">
+        <h3>{title}</h3>
+        <div className="hbar-list">
+          {visibleItems.map((it, idx) => (
+            <div className="hbar-row" key={idx}>
+              <div className="hbar-barwrap">
+                <div
+                  className="hbar-bar"
+                  style={{ width: `${(it.value / maxValue) * 100}%`, backgroundColor: color }}
+                >
+                  <span className="hbar-barlabel" title={it.label}>{it.label}</span>
+                </div>
+              </div>
+              <div className="hbar-value">{it.value}</div>
+            </div>
+          ))}
+        </div>
+        {items.length > maxItems && (
+          <div className="hbar-actions">
+            <button className="hbar-toggle" onClick={() => setShowAll(!showAll)}>
+              {showAll ? 'Show Top' : `Show All (${items.length})`}
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // Line Chart component
   const LineChart = ({ title, data, color }) => {
     const maxValue = Math.max(...data.values);
-    const points = data.values.map((val) => (val / maxValue) * 150);
-    
+    const points = maxValue > 0 ? data.values.map((val) => (val / maxValue) * 150) : data.values.map(() => 0);
+    const width = 400;
+    const height = 200;
+    const stepX = points.length > 1 ? width / (points.length - 1) : 0;
     const svgPath = points
-      .map((point, index) => `${index * 80} ${200 - point}`)
+      .map((point, index) => `${index * stepX} ${height - point}`)
       .join(' L ');
 
     return (
       <div className="chart-card">
         <h3>{title}</h3>
         <div className="line-chart">
-          <svg width="100%" height="250" viewBox="0 0 400 250">
+          <svg width="100%" height="250" viewBox={`0 0 ${width} 250`}>
             <polyline
               points={svgPath}
               fill="none"
@@ -129,8 +262,8 @@ function Dashboard() {
             {points.map((point, index) => (
               <circle
                 key={index}
-                cx={index * 80}
-                cy={200 - point}
+                cx={index * stepX}
+                cy={height - point}
                 r="4"
                 fill={color}
               />
@@ -141,6 +274,66 @@ function Dashboard() {
               <span key={index} className="line-label">
                 {label}
               </span>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Pie Chart component (Quarterly)
+  const PieChart = ({ title, data, colors }) => {
+    const total = data.values.reduce((a, b) => a + (Number(b) || 0), 0);
+    const cx = 110;
+    const cy = 110;
+    const r = 100;
+
+    const defaultColors = colors && colors.length ? colors : ['#41aafe', '#4CAF50', '#FF9800', '#E91E63', '#9C27B0', '#00BCD4'];
+
+    // Convert polar to cartesian
+    const polarToCartesian = (centerX, centerY, radius, angleInRadians) => {
+      return {
+        x: centerX + radius * Math.cos(angleInRadians),
+        y: centerY + radius * Math.sin(angleInRadians),
+      };
+    };
+
+    // Build slice path for a value
+    const buildSlice = (startAngle, endAngle) => {
+      const start = polarToCartesian(cx, cy, r, startAngle);
+      const end = polarToCartesian(cx, cy, r, endAngle);
+      const largeArc = endAngle - startAngle > Math.PI ? 1 : 0;
+      return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y} Z`;
+    };
+
+    let currentAngle = -Math.PI / 2; // start at top
+
+    return (
+      <div className="chart-card">
+        <h3>{title}</h3>
+        <div className="pie-chart">
+          {total > 0 ? (
+            <svg className="pie-svg" viewBox="0 0 220 220" width="100%" height="220">
+              {data.values.map((val, idx) => {
+                const value = Number(val) || 0;
+                const sliceAngle = (value / total) * Math.PI * 2;
+                const start = currentAngle;
+                const end = currentAngle + sliceAngle;
+                currentAngle = end;
+                const path = buildSlice(start, end);
+                const fill = defaultColors[idx % defaultColors.length];
+                return <path key={idx} d={path} fill={fill} stroke="#ffffff" strokeWidth="1"/>;
+              })}
+            </svg>
+          ) : (
+            <div className="pie-empty">No Data</div>
+          )}
+          <div className="pie-legend">
+            {data.labels.map((label, idx) => (
+              <div className="pie-legend-item" key={idx}>
+                <span className="pie-legend-swatch" style={{ backgroundColor: defaultColors[idx % defaultColors.length] }}></span>
+                <span className="pie-legend-label">{label}</span>
+              </div>
             ))}
           </div>
         </div>
@@ -249,25 +442,25 @@ function Dashboard() {
           <div className="stats-grid">
             <StatsCard
               title="Total Users"
-              value="127"
+              value={loadingStats ? 'Loading…' : (totalUsers ?? '—')}
               icon="👥"
               color="#41aafe"
             />
             <StatsCard
               title="Departments"
-              value="5"
+              value={loadingStats ? 'Loading…' : (departmentsCount ?? '—')}
               icon="🏢"
               color="#4CAF50"
             />
             <StatsCard
               title="Active KPIs"
-              value="24"
+              value={loadingStats ? 'Loading…' : (activeKpiCount ?? '—')}
               icon="🎯"
               color="#FF9800"
             />
             <StatsCard
               title="Avg Performance"
-              value="78%"
+              value={loadingStats ? 'Loading…' : (avgPerformance != null ? `${avgPerformance}%` : '—')}
               icon="📊"
               color="#E91E63"
             />
@@ -275,19 +468,19 @@ function Dashboard() {
 
           {/* Charts Grid */}
           <div className="charts-grid">
-            <BarChart
+            <HorizontalBarChart
               title="Employees by Department"
-              data={departmentData}
+              data={departmentData.labels.length ? departmentData : { labels: [], values: [] }}
               color="#41aafe"
+              maxItems={12}
             />
-            <LineChart
+            <PieChart
               title="Quarterly Performance"
               data={performanceData}
-              color="#4CAF50"
             />
             <BarChart
               title="KPI Achievement Rate"
-              data={kpiData}
+              data={kpiAchievementData.labels.length ? kpiAchievementData : { labels: ['No Data'], values: [0] }}
               color="#FF9800"
             />
             <div className="chart-card summary-card">
@@ -295,19 +488,19 @@ function Dashboard() {
               <div className="summary-content">
                 <div className="summary-item">
                   <span className="label">Total KMIs:</span>
-                  <span className="value">45</span>
+                  <span className="value">{loadingStats ? 'Loading…' : (activeKpiCount ?? '—')}</span>
                 </div>
                 <div className="summary-item">
                   <span className="label">Active KAIs:</span>
-                  <span className="value">12</span>
+                  <span className="value">—</span>
                 </div>
                 <div className="summary-item">
                   <span className="label">Completion Rate:</span>
-                  <span className="value">82%</span>
+                  <span className="value">{loadingStats ? 'Loading…' : (avgPerformance != null ? `${avgPerformance}%` : '—')}</span>
                 </div>
                 <div className="summary-item">
                   <span className="label">Last Updated:</span>
-                  <span className="value">Today</span>
+                  <span className="value">{new Date().toLocaleDateString()}</span>
                 </div>
               </div>
             </div>

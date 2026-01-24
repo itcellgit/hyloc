@@ -1,0 +1,2081 @@
+--
+-- PostgreSQL database dump
+--
+
+\restrict xFhiejloWoQ2aCclyu6TP1dDHY52jbSLHUxmlcUbo1fFduhejmLsvFv85yFUCVK
+
+-- Dumped from database version 17.6
+-- Dumped by pg_dump version 17.6
+
+-- Started on 2026-01-21 13:05:53
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 2 (class 3079 OID 115231)
+-- Name: pgcrypto; Type: EXTENSION; Schema: -; Owner: -
+--
+
+CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
+
+
+--
+-- TOC entry 5109 (class 0 OID 0)
+-- Dependencies: 2
+-- Name: EXTENSION pgcrypto; Type: COMMENT; Schema: -; Owner: 
+--
+
+COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
+
+
+--
+-- TOC entry 911 (class 1247 OID 115269)
+-- Name: bloodgroup_enum; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.bloodgroup_enum AS ENUM (
+    'O+',
+    'O-',
+    'A+',
+    'A-',
+    'B+',
+    'B-',
+    'AB+',
+    'AB-'
+);
+
+
+ALTER TYPE public.bloodgroup_enum OWNER TO postgres;
+
+--
+-- TOC entry 914 (class 1247 OID 115287)
+-- Name: value_type_enum; Type: TYPE; Schema: public; Owner: postgres
+--
+
+CREATE TYPE public.value_type_enum AS (
+	"Achieved" character varying(1),
+	"Target" character varying(1)
+);
+
+
+ALTER TYPE public.value_type_enum OWNER TO postgres;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 219 (class 1259 OID 115288)
+-- Name: categories; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.categories (
+    id integer NOT NULL,
+    category_name character varying(255) NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.categories OWNER TO postgres;
+
+--
+-- TOC entry 220 (class 1259 OID 115293)
+-- Name: departments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.departments (
+    id integer NOT NULL,
+    department_name character varying(255) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.departments OWNER TO postgres;
+
+--
+-- TOC entry 221 (class 1259 OID 115298)
+-- Name: departments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.departments_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.departments_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5110 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: departments_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.departments_id_seq OWNED BY public.departments.id;
+
+
+--
+-- TOC entry 222 (class 1259 OID 115299)
+-- Name: designations; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.designations (
+    id integer NOT NULL,
+    name character varying NOT NULL,
+    shortname character varying NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL
+);
+
+
+ALTER TABLE public.designations OWNER TO postgres;
+
+--
+-- TOC entry 223 (class 1259 OID 115306)
+-- Name: designations_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.designations ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.designations_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 224 (class 1259 OID 115307)
+-- Name: kpi_categories_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.categories ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.kpi_categories_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 245 (class 1259 OID 118748)
+-- Name: kpi_data_value; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.kpi_data_value (
+    id bigint NOT NULL,
+    kpi_value_id bigint NOT NULL,
+    value bigint NOT NULL,
+    value_type character varying NOT NULL,
+    month smallint NOT NULL,
+    year smallint NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.kpi_data_value OWNER TO postgres;
+
+--
+-- TOC entry 246 (class 1259 OID 118755)
+-- Name: kpi_data_value_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.kpi_data_value ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.kpi_data_value_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 225 (class 1259 OID 115308)
+-- Name: kpi_departments; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.kpi_departments (
+    id bigint NOT NULL,
+    kpi_id bigint NOT NULL,
+    department_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.kpi_departments OWNER TO postgres;
+
+--
+-- TOC entry 226 (class 1259 OID 115313)
+-- Name: kpi_departments_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.kpi_departments ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.kpi_departments_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 227 (class 1259 OID 115314)
+-- Name: kpi_emp; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.kpi_emp (
+    id bigint NOT NULL,
+    kpi_id bigint NOT NULL,
+    emp_id integer NOT NULL,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.kpi_emp OWNER TO postgres;
+
+--
+-- TOC entry 228 (class 1259 OID 115319)
+-- Name: kpi_emp_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.kpi_emp ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.kpi_emp_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 229 (class 1259 OID 115320)
+-- Name: kpi_values; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.kpi_values (
+    id bigint NOT NULL,
+    data character varying NOT NULL,
+    kpi_id bigint NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now() NOT NULL,
+    "data operator" integer NOT NULL,
+    target_required boolean,
+    uom integer,
+    kpi_type character varying DEFAULT 'manual'::character varying NOT NULL,
+    piller_id integer,
+    formula text,
+    source_kpi_value_ids integer[],
+    default_target_value integer
+);
+
+
+ALTER TABLE public.kpi_values OWNER TO postgres;
+
+--
+-- TOC entry 5111 (class 0 OID 0)
+-- Dependencies: 229
+-- Name: COLUMN kpi_values.formula; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.kpi_values.formula IS 'Formula for computed KPIs. Use v{kpi_value_id} syntax. Examples: v1+v2, v1*100/v2, AVERAGE(v1,v2,v3)';
+
+
+--
+-- TOC entry 5112 (class 0 OID 0)
+-- Dependencies: 229
+-- Name: COLUMN kpi_values.source_kpi_value_ids; Type: COMMENT; Schema: public; Owner: postgres
+--
+
+COMMENT ON COLUMN public.kpi_values.source_kpi_value_ids IS 'Array of KPI value IDs that this computed KPI depends on';
+
+
+--
+-- TOC entry 230 (class 1259 OID 115327)
+-- Name: kpi_values_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.kpi_values ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.kpi_values_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 231 (class 1259 OID 115328)
+-- Name: kpis; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.kpis (
+    id bigint NOT NULL,
+    title character varying(625) NOT NULL,
+    category_id integer NOT NULL,
+    parent_kpi_id bigint,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now(),
+    fin_year character varying
+);
+
+
+ALTER TABLE public.kpis OWNER TO postgres;
+
+--
+-- TOC entry 232 (class 1259 OID 115335)
+-- Name: kpis_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.kpis ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.kpis_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 241 (class 1259 OID 115435)
+-- Name: log; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.log (
+    id bigint NOT NULL,
+    user_id integer,
+    description text,
+    created_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.log OWNER TO postgres;
+
+--
+-- TOC entry 240 (class 1259 OID 115434)
+-- Name: log_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.log ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.log_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 244 (class 1259 OID 118718)
+-- Name: pillers; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.pillers (
+    id integer NOT NULL,
+    piller_name character varying NOT NULL,
+    short_name character varying NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.pillers OWNER TO postgres;
+
+--
+-- TOC entry 243 (class 1259 OID 118717)
+-- Name: pillers_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.pillers ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.pillers_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 237 (class 1259 OID 115420)
+-- Name: roles; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.roles (
+    id integer NOT NULL,
+    role_name character varying,
+    created_at timestamp without time zone DEFAULT now(),
+    "Updated_at" timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.roles OWNER TO postgres;
+
+--
+-- TOC entry 242 (class 1259 OID 115456)
+-- Name: roles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.roles ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.roles_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 233 (class 1259 OID 115336)
+-- Name: unit_master; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.unit_master (
+    id integer NOT NULL,
+    unit_name character varying NOT NULL,
+    symbol character varying,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.unit_master OWNER TO postgres;
+
+--
+-- TOC entry 234 (class 1259 OID 115343)
+-- Name: unit_master_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.unit_master ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.unit_master_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 239 (class 1259 OID 115426)
+-- Name: user_roles; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.user_roles (
+    id integer NOT NULL,
+    user_id integer,
+    role_id integer,
+    status character varying,
+    created_at timestamp without time zone DEFAULT now(),
+    updated_at timestamp without time zone DEFAULT now()
+);
+
+
+ALTER TABLE public.user_roles OWNER TO postgres;
+
+--
+-- TOC entry 238 (class 1259 OID 115425)
+-- Name: user_roles_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+ALTER TABLE public.user_roles ALTER COLUMN id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.user_roles_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
+
+
+--
+-- TOC entry 235 (class 1259 OID 115344)
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users (
+    id integer NOT NULL,
+    empid bigint NOT NULL,
+    department_id integer,
+    phone character varying(25),
+    address text,
+    firstname character varying(100) NOT NULL,
+    middlename character varying(100),
+    lastname character varying(100) NOT NULL,
+    email character varying(150) NOT NULL,
+    bloodgroup character varying(10),
+    password character varying(255) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- TOC entry 236 (class 1259 OID 115352)
+-- Name: users_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.users_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.users_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 5113 (class 0 OID 0)
+-- Dependencies: 236
+-- Name: users_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.users_id_seq OWNED BY public.users.id;
+
+
+--
+-- TOC entry 4853 (class 2604 OID 115353)
+-- Name: departments id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.departments ALTER COLUMN id SET DEFAULT nextval('public.departments_id_seq'::regclass);
+
+
+--
+-- TOC entry 4869 (class 2604 OID 115354)
+-- Name: users id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN id SET DEFAULT nextval('public.users_id_seq'::regclass);
+
+
+--
+-- TOC entry 5076 (class 0 OID 115288)
+-- Dependencies: 219
+-- Data for Name: categories; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.categories (id, category_name, created_at, updated_at) FROM stdin;
+1	Plant KPI	2026-01-05 11:23:35.389874	2026-01-05 11:23:35.389874
+2	Department KPI	2026-01-05 11:23:35.389874	2026-01-05 11:23:35.389874
+3	Pillar KPI	2026-01-05 11:23:35.389874	2026-01-05 11:23:35.389874
+4	Employee KPI	2026-01-05 11:23:35.389874	2026-01-05 11:23:35.389874
+5	KAI	2026-01-05 11:23:35.389874	2026-01-05 11:23:35.389874
+6	KMI / GLOBAL OBJECTIVES	2026-01-05 12:00:51.976472	2026-01-05 12:00:51.976472
+\.
+
+
+--
+-- TOC entry 5077 (class 0 OID 115293)
+-- Dependencies: 220
+-- Data for Name: departments; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.departments (id, department_name, created_at, updated_at) FROM stdin;
+1	Production	2025-12-31 13:03:17.900445	2025-12-31 13:03:17.900445
+2	Accounts & Finance	2025-12-31 13:03:17.90343	2025-12-31 13:03:17.90343
+3	Administration	2025-12-31 13:03:17.904312	2025-12-31 13:03:17.904312
+4	Design & Development	2025-12-31 13:03:17.904867	2025-12-31 13:03:17.904867
+5	Forgeshop	2025-12-31 13:03:17.905305	2025-12-31 13:03:17.905305
+6	Human Resource	2025-12-31 13:03:17.905805	2025-12-31 13:03:17.905805
+7	Marketing & Sales	2025-12-31 13:03:17.906359	2025-12-31 13:03:17.906359
+8	Management Representative	2025-12-31 13:03:17.906937	2025-12-31 13:03:17.906937
+11	Purchase	2026-01-06 12:18:49.267824	2026-01-06 12:18:49.267824
+12	QA	2026-01-06 12:51:00.191495	2026-01-06 12:51:00.191495
+\.
+
+
+--
+-- TOC entry 5079 (class 0 OID 115299)
+-- Dependencies: 222
+-- Data for Name: designations; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.designations (id, name, shortname, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 5102 (class 0 OID 118748)
+-- Dependencies: 245
+-- Data for Name: kpi_data_value; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.kpi_data_value (id, kpi_value_id, value, value_type, month, year, created_at, updated_at) FROM stdin;
+1	5	90	target	4	2025	2026-01-12 17:08:25.539552	2026-01-12 17:08:25.539552
+2	5	86	actual	4	2025	2026-01-12 17:08:25.54446	2026-01-12 17:08:25.54446
+3	5	87	target	5	2025	2026-01-12 17:11:14.973022	2026-01-12 17:11:14.973022
+4	5	90	actual	5	2025	2026-01-12 17:11:14.974416	2026-01-12 17:11:14.974416
+5	7	60	target	4	2025	2026-01-21 10:51:08.263184	2026-01-21 10:51:08.263184
+6	7	85	actual	4	2025	2026-01-21 10:51:08.286363	2026-01-21 10:51:08.286363
+7	5	90	target	6	2025	2026-01-21 11:10:30.173661	2026-01-21 11:10:30.173661
+8	5	86	actual	6	2025	2026-01-21 11:10:30.195568	2026-01-21 11:10:30.195568
+9	4	0	actual	6	2025	2026-01-21 11:10:30.205217	2026-01-21 11:10:30.205217
+10	5	90	target	7	2025	2026-01-21 11:10:59.447963	2026-01-21 11:10:59.447963
+11	5	90	actual	7	2025	2026-01-21 11:10:59.46795	2026-01-21 11:10:59.46795
+12	4	0	actual	7	2025	2026-01-21 11:10:59.488307	2026-01-21 11:10:59.488307
+13	3	70	target	4	2026	2026-01-21 11:11:20.395968	2026-01-21 11:11:20.395968
+14	3	62	actual	4	2026	2026-01-21 11:11:20.397421	2026-01-21 11:11:20.397421
+15	5	90	target	8	2025	2026-01-21 11:11:23.152441	2026-01-21 11:11:23.152441
+16	5	87	actual	8	2025	2026-01-21 11:11:23.155746	2026-01-21 11:11:23.155746
+17	4	0	actual	8	2025	2026-01-21 11:11:23.167833	2026-01-21 11:11:23.167833
+18	5	90	target	9	2025	2026-01-21 11:11:47.046433	2026-01-21 11:11:47.046433
+19	5	88	actual	9	2025	2026-01-21 11:11:47.06103	2026-01-21 11:11:47.06103
+20	4	0	actual	9	2025	2026-01-21 11:11:47.066176	2026-01-21 11:11:47.066176
+21	3	70	target	5	2026	2026-01-21 11:11:50.915031	2026-01-21 11:11:50.915031
+22	3	66	actual	5	2026	2026-01-21 11:11:50.931303	2026-01-21 11:11:50.931303
+23	5	90	target	10	2025	2026-01-21 11:11:53.853549	2026-01-21 11:11:53.853549
+24	5	88	actual	10	2025	2026-01-21 11:11:53.868413	2026-01-21 11:11:53.868413
+25	4	0	actual	10	2025	2026-01-21 11:11:53.872402	2026-01-21 11:11:53.872402
+26	3	70	target	6	2026	2026-01-21 11:12:33.787846	2026-01-21 11:12:33.787846
+27	3	68	actual	6	2026	2026-01-21 11:12:33.806528	2026-01-21 11:12:33.806528
+28	3	70	target	7	2026	2026-01-21 11:13:00.4474	2026-01-21 11:13:00.4474
+29	3	71	actual	7	2026	2026-01-21 11:13:00.462169	2026-01-21 11:13:00.462169
+30	3	75	target	8	2026	2026-01-21 11:13:20.620769	2026-01-21 11:13:20.620769
+31	3	64	actual	8	2026	2026-01-21 11:13:20.637148	2026-01-21 11:13:20.637148
+32	3	75	target	9	2026	2026-01-21 11:13:35.016514	2026-01-21 11:13:35.016514
+33	3	67	actual	9	2026	2026-01-21 11:13:35.031191	2026-01-21 11:13:35.031191
+34	6	800	target	4	2025	2026-01-21 11:13:40.774737	2026-01-21 11:13:40.774737
+35	6	900	actual	4	2025	2026-01-21 11:13:40.783363	2026-01-21 11:13:40.783363
+36	6	800	target	5	2025	2026-01-21 11:13:59.174057	2026-01-21 11:13:59.174057
+37	6	1000	actual	5	2025	2026-01-21 11:13:59.175358	2026-01-21 11:13:59.175358
+38	6	800	target	6	2025	2026-01-21 11:14:13.474456	2026-01-21 11:14:13.474456
+39	6	1200	actual	6	2025	2026-01-21 11:14:13.475943	2026-01-21 11:14:13.475943
+40	3	75	target	10	2026	2026-01-21 11:14:13.788841	2026-01-21 11:14:13.788841
+41	3	61	actual	10	2026	2026-01-21 11:14:13.803733	2026-01-21 11:14:13.803733
+42	3	75	target	11	2026	2026-01-21 11:14:34.76	2026-01-21 11:14:34.76
+43	3	65	actual	11	2026	2026-01-21 11:14:34.775329	2026-01-21 11:14:34.775329
+44	6	800	target	7	2025	2026-01-21 11:14:35.818625	2026-01-21 11:14:35.818625
+45	6	1100	actual	7	2025	2026-01-21 11:14:35.833493	2026-01-21 11:14:35.833493
+46	3	80	target	12	2026	2026-01-21 11:14:53.680409	2026-01-21 11:14:53.680409
+47	6	800	target	8	2025	2026-01-21 11:14:54.630691	2026-01-21 11:14:54.630691
+48	6	1000	actual	8	2025	2026-01-21 11:14:54.647138	2026-01-21 11:14:54.647138
+49	3	80	target	1	2027	2026-01-21 11:14:57.886759	2026-01-21 11:14:57.886759
+50	3	80	target	2	2027	2026-01-21 11:15:00.847692	2026-01-21 11:15:00.847692
+51	3	80	target	3	2027	2026-01-21 11:15:12.496255	2026-01-21 11:15:12.496255
+52	6	800	target	9	2025	2026-01-21 11:15:33.367849	2026-01-21 11:15:33.367849
+53	6	900	actual	9	2025	2026-01-21 11:15:33.369772	2026-01-21 11:15:33.369772
+54	6	800	target	10	2025	2026-01-21 11:15:41.757019	2026-01-21 11:15:41.757019
+55	6	950	actual	10	2025	2026-01-21 11:15:41.75789	2026-01-21 11:15:41.75789
+56	7	60	target	5	2025	2026-01-21 11:16:41.193734	2026-01-21 11:16:41.193734
+57	7	80	actual	5	2025	2026-01-21 11:16:41.199573	2026-01-21 11:16:41.199573
+58	7	60	target	6	2025	2026-01-21 11:16:54.623358	2026-01-21 11:16:54.623358
+59	7	75	actual	6	2025	2026-01-21 11:16:54.637536	2026-01-21 11:16:54.637536
+60	7	60	target	7	2025	2026-01-21 11:17:06.954427	2026-01-21 11:17:06.954427
+61	7	70	actual	7	2025	2026-01-21 11:17:06.970575	2026-01-21 11:17:06.970575
+64	7	60	target	8	2025	2026-01-21 11:17:22.754646	2026-01-21 11:17:22.754646
+65	7	65	actual	8	2025	2026-01-21 11:17:22.756012	2026-01-21 11:17:22.756012
+66	7	60	target	9	2025	2026-01-21 11:17:28.907068	2026-01-21 11:17:28.907068
+67	7	65	actual	9	2025	2026-01-21 11:17:28.910394	2026-01-21 11:17:28.910394
+68	7	60	target	10	2025	2026-01-21 11:17:39.446918	2026-01-21 11:17:39.446918
+69	7	60	actual	10	2025	2026-01-21 11:17:39.448719	2026-01-21 11:17:39.448719
+70	80	90	target	5	2025	2026-01-21 11:17:58.692126	2026-01-21 11:17:58.692126
+71	80	75	actual	5	2025	2026-01-21 11:17:58.706342	2026-01-21 11:17:58.706342
+72	80	90	target	6	2025	2026-01-21 11:18:23.240418	2026-01-21 11:18:23.240418
+73	80	80	actual	6	2025	2026-01-21 11:18:23.259856	2026-01-21 11:18:23.259856
+74	9	150	target	4	2025	2026-01-21 11:19:54.716951	2026-01-21 11:19:54.716951
+75	9	240	actual	4	2025	2026-01-21 11:19:54.731701	2026-01-21 11:19:54.731701
+76	9	150	target	5	2025	2026-01-21 11:20:09.309593	2026-01-21 11:20:09.309593
+77	9	220	actual	5	2025	2026-01-21 11:20:09.320763	2026-01-21 11:20:09.320763
+78	9	150	target	6	2025	2026-01-21 11:20:21.870041	2026-01-21 11:20:21.870041
+79	9	200	actual	6	2025	2026-01-21 11:20:21.871412	2026-01-21 11:20:21.871412
+80	9	150	target	7	2025	2026-01-21 11:20:36.231928	2026-01-21 11:20:36.231928
+81	9	210	actual	7	2025	2026-01-21 11:20:36.246723	2026-01-21 11:20:36.246723
+82	9	150	target	8	2025	2026-01-21 11:20:43.873262	2026-01-21 11:20:43.873262
+83	9	180	actual	8	2025	2026-01-21 11:20:43.890389	2026-01-21 11:20:43.890389
+84	9	150	target	9	2025	2026-01-21 11:20:57.773867	2026-01-21 11:20:57.773867
+85	9	150	actual	9	2025	2026-01-21 11:20:57.77511	2026-01-21 11:20:57.77511
+86	9	150	target	10	2025	2026-01-21 11:21:04.158495	2026-01-21 11:21:04.158495
+87	9	160	actual	10	2025	2026-01-21 11:21:04.173732	2026-01-21 11:21:04.173732
+88	80	90	target	7	2025	2026-01-21 11:21:49.686969	2026-01-21 11:21:49.686969
+89	80	75	actual	7	2025	2026-01-21 11:21:49.702034	2026-01-21 11:21:49.702034
+92	80	90	target	9	2025	2026-01-21 11:23:12.045827	2026-01-21 11:23:12.045827
+93	80	90	actual	9	2025	2026-01-21 11:23:12.047684	2026-01-21 11:23:12.047684
+90	80	90	target	8	2025	2026-01-21 11:22:26.555412	2026-01-21 11:23:14.904855
+91	80	90	actual	8	2025	2026-01-21 11:22:26.556917	2026-01-21 11:23:15.000288
+94	80	90	target	10	2025	2026-01-21 11:23:29.105284	2026-01-21 11:23:29.105284
+95	80	90	actual	10	2025	2026-01-21 11:23:29.117871	2026-01-21 11:23:29.117871
+62	80	90	target	4	2025	2026-01-21 11:17:07.402396	2026-01-21 11:24:29.853385
+63	80	70	actual	4	2025	2026-01-21 11:17:07.403516	2026-01-21 11:24:29.85452
+96	91	4	actual	4	2025	2026-01-21 11:26:47.181062	2026-01-21 11:26:47.181062
+97	91	2	actual	5	2025	2026-01-21 11:27:09.625367	2026-01-21 11:27:09.625367
+98	91	1	actual	6	2025	2026-01-21 11:27:12.525759	2026-01-21 11:27:12.525759
+99	91	3	actual	7	2025	2026-01-21 11:27:15.654002	2026-01-21 11:27:15.654002
+100	91	3	actual	8	2025	2026-01-21 11:27:19.119443	2026-01-21 11:27:19.119443
+101	91	2	actual	9	2025	2026-01-21 11:27:37.88413	2026-01-21 11:27:37.88413
+102	91	1	actual	10	2025	2026-01-21 11:27:55.021715	2026-01-21 11:27:55.021715
+103	91	3	actual	11	2025	2026-01-21 11:27:58.034195	2026-01-21 11:27:58.034195
+105	92	3	actual	5	2025	2026-01-21 11:28:22.281308	2026-01-21 11:28:22.281308
+106	92	2	actual	6	2025	2026-01-21 11:28:25.322553	2026-01-21 11:28:25.322553
+107	92	3	actual	7	2025	2026-01-21 11:28:29.650057	2026-01-21 11:28:29.650057
+108	92	2	actual	8	2025	2026-01-21 11:28:44.2732	2026-01-21 11:28:44.2732
+109	92	3	actual	9	2025	2026-01-21 11:28:47.194512	2026-01-21 11:28:47.194512
+110	92	3	actual	10	2025	2026-01-21 11:28:50.082497	2026-01-21 11:28:50.082497
+111	92	4	actual	11	2025	2026-01-21 11:28:52.770162	2026-01-21 11:28:52.770162
+104	92	1	actual	4	2025	2026-01-21 11:28:19.2371	2026-01-21 11:30:15.25214
+112	95	200000	actual	4	2025	2026-01-21 11:30:56.196909	2026-01-21 11:31:44.948409
+113	95	300000	actual	5	2025	2026-01-21 11:32:14.234292	2026-01-21 11:32:14.234292
+114	95	150000	actual	6	2025	2026-01-21 11:32:43.283439	2026-01-21 11:32:43.283439
+115	95	500000	actual	7	2025	2026-01-21 11:32:59.674679	2026-01-21 11:32:59.674679
+116	95	400000	actual	8	2025	2026-01-21 11:33:33.492525	2026-01-21 11:33:33.492525
+118	95	100000	actual	10	2025	2026-01-21 11:33:46.033631	2026-01-21 11:33:46.033631
+117	95	700000	actual	9	2025	2026-01-21 11:33:40.21787	2026-01-21 11:34:31.325284
+119	95	500000	actual	11	2025	2026-01-21 11:33:51.577329	2026-01-21 11:34:37.059593
+120	16	20	target	4	2026	2026-01-21 11:47:02.79476	2026-01-21 11:47:02.79476
+121	16	10	target	5	2026	2026-01-21 11:47:06.252113	2026-01-21 11:47:06.252113
+122	16	5	target	6	2026	2026-01-21 11:47:09.520279	2026-01-21 11:47:09.520279
+123	16	1	target	7	2026	2026-01-21 11:47:12.940781	2026-01-21 11:47:12.940781
+124	16	20	actual	4	2026	2026-01-21 11:49:20.991465	2026-01-21 11:50:00.580893
+125	16	10	actual	5	2026	2026-01-21 11:49:26.785312	2026-01-21 11:50:04.305006
+126	16	5	actual	6	2026	2026-01-21 11:49:31.389874	2026-01-21 11:50:06.616662
+127	16	1	actual	7	2026	2026-01-21 11:49:36.296893	2026-01-21 11:50:08.985602
+128	16	3	actual	8	2026	2026-01-21 11:50:13.137709	2026-01-21 11:50:13.137709
+129	16	5	actual	9	2026	2026-01-21 11:50:15.890785	2026-01-21 11:50:15.890785
+130	16	10	actual	10	2026	2026-01-21 11:50:19.131404	2026-01-21 11:50:19.131404
+131	17	5	actual	4	2025	2026-01-21 11:50:59.188763	2026-01-21 11:50:59.188763
+132	17	3	actual	5	2025	2026-01-21 11:51:01.884379	2026-01-21 11:51:01.884379
+133	17	1	actual	6	2025	2026-01-21 11:51:05.378476	2026-01-21 11:51:05.378476
+134	17	0	actual	7	2025	2026-01-21 11:51:07.74662	2026-01-21 11:51:07.74662
+135	17	0	actual	8	2025	2026-01-21 11:51:11.58003	2026-01-21 11:51:11.58003
+136	17	2	actual	9	2025	2026-01-21 11:51:22.534104	2026-01-21 11:51:22.534104
+137	17	3	actual	10	2025	2026-01-21 11:51:24.916613	2026-01-21 11:51:24.916613
+138	32	70	actual	4	2025	2026-01-21 11:52:00.309531	2026-01-21 11:52:00.309531
+139	32	80	actual	5	2025	2026-01-21 11:52:03.124837	2026-01-21 11:52:03.124837
+140	32	65	actual	6	2025	2026-01-21 11:52:06.412723	2026-01-21 11:52:06.412723
+141	32	90	actual	7	2025	2026-01-21 11:52:20.334585	2026-01-21 11:52:20.334585
+142	32	80	actual	8	2025	2026-01-21 11:52:24.301122	2026-01-21 11:52:24.301122
+143	32	78	actual	9	2025	2026-01-21 11:52:29.007713	2026-01-21 11:52:29.007713
+144	32	90	actual	10	2025	2026-01-21 11:52:39.582064	2026-01-21 11:52:39.582064
+145	13	4	actual	4	2025	2026-01-21 11:53:03.238859	2026-01-21 11:53:03.238859
+146	13	3	actual	5	2025	2026-01-21 11:53:15.042601	2026-01-21 11:53:15.042601
+147	13	2	actual	6	2025	2026-01-21 11:53:18.552266	2026-01-21 11:53:18.552266
+148	13	4	actual	7	2025	2026-01-21 11:53:22.34549	2026-01-21 11:53:22.34549
+149	42	1	actual	4	2025	2026-01-21 11:53:31.409436	2026-01-21 11:53:31.409436
+150	13	3	actual	8	2025	2026-01-21 11:53:33.986594	2026-01-21 11:53:33.986594
+151	42	2	actual	5	2025	2026-01-21 11:53:34.583376	2026-01-21 11:53:34.583376
+152	13	2	actual	9	2025	2026-01-21 11:53:37.289025	2026-01-21 11:53:37.289025
+153	42	1	actual	6	2025	2026-01-21 11:53:37.326953	2026-01-21 11:53:37.326953
+154	42	2	actual	7	2025	2026-01-21 11:53:40.815594	2026-01-21 11:53:40.815594
+155	13	4	actual	10	2025	2026-01-21 11:53:41.369677	2026-01-21 11:53:41.369677
+156	42	1	actual	8	2025	2026-01-21 11:53:49.034938	2026-01-21 11:53:49.034938
+157	42	1	actual	9	2025	2026-01-21 11:53:51.291254	2026-01-21 11:53:51.291254
+158	42	2	actual	10	2025	2026-01-21 11:53:53.809422	2026-01-21 11:53:53.809422
+159	60	0	target	4	2025	2026-01-21 11:54:51.433256	2026-01-21 11:54:51.433256
+160	60	0	actual	4	2025	2026-01-21 11:54:51.434833	2026-01-21 11:54:51.434833
+161	56	0	actual	4	2025	2026-01-21 11:54:51.440483	2026-01-21 11:54:51.440483
+162	60	0	target	5	2025	2026-01-21 11:55:09.960468	2026-01-21 11:55:09.960468
+163	60	8	actual	5	2025	2026-01-21 11:55:09.961891	2026-01-21 11:55:09.961891
+164	56	8	actual	5	2025	2026-01-21 11:55:09.967142	2026-01-21 11:55:09.967142
+165	60	0	target	6	2025	2026-01-21 12:00:51.705365	2026-01-21 12:00:51.705365
+166	60	3	actual	6	2025	2026-01-21 12:00:51.719956	2026-01-21 12:00:51.719956
+167	56	3	actual	6	2025	2026-01-21 12:00:51.726217	2026-01-21 12:00:51.726217
+168	10	1	actual	4	2027	2026-01-21 12:01:07.946386	2026-01-21 12:01:07.946386
+169	10	4	actual	5	2027	2026-01-21 12:01:12.767441	2026-01-21 12:01:12.767441
+170	10	5	actual	6	2027	2026-01-21 12:01:16.483551	2026-01-21 12:01:16.483551
+171	60	0	target	7	2025	2026-01-21 12:01:19.992631	2026-01-21 12:01:19.992631
+172	60	5	actual	7	2025	2026-01-21 12:01:19.993424	2026-01-21 12:01:19.993424
+173	56	5	actual	7	2025	2026-01-21 12:01:19.997213	2026-01-21 12:01:19.997213
+174	10	2	actual	7	2027	2026-01-21 12:01:25.222336	2026-01-21 12:01:25.222336
+175	60	0	target	8	2025	2026-01-21 12:01:25.402907	2026-01-21 12:01:25.402907
+176	60	6	actual	8	2025	2026-01-21 12:01:25.403693	2026-01-21 12:01:25.403693
+177	56	6	actual	8	2025	2026-01-21 12:01:25.40723	2026-01-21 12:01:25.40723
+178	10	3	actual	8	2027	2026-01-21 12:01:30.824976	2026-01-21 12:01:30.824976
+179	60	0	target	9	2025	2026-01-21 12:01:33.77737	2026-01-21 12:01:33.77737
+180	60	9	actual	9	2025	2026-01-21 12:01:33.778165	2026-01-21 12:01:33.778165
+181	56	9	actual	9	2025	2026-01-21 12:01:33.783031	2026-01-21 12:01:33.783031
+182	10	0	actual	9	2027	2026-01-21 12:01:34.176723	2026-01-21 12:01:34.176723
+183	10	1	actual	10	2027	2026-01-21 12:01:38.279866	2026-01-21 12:01:38.279866
+184	60	0	target	10	2025	2026-01-21 12:01:38.830658	2026-01-21 12:01:38.830658
+185	60	7	actual	10	2025	2026-01-21 12:01:38.844402	2026-01-21 12:01:38.844402
+186	56	7	actual	10	2025	2026-01-21 12:01:38.84807	2026-01-21 12:01:38.84807
+187	8	2	actual	4	2027	2026-01-21 12:02:14.659549	2026-01-21 12:02:14.659549
+188	8	3	actual	5	2027	2026-01-21 12:02:18.409223	2026-01-21 12:02:18.409223
+189	8	2	actual	6	2027	2026-01-21 12:02:21.713653	2026-01-21 12:02:21.713653
+190	8	1	actual	7	2027	2026-01-21 12:02:26.209324	2026-01-21 12:02:26.209324
+191	8	3	actual	8	2027	2026-01-21 12:02:48.093155	2026-01-21 12:02:48.093155
+192	8	4	actual	9	2027	2026-01-21 12:02:48.932332	2026-01-21 12:02:48.932332
+193	8	3	actual	10	2027	2026-01-21 12:02:54.003374	2026-01-21 12:02:54.003374
+\.
+
+
+--
+-- TOC entry 5082 (class 0 OID 115308)
+-- Dependencies: 225
+-- Data for Name: kpi_departments; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.kpi_departments (id, kpi_id, department_id, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 5084 (class 0 OID 115314)
+-- Dependencies: 227
+-- Data for Name: kpi_emp; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.kpi_emp (id, kpi_id, emp_id, created_at, updated_at) FROM stdin;
+\.
+
+
+--
+-- TOC entry 5086 (class 0 OID 115320)
+-- Dependencies: 229
+-- Data for Name: kpi_values; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.kpi_values (id, data, kpi_id, created_at, updated_at, "data operator", target_required, uom, kpi_type, piller_id, formula, source_kpi_value_ids, default_target_value) FROM stdin;
+32	JH IMPLEMENTATION	36	2026-01-10 16:43:12.084055	2026-01-10 16:43:20.230756	70082	f	1	manual	2	\N	\N	\N
+31	MACHINE BREAKDOWN TIME - INADEQUATE JH	35	2026-01-10 16:42:18.760841	2026-01-10 16:43:41.958205	70082	f	2	manual	2	\N	\N	\N
+3	OVERALL PLANT EFFICIENCY (OPE)	1	2026-01-09 16:22:09.916879	2026-01-10 11:29:29.034943	70055	t	1	manual	\N	\N	\N	\N
+59	TPM TRACKER - NO OPERATOR ASSIGNED TIME	60	2026-01-13 11:30:57.129664	2026-01-13 11:30:57.129664	70080	t	2	manual	8	\N	\N	\N
+6	TPM TRACKER - SETTING TIME	12	2026-01-09 16:24:47.353639	2026-01-10 16:27:58.143704	70076	t	2	manual	1	\N	\N	\N
+7	 AVERAGE SETTING TIME - CNC 	13	2026-01-09 16:26:52.349037	2026-01-10 16:28:32.246928	70076	t	3	manual	1	\N	\N	\N
+5	AVAILABILITY EFFICIENCY (AE)	11	2026-01-09 16:23:58.047515	2026-01-10 11:57:36.683412	70076	t	1	manual	\N	\N	\N	\N
+33	MTBF	37	2026-01-10 16:45:00.452917	2026-01-10 16:45:00.452917	70078	f	2	manual	4	\N	\N	\N
+34	REPAIR AND MAINTENANCE COST	38	2026-01-10 16:46:05.336966	2026-01-10 16:46:05.336966	70078	t	6	manual	4	\N	\N	\N
+35	PLANNED MAINTENANCE ACTIVITY AS PER PLAN	39	2026-01-10 16:47:11.829917	2026-01-10 16:47:11.829917	70078	f	1	manual	4	\N	\N	\N
+36	TPM TRACKER - CLITA TIME	40	2026-01-10 16:48:07.147738	2026-01-10 16:48:07.147738	70082	f	2	manual	2	\N	\N	\N
+37	NO. OF MACHINES ON TPM TRACKER	40	2026-01-10 16:50:21.003308	2026-01-10 16:50:21.003308	70082	f	4	manual	2	\N	\N	\N
+10	NUMBER OF KAIZEN IMPLEMENTED TO REDUCE SETTING TIME - MULTISPINDLE	16	2026-01-09 16:30:45.0255	2026-01-21 12:00:29.098384	70076	f	4	manual	1	\N	\N	\N
+39	TPM TRACKER - OPERATOR ABSENT TIME	41	2026-01-10 16:52:22.979655	2026-01-10 16:52:22.979655	70080	t	2	manual	6	\N	\N	\N
+40	TPM TRACKER -OPERATOR LATE TIME	42	2026-01-10 16:54:02.373881	2026-01-10 16:54:02.373881	70080	t	2	manual	6	\N	\N	\N
+41	PERFORMANCE EFFICIENCY (PE)	43	2026-01-10 16:55:05.243653	2026-01-10 16:55:05.243653	70082	t	1	manual	\N	\N	\N	\N
+42	KAIZEN TO IMPROVE PE	259	2026-01-10 16:58:50.868487	2026-01-10 16:58:50.868487	70082	f	4	manual	\N	\N	\N	\N
+16	TPM TRACKER - WAITING FOR SETTING TIME	256	2026-01-09 16:58:25.096052	2026-01-10 12:06:52.576828	70082	t	2	manual	\N	\N	\N	\N
+17	NUMBER OF KAIZEN IMPLEMENTED TO REDUCE WAITING FOR SETTING TIME	257	2026-01-09 17:01:49.544721	2026-01-10 12:07:22.048715	70082	f	4	manual	\N	\N	\N	\N
+18	TPM TRACKER - PLANNED MAINTENANCE TIME	22	2026-01-10 11:09:11.560247	2026-01-10 12:11:28.089381	70078	t	2	manual	\N	\N	\N	\N
+45	RAW MATERIAL RECEIVING STAGE REJECTION	47	2026-01-10 17:02:04.89032	2026-01-10 17:02:04.89032	70074	f	1	manual	\N	\N	\N	\N
+46	BOC RECEIVING STAGE REJECTION	48	2026-01-10 17:05:25.903136	2026-01-10 17:05:25.903136	70074	f	1	manual	3	\N	\N	\N
+47	IN PROCESS REJECTION - INHOUSE	49	2026-01-10 17:07:00.771981	2026-01-10 17:07:00.771981	70074	f	1	manual	3	\N	\N	\N
+48	IN PROCESS REJECTION - SUBCONTRACTORS	50	2026-01-10 17:07:54.290302	2026-01-10 17:07:54.290302	70074	f	1	manual	3	\N	\N	\N
+49	FG STORES REJECTION	51	2026-01-10 17:08:49.539696	2026-01-10 17:08:49.539696	70074	f	1	manual	3	\N	\N	\N
+51	RAW MATERIAL RECEIVING STAGE REWORK	53	2026-01-10 17:11:04.578749	2026-01-10 17:11:04.578749	70074	f	1	manual	3	\N	\N	\N
+52	BOC RECEIVING STAGE REWORK	54	2026-01-10 17:11:56.291489	2026-01-10 17:11:56.291489	70074	f	1	manual	3	\N	\N	\N
+9	AVERAGE SETTING TIME -MULTISPINDLE	15	2026-01-09 16:29:05.80988	2026-01-10 16:31:12.262893	70076	t	3	manual	1	\N	\N	\N
+11	TPM TRACKER - INSERT CHANGE TIME	17	2026-01-09 16:32:23.82309	2026-01-10 16:32:00.985213	10060	f	2	manual	1	\N	\N	\N
+12	AVERAGE INSERT CHANGE TIME	18	2026-01-09 16:33:46.324946	2026-01-10 16:32:20.327442	10060	t	3	manual	1	\N	\N	\N
+13	NUMBER OF KAIZEN IMPLEMENTED TO REDUCE INSERT CHANGE TIME	19	2026-01-09 16:47:46.227004	2026-01-10 16:32:51.569191	70076	f	4	manual	1	\N	\N	\N
+14	TPM TRACKER - SCRAP REMOVAL TIME	20	2026-01-09 16:49:25.36363	2026-01-10 16:33:15.680871	10060	t	2	manual	1	\N	\N	\N
+15	NUMBER OF KAIZEN IMPLEMENTED TO REDUCE SCRAP REMOVAL TIME	21	2026-01-09 16:50:09.251664	2026-01-10 16:33:36.17456	10060	f	4	manual	1	\N	\N	\N
+19	TPM TRACKER - MACHINE BREAKDOWN TIME	23	2026-01-10 11:10:20.022553	2026-01-10 16:34:15.174883	70078	t	2	manual	4	\N	\N	\N
+20	ACTUAL REPAIR TIME	24	2026-01-10 11:11:44.70144	2026-01-10 16:34:47.751628	70078	f	2	manual	4	\N	\N	\N
+22	KAIZEN TO REDUCE WAITING FOR REPAIR TIME	26	2026-01-10 11:14:00.303083	2026-01-10 16:35:52.92097	70078	f	4	manual	4	\N	\N	\N
+23	NUMBER OF MACHINE BREAKDOWNS	27	2026-01-10 11:14:57.389755	2026-01-10 16:36:36.016551	70078	f	4	manual	4	\N	\N	\N
+38	AVERAGE CLITA TIME PER MACHINE	40	2026-01-10 16:51:09.942827	2026-01-19 16:21:49.399044	70082	t	3	computed	2	v36*60/v37	{36,37}	10
+25	MTTR - MAINTENANCE TEAM	29	2026-01-10 11:16:30.210018	2026-01-10 16:37:15.440248	70078	t	3	manual	4	\N	\N	\N
+26	KAIZEN TO IMPROVE MTTR - MAINTENANCE TEAM	30	2026-01-10 11:17:34.706866	2026-01-10 16:37:56.166283	70078	f	4	manual	4	\N	\N	\N
+53	IN PROCESS REWORK - INHOUSE	55	2026-01-10 17:12:41.826664	2026-01-10 17:12:41.826664	70074	f	1	manual	3	\N	\N	\N
+27	MTTR - OPERATOR (MINOR REPAIR BY OPERATORS)	31	2026-01-10 11:18:25.382547	2026-01-10 16:38:51.063108	70082	t	3	manual	2	\N	\N	\N
+28	OPERATOR TRAINING - MINOR REPAIR BY OPERATORS	32	2026-01-10 12:07:35.491002	2026-01-10 16:39:25.249145	70082	f	5	manual	2	\N	\N	\N
+54	IN PROCESS REWORK - SUBCONTRACTORS	56	2026-01-10 17:13:28.248626	2026-01-10 17:13:28.248626	70074	f	1	manual	3	\N	\N	\N
+29	CRITICAL SPARES MANAGEMENT	33	2026-01-10 13:09:38.333534	2026-01-10 16:40:20.999851	70078	f	1	manual	4	\N	\N	\N
+30	MACHINE BREAKDOWN TIME - LACK OF SKILLS	34	2026-01-10 16:15:21.686806	2026-01-10 16:40:57.992172	70080	f	2	manual	6	\N	\N	\N
+55	FG STORES REWORK	57	2026-01-10 17:14:08.733136	2026-01-10 17:14:08.733136	70074	f	1	manual	3	\N	\N	\N
+57	TPM TRACKER - MEETING TIME	59	2026-01-10 17:16:44.850039	2026-01-10 17:16:44.850039	10060	f	2	manual	8	\N	\N	\N
+21	ZERO WAITING FOR REPAIR TIME	25	2026-01-10 11:13:10.422239	2026-01-19 15:47:26.191843	70078	t	2	computed	4	v19-v20	{19,20}	\N
+60	TPM TRACKER -NO LOAD TIME	61	2026-01-13 11:32:17.967267	2026-01-13 11:32:17.967267	70082	t	2	manual	8	\N	\N	\N
+61	TPM TRACKER - LUNCH BREAK TIME	62	2026-01-13 11:33:20.272782	2026-01-13 11:33:20.272782	70082	f	2	manual	\N	\N	\N	\N
+62	TPM TRACKER - TEA BREAK TIME	63	2026-01-13 11:33:58.20702	2026-01-13 11:33:58.20702	70082	f	2	manual	\N	\N	\N	\N
+64	TPM TRACKER - AVAILABILITY LOSS	65	2026-01-13 11:35:59.004603	2026-01-13 11:35:59.004603	70055	f	2	manual	\N	\N	\N	\N
+43	QUALITY EFFICIENCY (QE)	45	2026-01-10 16:59:55.086722	2026-01-19 16:28:34.945928	70074	t	1	computed	3	1-(v44+v50)	{44,50}	100
+50	TOTAL REWORK	52	2026-01-10 17:10:01.873493	2026-01-19 16:41:22.828813	70074	f	1	computed	3	v51+v52+v53+v54+v55	{51,52,53,54,55}	\N
+58	AVERAGE MEETING TIME PER MACHINE	59	2026-01-13 11:29:15.851004	2026-01-19 16:45:11.09856	10060	t	3	manual	8	\N	\N	\N
+56	TPM TRACKER - MANAGEMENT LOSS TIME	58	2026-01-10 17:15:54.827028	2026-01-19 16:50:04.967401	70075	t	2	computed	8	v57+v59+v60+v61+v62	{57,59,60,61,62}	2500
+8	NUMBER OF KAIZEN IMPLEMENTED TO REDUCE SETTING TIME - CNC	14	2026-01-09 16:27:55.580794	2026-01-21 12:00:05.756144	70076	f	4	manual	1	\N	\N	\N
+65	TPM TRACKER - PERFORMANCE LOSS	66	2026-01-13 11:36:54.470672	2026-01-13 11:36:54.470672	70055	f	2	manual	\N	\N	\N	\N
+66	TPM TRACKER - MANAGEMENT LOSS	67	2026-01-13 11:37:53.181315	2026-01-13 11:37:53.181315	70055	f	2	manual	\N	\N	\N	\N
+67	TIME NOT SCHEDULED FOR PRODUCTION	68	2026-01-13 11:38:36.974283	2026-01-13 11:38:36.974283	70055	f	2	manual	\N	\N	\N	\N
+68	PRODUCTION TIME	69	2026-01-13 11:39:19.973138	2026-01-13 11:39:19.973138	70055	f	2	manual	\N	\N	\N	\N
+70	1S - SORT	71	2026-01-13 11:44:40.912945	2026-01-13 11:44:40.912945	10060	t	1	manual	9	\N	\N	\N
+71	2S - SET IN ORDER	72	2026-01-13 11:45:53.768404	2026-01-13 11:45:53.768404	10060	t	1	manual	9	\N	\N	\N
+72	3S - SHINE	73	2026-01-13 11:46:49.147138	2026-01-13 11:46:49.147138	10060	t	1	manual	9	\N	\N	\N
+73	4S - STANDARDIZE	74	2026-01-13 11:47:28.465017	2026-01-13 11:47:28.465017	10060	t	1	manual	9	\N	\N	\N
+74	5S - SUSTAIN	75	2026-01-13 11:48:35.469001	2026-01-13 11:48:35.469001	10060	t	1	manual	9	\N	\N	\N
+75	INDUSTRY 4.0	2	2026-01-13 11:49:24.809562	2026-01-13 11:49:24.809562	70055	t	1	computed	\N	\N	\N	\N
+76	PAPERLESS OFFICE	76	2026-01-13 11:50:12.339909	2026-01-13 11:50:12.339909	70075	t	1	computed	\N	\N	\N	\N
+77	PAPERLESS OFFICE - MARKETING AND SALES	77	2026-01-13 11:51:24.192411	2026-01-13 11:51:24.192411	70063	t	1	manual	\N	\N	\N	\N
+78	PAPERLESS OFFICE - DESIGN AND DEVELOPMENT	78	2026-01-13 11:51:56.987736	2026-01-13 11:51:56.987736	70034	t	1	manual	\N	\N	\N	\N
+79	PAPERLESS OFFICE - PURCHASE	79	2026-01-13 11:53:02.959271	2026-01-13 11:53:02.959271	70092	t	1	manual	\N	\N	\N	\N
+80	PAPERLESS OFFICE - PRODUCTION	80	2026-01-13 11:55:07.594546	2026-01-13 11:55:07.594546	70055	t	1	manual	\N	\N	\N	\N
+81	PAPERLESS OFFICE - QA	81	2026-01-13 11:55:48.631495	2026-01-13 11:55:48.631495	70074	t	1	manual	\N	\N	\N	\N
+82	PAPERLESS OFFICE - FORGE SHOP	82	2026-01-13 11:56:33.904926	2026-01-13 11:56:33.904926	70010	t	1	manual	\N	\N	\N	\N
+83	PAPERLESS OFFICE - ADMINISTRATION	83	2026-01-13 11:57:06.498684	2026-01-13 11:57:06.498684	70075	t	1	manual	\N	\N	\N	\N
+84	PAPERLESS OFFICE - HR	84	2026-01-13 11:57:44.166802	2026-01-13 11:57:44.166802	70080	t	1	manual	\N	\N	\N	\N
+85	PAPERLESS OFFICE - ACCOUNTS AND FINANCE	85	2026-01-13 11:58:11.127794	2026-01-13 11:58:11.127794	70084	t	1	manual	\N	\N	\N	\N
+86	PAPERLESS OFFICE - MR	86	2026-01-13 11:58:35.82267	2026-01-13 11:58:35.82267	70090	t	1	manual	\N	\N	\N	\N
+87	TOTAL PAPER CUNSUMPTION	87	2026-01-13 12:19:05.23525	2026-01-13 12:19:05.23525	70075	f	1	computed	\N	\N	\N	\N
+88	PAPER CONSUMPTION	87	2026-01-13 12:21:06.215376	2026-01-13 12:21:06.215376	70075	t	6	manual	\N	\N	\N	\N
+89	AUTOMATION	88	2026-01-13 12:22:08.588659	2026-01-13 12:22:08.588659	70055	f	1	computed	\N	\N	\N	\N
+90	TIMELY COMPLETION OF AUTOMATION PROJECTS	89	2026-01-13 12:23:23.734009	2026-01-13 12:23:23.734009	70055	f	1	manual	\N	\N	\N	\N
+91	NUMBER OF AUTOMATION PROJECTS COMPLETED	90	2026-01-13 12:24:18.902274	2026-01-13 12:24:18.902274	70055	f	4	manual	\N	\N	\N	\N
+92	NUMBER OF AUTOMATION PROJECTS UNDER PROCESS	91	2026-01-13 12:24:52.915959	2026-01-13 12:24:52.915959	70055	f	4	manual	\N	\N	\N	\N
+93	AUTOMATION - NET COST SAVING %	92	2026-01-13 12:25:56.78033	2026-01-13 12:25:56.78033	70055	f	1	computed	\N	\N	\N	\N
+94	AUTOMATION - NET COST SAVING	93	2026-01-13 12:26:42.928112	2026-01-13 12:26:42.928112	70055	f	6	computed	\N	\N	\N	\N
+95	AUTOMATION - EXPENDITURE	94	2026-01-13 12:30:38.088133	2026-01-13 12:30:38.088133	70055	f	6	manual	\N	\N	\N	\N
+96	AUTOMATION - COST SAVING	95	2026-01-13 12:31:12.006689	2026-01-13 12:31:12.006689	70055	f	6	manual	\N	\N	\N	\N
+97	ZERO QUALITY COMPLAINTS FROM CUSTOMERS	3	2026-01-13 12:31:57.535132	2026-01-13 12:31:57.535132	70074	t	4	manual	3	\N	\N	\N
+98	OVERALL REJECTION PPM	96	2026-01-13 12:32:55.639319	2026-01-13 12:32:55.639319	70074	t	7	computed	3	\N	\N	\N
+99	REJECTION PPM	100	2026-01-13 12:33:41.333743	2026-01-13 12:33:41.333743	70074	t	7	computed	3	\N	\N	\N
+100	REWORK PPM	99	2026-01-13 12:34:16.027261	2026-01-13 12:34:16.027261	70074	t	7	computed	3	\N	\N	\N
+101	REJECTION/REWORK PHENOMENON - MATERIAL QUALITY	101	2026-01-16 10:56:20.972007	2026-01-16 10:56:20.972007	70092	t	7	manual	\N	\N	\N	\N
+103	REJECTION/REWORK PHENOMENON - TOOLING AND MACHINERY ISSUES	102	2026-01-16 10:57:44.637546	2026-01-16 10:57:44.637546	70055	f	7	manual	\N	\N	\N	\N
+104	REJECTION/REWORK PHENOMENON - INADEQUATE JH	103	2026-01-16 10:59:06.267211	2026-01-16 10:59:06.267211	70082	t	7	manual	2	\N	\N	\N
+105	REJECTION/REWORK PHENOMENON - HUMAN ERROR AND TRAINING	104	2026-01-16 11:00:23.106953	2026-01-16 11:00:23.106953	70080	t	7	manual	6	\N	\N	\N
+106	REJECTION/REWORK PHENOMENON - DESIGN ERRORS	106	2026-01-16 11:01:49.46862	2026-01-16 11:01:49.46862	70005	t	7	manual	\N	\N	\N	\N
+107	REJECTION/REWORK PHENOMENON - INTERNAL PROCESS CONTROL AND STABILITY	107	2026-01-16 11:02:39.423093	2026-01-16 11:02:39.423093	70055	f	7	manual	\N	\N	\N	\N
+24	MTTR	28	2026-01-10 11:15:46.538987	2026-01-19 16:15:55.266882	70078	t	3	computed	4	(v20*60)/v23	{20,23}	60
+44	TOTAL REJECTION	46	2026-01-10 17:01:07.308124	2026-01-19 16:35:51.441756	70074	f	1	computed	3	v45+v46+v47+v48+v49	{45,46,47,48,49}	\N
+63	PLANT UTILIZATION	64	2026-01-13 11:34:51.808346	2026-01-19 16:54:53.800142	70055	t	1	computed	\N	 v68/(v68+v67+v66+v65+v64)	{68,67,66,65,64}	70
+69	5S Progress	70	2026-01-13 11:43:31.303596	2026-01-19 16:59:32.771043	10060	t	1	computed	9	average(v70+v71+v72+v73+v74)	{70,71,72,73,74}	100
+4	OVERALL EQUIPMENT EFFECTIVENESS (OEE)	10	2026-01-09 16:22:55.817025	2026-01-20 15:20:20.981411	70076	t	1	computed	1	v5*v41*v43	{5,41,43}	\N
+\.
+
+
+--
+-- TOC entry 5088 (class 0 OID 115328)
+-- Dependencies: 231
+-- Data for Name: kpis; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.kpis (id, title, category_id, parent_kpi_id, created_at, updated_at, fin_year) FROM stdin;
+1	OVERALL PLANT EFFICIENCY (OPE)	6	\N	2026-01-06 14:54:05.626092	2026-01-06 14:54:05.626092	2025-26
+2	INDUSTRY 4.0	6	\N	2026-01-06 14:54:28.200032	2026-01-06 14:54:28.200032	2025-26
+3	ZERO QUALITY COMPLAINTS FROM CUSTOMERS	6	\N	2026-01-06 14:54:41.211613	2026-01-06 14:54:41.211613	2025-26
+4	PROFITABILITY AS PER LATEST P & L STATEMENT	6	\N	2026-01-06 14:54:57.548332	2026-01-06 14:54:57.548332	2025-26
+5	SALES	6	\N	2026-01-06 14:55:11.951052	2026-01-06 14:55:11.951052	2025-26
+6	ON TIME DELIVERY	6	\N	2026-01-06 14:55:25.36743	2026-01-06 14:55:25.36743	2025-26
+7	ZERO ACCIDENTS	6	\N	2026-01-06 14:55:37.944226	2026-01-06 14:55:37.944226	2025-26
+8	THEME OF THE YEAR 2025-26 - UNLOCK THE POWER OF "YOU"	6	\N	2026-01-06 14:55:49.25266	2026-01-06 14:55:49.25266	2025-26
+9	GREEN FACTORY	6	\N	2026-01-06 14:56:00.300799	2026-01-06 14:56:00.300799	2025-26
+10	OVERALL EQUIPMENT EFFECTIVENESS (OEE)	1	1	2026-01-06 16:05:24.597245	2026-01-06 16:05:24.597245	2025-26
+11	AVAILABILITY EFFICIENCY (AE)	2	10	2026-01-06 16:08:19.644294	2026-01-06 16:08:19.644294	2025-26
+12	TPM TRACKER - SETTING TIME	3	11	2026-01-06 16:11:55.43952	2026-01-06 16:11:55.43952	2025-26
+13	 AVERAGE SETTING TIME - CNC 	4	12	2026-01-06 16:12:29.282228	2026-01-06 16:12:29.282228	2025-26
+14	NUMBER OF KAIZEN IMPLEMENTED TO REDUCE SETTING TIME - CNC	5	13	2026-01-06 16:15:12.587831	2026-01-06 16:15:12.587831	2025-26
+15	AVERAGE SETTING TIME –MULTISPINDLE	4	12	2026-01-06 16:18:02.084858	2026-01-06 16:18:02.084858	2025-26
+16	NUMBER OF KAIZEN IMPLEMENTED TO REDUCE SETTING TIME - MULTISPINDLE	5	15	2026-01-06 16:18:27.355379	2026-01-06 16:18:27.355379	2025-26
+17	TPM TRACKER - INSERT CHANGE TIME	3	11	2026-01-06 16:18:58.05448	2026-01-06 16:18:58.05448	2025-26
+18	AVERAGE INSERT CHANGE TIME	4	17	2026-01-06 16:19:39.386718	2026-01-06 16:19:39.386718	2025-26
+19	NUMBER OF KAIZEN IMPLEMENTED TO REDUCE INSERT CHANGE TIME	5	18	2026-01-06 16:20:13.985219	2026-01-06 16:20:13.985219	2025-26
+20	TPM TRACKER - SCRAP REMOVAL TIME	3	11	2026-01-06 16:25:44.328874	2026-01-06 16:25:44.328874	2025-26
+21	NUMBER OF KAIZEN IMPLEMENTED TO REDUCE SCRAP REMOVAL TIME	5	20	2026-01-06 16:26:34.547439	2026-01-06 16:26:34.547439	2025-26
+22	TPM TRACKER - PLANNED MAINTENANCE TIME	3	11	2026-01-06 16:27:03.449754	2026-01-06 16:27:03.449754	2025-26
+23	TPM TRACKER - MACHINE BREAKDOWN TIME	3	11	2026-01-06 16:27:25.664874	2026-01-06 16:27:25.664874	2025-26
+24	ACTUAL REPAIR TIME	5	23	2026-01-06 16:27:43.925138	2026-01-06 16:27:43.925138	2025-26
+25	WAITING FOR REPAIR TIME	5	23	2026-01-06 16:28:31.345326	2026-01-06 16:28:31.345326	2025-26
+26	KAIZEN TO REDUCE WAITING FOR REPAIR TIME	5	23	2026-01-06 16:38:40.896946	2026-01-06 16:38:40.896946	2025-26
+27	NUMBER OF MACHINE BREAKDOWNS	5	23	2026-01-06 16:38:59.34989	2026-01-06 16:38:59.34989	2025-26
+28	MTTR	3	11	2026-01-06 16:39:23.189429	2026-01-06 16:39:23.189429	2025-26
+29	MTTR - MAINTENANCE TEAM	4	28	2026-01-06 16:39:46.438708	2026-01-06 16:39:46.438708	2025-26
+30	KAIZEN TO IMPROVE MTTR - MAINTENANCE TEAM	5	29	2026-01-06 16:40:02.00485	2026-01-06 16:40:02.00485	2025-26
+31	MTTR - OPERATOR	3	11	2026-01-06 16:40:18.902148	2026-01-06 16:40:18.902148	2025-26
+32	OPERATOR TRAINING - MINOR REPAIR BY OPERATORS	5	31	2026-01-06 16:40:34.194907	2026-01-06 16:40:34.194907	2025-26
+33	CRITICAL SPARES MANAGEMENT	5	31	2026-01-06 16:40:51.453811	2026-01-06 16:40:51.453811	2025-26
+34	MACHINE BREAKDOWN TIME - LACK OF SKILLS	3	11	2026-01-06 16:41:09.453804	2026-01-06 16:41:09.453804	2025-26
+35	MACHINE BREAKDOWN TIME - INADEQUATE JH	3	11	2026-01-06 16:41:22.869014	2026-01-06 16:41:22.869014	2025-26
+36	JH IMPLEMENTATION	1	35	2026-01-06 16:41:44.039608	2026-01-06 16:41:44.039608	2025-26
+37	MTBF	3	11	2026-01-06 16:42:01.188187	2026-01-06 16:42:01.188187	2025-26
+38	REPAIR AND MAINTENANCE COST	3	11	2026-01-06 16:42:14.860235	2026-01-06 16:42:14.860235	2025-26
+39	PLANNED MAINTENANCE ACTIVITY AS PER PLAN	3	11	2026-01-06 16:42:36.998229	2026-01-06 16:42:36.998229	2025-26
+40	TPM TRACKER - CLITA TIME	3	11	2026-01-06 16:42:50.407297	2026-01-06 16:42:50.407297	2025-26
+41	TPM TRACKER - OPERATOR ABSENT	3	11	2026-01-06 16:43:03.782736	2026-01-06 16:43:03.782736	2025-26
+42	TPM TRACKER -OPERATOR LATE	3	11	2026-01-06 16:43:15.766878	2026-01-06 16:43:15.766878	2025-26
+43	PERFORMANCE EFFICIENCY (PE)	2	10	2026-01-06 16:43:46.374097	2026-01-06 16:43:46.374097	2025-26
+45	QUALITY EFFICIENCY (QE)	2	10	2026-01-06 16:44:18.559866	2026-01-06 16:44:18.559866	2025-26
+46	TOTAL REJECTION	3	45	2026-01-06 16:44:33.63893	2026-01-06 16:44:33.63893	2025-26
+47	RAW MATERIAL RECEIVING STAGE REJECTION	5	46	2026-01-06 16:44:53.036957	2026-01-06 16:44:53.036957	2025-26
+48	BOC RECEIVING STAGE REJECTION	5	46	2026-01-06 16:45:10.503386	2026-01-06 16:45:10.503386	2025-26
+49	IN PROCESS REJECTION - INHOUSE	5	46	2026-01-06 16:45:22.155485	2026-01-06 16:45:22.155485	2025-26
+50	IN PROCESS REJECTION - SUBCONTRACTORS	5	46	2026-01-06 16:45:34.242033	2026-01-06 16:45:34.242033	2025-26
+51	FG STORES REJECTION	5	46	2026-01-06 16:45:47.918796	2026-01-06 16:45:47.918796	2025-26
+52	TOTAL REWORK	3	45	2026-01-06 16:46:11.424944	2026-01-06 16:46:11.424944	2025-26
+53	RAW MATERIAL RECEIVING STAGE REWORK	5	52	2026-01-06 16:46:30.332325	2026-01-06 16:46:30.332325	2025-26
+54	BOC RECEIVING STAGE REWORK	5	52	2026-01-06 16:46:46.217763	2026-01-06 16:46:46.217763	2025-26
+55	IN PROCESS REWORK - INHOUSE	5	52	2026-01-06 16:47:03.527429	2026-01-06 16:47:03.527429	2025-26
+56	IN PROCESS REWORK - SUBCONTRACTORS	5	52	2026-01-06 16:47:19.180634	2026-01-06 16:47:19.180634	2025-26
+57	FG STORES REWORK	5	52	2026-01-06 16:47:34.513319	2026-01-06 16:47:34.513319	2025-26
+58	MANAGEMENT LOSS	1	1	2026-01-06 16:48:09.270393	2026-01-06 16:48:09.270393	2025-26
+59	TPM TRACKER - MEETING TIME	4	58	2026-01-06 16:48:49.051432	2026-01-06 16:48:49.051432	2025-26
+60	TPM TRACKER - NO OPERATOR ASSIGNED	4	58	2026-01-06 16:49:03.12674	2026-01-06 16:49:03.12674	2025-26
+61	TPM TRACKER -NO LOAD	4	58	2026-01-06 16:49:15.838034	2026-01-06 16:49:15.838034	2025-26
+62	TPM TRACKER - LUNCH BREAK TIME	4	58	2026-01-06 16:49:38.038421	2026-01-06 16:49:38.038421	2025-26
+63	TPM TRACKER - TEA BREAK TIME	4	58	2026-01-06 16:50:00.749978	2026-01-06 16:50:00.749978	2025-26
+64	PLANT UTILIZATION	4	58	2026-01-06 16:50:16.165331	2026-01-06 16:50:16.165331	2025-26
+65	TPM TRACKER - AVAILABILITY LOSS	5	64	2026-01-06 16:50:45.145876	2026-01-06 16:50:45.145876	2025-26
+66	TPM TRACKER - PERFORMANCE LOSS	5	64	2026-01-06 16:50:56.058021	2026-01-06 16:50:56.058021	2025-26
+67	TPM TRACKER - MANAGEMENT LOSS	5	64	2026-01-06 16:51:09.640901	2026-01-06 16:51:09.640901	2025-26
+68	TIME NOT SCHEDULED FOR PRODUCTION	5	64	2026-01-06 16:51:22.012343	2026-01-06 16:51:22.012343	2025-26
+69	PRODUCTION TIME	5	64	2026-01-06 16:51:38.107998	2026-01-06 16:51:38.107998	2025-26
+70	5S PROGRESS	1	1	2026-01-06 16:51:55.524228	2026-01-06 16:51:55.524228	2025-26
+71	1S - SORT	3	70	2026-01-06 16:52:10.248664	2026-01-06 16:52:10.248664	2025-26
+72	2S - SET IN ORDER	3	70	2026-01-06 16:52:26.494207	2026-01-06 16:52:26.494207	2025-26
+73	3S - SHINE	3	70	2026-01-06 16:52:39.781077	2026-01-06 16:52:39.781077	2025-26
+74	4S - STANDARDIZE	3	70	2026-01-06 16:52:53.028412	2026-01-06 16:52:53.028412	2025-26
+75	5S - SUSTAIN	3	70	2026-01-06 16:53:05.003344	2026-01-06 16:53:05.003344	2025-26
+76	PAPERLESS OFFICE	1	2	2026-01-08 10:15:11.95286	2026-01-08 10:15:11.95286	2025-26
+77	PAPERLESS OFFICE - MARKETING AND SALES	2	76	2026-01-08 10:15:29.972126	2026-01-08 10:15:29.972126	2025-26
+78	PAPERLESS OFFICE - DESIGN AND DEVELOPMENT	2	76	2026-01-08 10:15:49.888789	2026-01-08 10:15:49.888789	2025-26
+79	PAPERLESS OFFICE - PURCHASE	2	76	2026-01-08 10:16:21.043898	2026-01-08 10:16:21.043898	2025-26
+80	PAPERLESS OFFICE - PRODUCTION	2	76	2026-01-08 10:16:38.795491	2026-01-08 10:16:38.795491	2025-26
+81	PAPERLESS OFFICE - QA	2	76	2026-01-08 10:16:47.628465	2026-01-08 10:16:47.628465	2025-26
+82	PAPERLESS OFFICE - FORGE SHOP	2	76	2026-01-08 10:16:56.073408	2026-01-08 10:16:56.073408	2025-26
+83	PAPERLESS OFFICE - ADMINISTRATION	2	76	2026-01-08 10:17:05.40656	2026-01-08 10:17:05.40656	2025-26
+84	PAPERLESS OFFICE - HR	2	76	2026-01-08 10:17:17.950076	2026-01-08 10:17:17.950076	2025-26
+85	PAPERLESS OFFICE - ACCOUNTS AND FINANCE	2	76	2026-01-08 10:17:26.123705	2026-01-08 10:17:26.123705	2025-26
+86	PAPERLESS OFFICE - MR	2	76	2026-01-08 10:17:34.207041	2026-01-08 10:17:34.207041	2025-26
+88	AUTOMATION	1	2	2026-01-08 10:23:54.312812	2026-01-08 10:23:54.312812	2025-26
+89	TIMELY COMPLETION OF AUTOMATION PROJECTS	3	88	2026-01-08 10:24:17.307451	2026-01-08 10:24:17.307451	2025-26
+90	NUMBER OF AUTOMATION PROJECTS COMPLETED	5	89	2026-01-08 10:24:47.398277	2026-01-08 10:24:47.398277	2025-26
+91	NUMBER OF AUTOMATION PROJECTS UNDER PROCESS	5	89	2026-01-08 10:25:17.473543	2026-01-08 10:25:17.473543	2025-26
+92	COST SAVING WITH AUTOMATION	3	88	2026-01-08 10:25:51.563719	2026-01-08 10:25:51.563719	2025-26
+93	AUTOMATION - NET COST SAVING	5	92	2026-01-08 10:26:14.594583	2026-01-08 10:26:14.594583	2025-26
+94	AUTOMATION - EXPENDITURE	5	92	2026-01-08 10:26:39.090067	2026-01-08 10:26:39.090067	2025-26
+95	AUTOMATION - COST SAVING	5	92	2026-01-08 10:32:03.305807	2026-01-08 10:32:03.305807	2025-26
+96	OVERALL REJECTION PPM	1	3	2026-01-08 10:33:04.308927	2026-01-08 10:33:04.308927	2025-26
+99	REWORK PPM	2	96	2026-01-08 10:34:50.660568	2026-01-08 10:34:50.660568	2025-26
+100	REJECTION PPM	2	96	2026-01-08 10:35:10.562585	2026-01-08 10:35:10.562585	2025-26
+101	REJECTION/REWORK PHENOMENON - MATERIAL QUALITY	4	99	2026-01-08 10:35:56.957991	2026-01-08 10:35:56.957991	2025-26
+102	REJECTION/REWORK PHENOMENON - TOOLING AND MACHINERY ISSUES	4	99	2026-01-08 10:36:14.276551	2026-01-08 10:36:14.276551	2025-26
+103	REJECTION/REWORK PHENOMENON - INADEQUATE JH	3	99	2026-01-08 10:36:35.588955	2026-01-08 10:36:35.588955	2025-26
+104	REJECTION/REWORK PHENOMENON - HUMAN ERROR AND TRAINING	4	103	2026-01-08 10:36:55.462583	2026-01-08 10:36:55.462583	2025-26
+106	REJECTION/REWORK PHENOMENON - DESIGN ERRORS	4	103	2026-01-08 10:37:42.350911	2026-01-08 10:37:42.350911	2025-26
+107	REJECTION/REWORK PHENOMENON - INTERNAL PROCESS CONTROL AND STABILITY	4	103	2026-01-08 10:38:32.218214	2026-01-08 10:38:32.218214	2025-26
+108	AVAILBILITY OF CALIBRATED GAUGES AND INSTRUMENTS	5	107	2026-01-08 10:39:06.030911	2026-01-08 10:39:06.030911	2025-26
+109	COST OF QUALITY	1	3	2026-01-08 10:39:32.016829	2026-01-08 10:39:32.016829	2025-26
+110	COST OF GOOD QUALITY	5	109	2026-01-08 10:39:59.853515	2026-01-08 10:39:59.853515	2025-26
+111	COST OF POOR QUALITY	5	109	2026-01-08 10:40:22.032026	2026-01-08 10:40:22.032026	2025-26
+112	EFFECTIVE RESOLUTION OF NON-CONFITMITIES	1	3	2026-01-08 10:40:48.1593	2026-01-08 10:40:48.1593	2025-26
+113	NC OPEN TILL DATE	5	112	2026-01-08 10:41:08.860605	2026-01-08 10:41:08.860605	2025-26
+114	NC CLOSED TILL DATE	5	112	2026-01-08 10:41:27.523391	2026-01-08 10:41:27.523391	2025-26
+115	NC RESOLUTION - ADMINISTRATION	2	112	2026-01-08 10:41:49.393483	2026-01-08 10:41:49.393483	2025-26
+116	NC RESOLUTION - HR	2	112	2026-01-08 10:42:01.952851	2026-01-08 10:42:01.952851	2025-26
+117	NC RESOLUTION - ACCOUNTS AND FINANCE	2	112	2026-01-08 10:42:12.361513	2026-01-08 10:42:12.361513	2025-26
+118	NC RESOLUTION - DESIGN AND DEVELOPMENT	2	112	2026-01-08 10:42:27.556196	2026-01-08 10:42:27.556196	2025-26
+119	NC RESOLUTION - FORGE SHOP	2	112	2026-01-08 10:42:37.480789	2026-01-08 10:42:37.480789	2025-26
+120	NC RESOLUTION - MARKETING AND SALES	2	112	2026-01-08 10:42:47.880494	2026-01-08 10:42:47.880494	2025-26
+121	NC RESOLUTION - PRODUCTION	2	112	2026-01-08 10:42:58.736073	2026-01-08 10:42:58.736073	2025-26
+122	NC RESOLUTION - PURCHASE	2	112	2026-01-08 10:43:12.171104	2026-01-08 10:43:12.171104	2025-26
+123	NC RESOLUTION - QA	2	112	2026-01-08 10:43:23.025471	2026-01-08 10:43:23.025471	2025-26
+124	NC RESOLUTION - MR	2	112	2026-01-08 10:43:34.211643	2026-01-08 10:43:34.211643	2025-26
+125	WORKING WITHIN THE BUDGET	1	4	2026-01-08 10:44:06.229229	2026-01-08 10:44:06.229229	2025-26
+126	WORKING WITHIN THE BUDGET - PURCHASE	2	125	2026-01-08 10:44:29.627234	2026-01-08 10:44:29.627234	2025-26
+127	WORKING WITHIN BUDGET - LOGISTICS COSTS	3	126	2026-01-08 10:45:04.826021	2026-01-08 10:45:04.826021	2025-26
+128	WORKING WITHIN THE BUDGET - PRODUCTION	2	125	2026-01-08 10:45:31.472051	2026-01-08 10:45:31.472051	2025-26
+129	REDUCTION IN OIL CONSUMPTION	3	128	2026-01-08 10:45:58.719193	2026-01-08 10:45:58.719193	2025-26
+131	WORKING WITHIN THE BUDGET - MARKETING AND SALES	2	125	2026-01-08 10:46:33.544247	2026-01-08 10:46:33.544247	2025-26
+132	WORKING WITHIN THE BUDGET - ADMINISTRATION	2	125	2026-01-08 10:46:47.618504	2026-01-08 10:46:47.618504	2025-26
+133	WORKING WITHIN THE BUDGET - HR	2	125	2026-01-08 10:47:29.188687	2026-01-08 10:47:29.188687	2025-26
+134	WORKING WITHIN THE BUDGET - ACCOUNTS AND FINANCE	2	125	2026-01-08 10:47:49.847943	2026-01-08 10:47:49.847943	2025-26
+135	ON TIME DEBT RECOVERY	2	125	2026-01-08 10:48:24.177962	2026-01-08 10:48:24.177962	2025-26
+136	ACCOUNTS RECEIVABLE - 0 - 30 DAYS	5	135	2026-01-08 10:49:12.966103	2026-01-08 10:49:12.966103	2025-26
+137	ACCOUNTS RECEIVABLE - 31-60 DAYS	5	135	2026-01-08 10:49:29.527338	2026-01-08 10:49:29.527338	2025-26
+138	ACCOUNTS RECEIVABLE - 61-90 DAYS	5	135	2026-01-08 10:49:46.002092	2026-01-08 10:49:46.002092	2025-26
+139	ACCOUNTS RECEIVABLE - 91-120 DAYS	5	135	2026-01-08 10:50:05.010975	2026-01-08 10:50:05.010975	2025-26
+140	ACCOUNTS RECEIVABLE - 121+ DAYS	5	135	2026-01-08 10:50:23.053791	2026-01-08 10:50:23.053791	2025-26
+141	TOTAL ACCOUNTS RECEIVABLE	5	135	2026-01-08 10:50:42.032328	2026-01-08 10:50:42.032328	2025-26
+142	ON TIME SUPPLIER PAYMENT	2	125	2026-01-08 10:51:02.609734	2026-01-08 10:51:02.609734	2025-26
+143	ACCOUNTS PAYABLE - 0 - 30 DAYS	5	142	2026-01-08 10:51:20.970818	2026-01-08 10:51:20.970818	2025-26
+144	ACCOUNTS PAYABLE - 31-60 DAYS	5	142	2026-01-08 10:51:48.913815	2026-01-08 10:51:48.913815	2025-26
+145	ACCOUNTS PAYABLE - 61-90 DAYS	5	142	2026-01-08 10:52:07.735394	2026-01-08 10:52:07.735394	2025-26
+87	TOTAL PAPER CONSUMPTION	2	76	2026-01-08 10:17:54.731485	2026-01-13 12:19:59.473861	2025-26
+146	ACCOUNTS PAYABLE - 91-120 DAYS	5	142	2026-01-08 10:52:26.726842	2026-01-08 10:52:26.726842	2025-26
+147	ACCOUNTS PAYABLE - 121+ DAYS	5	142	2026-01-08 10:52:44.1625	2026-01-08 10:52:44.1625	2025-26
+148	TOTAL ACCOUNTS PAYABLE	5	142	2026-01-08 10:53:00.337495	2026-01-08 10:53:00.337495	2025-26
+149	VALUE ADDED PER EMPLOYEE	1	4	2026-01-08 10:53:19.815802	2026-01-08 10:53:19.815802	2025-26
+150	TOTAL VALUE ADDITION	2	149	2026-01-08 10:53:43.872036	2026-01-08 10:53:43.872036	2025-26
+151	TOTAL NO. OF EMPLOYEES	5	150	2026-01-08 10:54:23.227838	2026-01-08 10:54:23.227838	2025-26
+152	COST SAVING BY ELIMINATING 8 WASTES OF LEAN MANUFACTURING	1	4	2026-01-08 10:55:36.09019	2026-01-08 10:55:36.09019	2025-26
+153	MUDA OF TRANSPORT - ACTUAL REDUCTION IN TRAVELLING DISTANCE	2	152	2026-01-08 10:55:49.203952	2026-01-08 10:55:49.203952	2025-26
+154	MUDA OF INVENTORY - INVENTORY TURNOVER DAYS	3	153	2026-01-08 10:56:11.432109	2026-01-08 10:56:11.432109	2025-26
+155	MUDA OF INVENTORY - INVENTORY TURNOVER DAYS - RAW MATERIAL	4	154	2026-01-08 10:56:37.7649	2026-01-08 10:56:37.7649	2025-26
+156	INVENTORY - RAW MATERIAL	5	155	2026-01-08 10:57:01.94722	2026-01-08 10:57:01.94722	2025-26
+157	MUDA OF INVENTORY - INVENTORY TURNOVER DAYS - BOC	4	154	2026-01-08 10:57:28.809501	2026-01-08 10:57:28.809501	2025-26
+158	INVENTORY - BOC	5	157	2026-01-08 10:57:55.194407	2026-01-08 10:57:55.194407	2025-26
+159	MUDA OF INVENTORY - INVENTORY TURNOVER DAYS - SPARES AND CONSUMABLES	4	154	2026-01-08 10:58:25.616701	2026-01-08 10:58:25.616701	2025-26
+160	INVENTORY - SPARES AND CONSUMABLES	5	159	2026-01-08 10:59:00.397982	2026-01-08 10:59:00.397982	2025-26
+161	MUDA OF INVENTORY - INVENTORY TURNOVER DAYS - WIP	4	154	2026-01-08 10:59:24.759793	2026-01-08 10:59:24.759793	2025-26
+162	INVENTORY - WIP	5	161	2026-01-08 10:59:43.613419	2026-01-08 10:59:43.613419	2025-26
+163	MUDA OF INVENTORY - INVENTORY TURNOVER DAYS - FG STORES	4	154	2026-01-08 11:00:08.286891	2026-01-08 11:00:08.286891	2025-26
+164	INVENTORY - FG STORES	5	163	2026-01-08 11:00:27.145404	2026-01-08 11:00:27.145404	2025-26
+165	MUDA OF MOTION - KAIZEN TO ELIMINATE NON VALUE ADDED MOVEMENTS	2	152	2026-01-08 11:01:15.114994	2026-01-08 11:01:15.114994	2025-26
+166	MUDA OF WAITING - IMPROVEMENT IN THROUGHPUT TIME	2	152	2026-01-08 11:01:42.967969	2026-01-08 11:01:42.967969	2025-26
+167	MUDA OF OVERPRODUCTION - PRODUCTION VOLUME VS. ACTUAL DEMAND	2	152	2026-01-08 11:02:18.259615	2026-01-08 11:02:18.259615	2025-26
+168	MUDA OF EXCESS PROCESSING - TIME SPENT ON UNNECESSARY TASKS	2	152	2026-01-08 11:02:36.027816	2026-01-08 11:02:36.027816	2025-26
+169	MUDA OF NON-UTILISED TALENT - EMPLOYEE KAIZEN PARTICIPATION	2	152	2026-01-08 11:03:07.058599	2026-01-08 11:03:07.058599	2025-26
+170	NO. OF KAIZEN RECEIVED	5	169	2026-01-08 11:03:44.889994	2026-01-08 11:03:44.889994	2025-26
+171	TARGET SALES	5	5	2026-01-08 11:04:39.92084	2026-01-08 11:04:39.92084	2025-26
+172	CUMULATIVE SALES	5	5	2026-01-08 11:05:09.724819	2026-01-08 11:05:09.724819	2025-26
+173	CUMULATIVE TARGET SALES	5	5	2026-01-08 11:05:24.685531	2026-01-08 11:05:24.685531	2025-26
+174	TARGET VS ACTUAL CUMULATIVE SALES	1	5	2026-01-08 11:05:44.960326	2026-01-08 11:05:44.960326	2025-26
+175	SALES DOMESTIC	4	174	2026-01-08 11:06:11.411809	2026-01-08 11:06:24.237589	2025-26
+176	SALES EXPORT	4	174	2026-01-08 11:06:51.182084	2026-01-08 11:06:51.182084	2025-26
+177	INTER UNIT SALES	4	174	2026-01-08 11:07:10.884592	2026-01-08 11:07:10.884592	2025-26
+178	PENDING ORDERS - NON SHIPPABLE	5	177	2026-01-08 11:07:44.321446	2026-01-08 11:07:44.321446	2025-26
+179	PENDING ORDERS - SHIPPABLE - BACKLOG	5	177	2026-01-08 11:07:57.121159	2026-01-08 11:07:57.121159	2025-26
+180	PENDING ORDERS - SHIPPABLE - FUTURE DUE	5	177	2026-01-08 11:08:13.732681	2026-01-08 11:08:13.732681	2025-26
+181	DIGITAL MARKETING	4	174	2026-01-08 11:09:14.068867	2026-01-08 11:09:14.068867	2025-26
+182	CUSTOMER VISIT	4	174	2026-01-08 11:09:56.218507	2026-01-08 11:09:56.218507	2025-26
+183	BUILDING RAPPORT WITH TOP 20% CUSTOMERS	4	174	2026-01-08 11:10:33.667692	2026-01-08 11:10:33.667692	2025-26
+184	ORDER CONVERSION	2	174	2026-01-08 11:11:05.858248	2026-01-08 11:11:05.858248	2025-26
+185	ORDER CONVERSION - EXPORT	4	184	2026-01-08 11:11:30.238538	2026-01-08 11:11:30.238538	2025-26
+186	ORDER CONVERSION - DOMESTIC - RAILWAY	4	184	2026-01-08 11:11:57.76537	2026-01-08 11:11:57.76537	2025-26
+187	ORDER CONVERSION - DOMESTIC - OTHER THAN RAILWAY	4	184	2026-01-08 11:12:59.440052	2026-01-08 11:12:59.440052	2025-26
+188	ON TIME DELIVERY - STANDARD PRODUCTS	1	6	2026-01-08 11:13:25.627877	2026-01-08 11:13:25.627877	2025-26
+189	SALES ORDER CYCLE	5	188	2026-01-08 11:13:43.645302	2026-01-08 11:13:43.645302	2025-26
+190	ON TIME QUOTATIONS	2	188	2026-01-08 11:13:59.471033	2026-01-08 11:13:59.471033	2025-26
+191	QUOTATION TIME	5	190	2026-01-08 11:14:22.105662	2026-01-08 11:14:22.105662	2025-26
+192	ON TIME ORDER BOOKING	2	188	2026-01-08 11:14:35.961124	2026-01-08 11:14:35.961124	2025-26
+193	ORDER BOOKING TIME	5	192	2026-01-08 11:14:53.78369	2026-01-08 11:14:53.78369	2025-26
+194	ON TIME PURCHASE	2	188	2026-01-08 11:15:15.374372	2026-01-08 11:15:15.374372	2025-26
+195	PURCHASE CYCLE	5	194	2026-01-08 11:15:34.001945	2026-01-08 11:15:34.001945	2025-26
+196	PR TO PO DAYS	4	194	2026-01-08 11:15:57.657778	2026-01-08 11:15:57.657778	2025-26
+197	SAP - OPEN PR	5	196	2026-01-08 11:16:28.942034	2026-01-08 11:16:28.942034	2025-26
+198	PO TO GOODS RECEIPT DAYS	4	194	2026-01-08 11:17:29.278992	2026-01-08 11:17:29.278992	2025-26
+199	SAP - OPEN PO	5	198	2026-01-08 11:17:50.882141	2026-01-08 11:17:50.882141	2025-26
+200	GOODS RECEIPT TO GRPO DAYS	4	194	2026-01-08 11:18:38.218253	2026-01-08 11:18:38.218253	2025-26
+201	DOCUMENTS WAITING FOR GRPO	5	200	2026-01-08 11:19:08.460459	2026-01-08 11:19:08.460459	2025-26
+202	GRPO TO INVOICE DAYS	4	194	2026-01-08 11:19:36.301698	2026-01-08 11:19:36.301698	2025-26
+203	SAP - OPEN GRPO	5	202	2026-01-08 11:20:00.993161	2026-01-08 11:20:00.993161	2025-26
+204	ON TIME PRODUCTION	2	188	2026-01-08 11:20:25.663294	2026-01-08 11:20:25.663294	2025-26
+205	PRODUCTION CYCLE	5	204	2026-01-08 11:20:48.597333	2026-01-08 11:20:48.597333	2025-26
+206	PRODUCTION ORDER TO GOODS ISSUE DAYS	4	204	2026-01-08 11:21:15.161297	2026-01-08 11:21:15.161297	2025-26
+207	GOODS ISSUE TO PROCESS CARD CREATION DAYS	4	204	2026-01-08 11:21:45.475378	2026-01-08 11:21:45.475378	2025-26
+208	PROCESS CARD CREATION TO CARD CLOSE DAYS	4	204	2026-01-08 11:22:04.962105	2026-01-08 11:22:04.962105	2025-26
+209	ON TIME DELIVERY - SUBCONTRACTORS	2	188	2026-01-08 11:22:40.830484	2026-01-08 11:22:40.830484	2025-26
+210	SUBCONTRACTING TIME	5	209	2026-01-08 11:22:59.064184	2026-01-08 11:22:59.064184	2025-26
+211	SUBCONTRACTOR INVOICING DAYS	4	209	2026-01-08 11:23:27.45254	2026-01-08 11:23:27.45254	2025-26
+212	SUBCONTRACTOR BILLS PENDING	5	211	2026-01-08 11:25:33.711246	2026-01-08 11:25:33.711246	2025-26
+213	ON TIME ASSEMBLY - FG STORES	2	188	2026-01-08 11:25:49.220808	2026-01-08 11:25:49.220808	2025-26
+214	FG STORES ASSEMBLY TIME	5	213	2026-01-08 11:26:04.266702	2026-01-08 11:26:04.266702	2025-26
+215	ON TIME DELIVERY - FORGE SHOP	2	188	2026-01-08 11:26:26.774954	2026-01-08 11:26:26.774954	2025-26
+216	ON TIME NEW DEVELOPMENTS - PRODUCT	2	188	2026-01-08 11:26:50.128217	2026-01-08 11:26:50.128217	2025-26
+217	ON TIME NEW DEVELOPMENTS - EQUIPMENT	2	188	2026-01-08 11:27:17.713295	2026-01-08 11:27:17.713295	2025-26
+218	REDUCTION IN NEW EQUIPMENT DEVELOPMENT TIME	3	217	2026-01-08 11:27:33.596112	2026-01-08 11:27:33.596112	2025-26
+219	OPTIMIZATION IN NEW EQUIPMENT VERTICAL START UP TIME	3	217	2026-01-08 11:27:54.372971	2026-01-08 11:27:54.372971	2025-26
+220	REDUCTION IN NEW EQUIPMENT DEVELOPMENT COST	3	217	2026-01-08 11:28:12.720762	2026-01-08 11:28:12.720762	2025-26
+221	MP SHEETS IN NEW EQUIPMENT	5	220	2026-01-08 11:28:44.917838	2026-01-08 11:28:44.917838	2025-26
+222	ON TIME NEW DEVELOPMENTS - PRODUCT - FORGE SHOP	2	188	2026-01-08 11:29:02.224916	2026-01-08 11:29:02.224916	2025-26
+223	ON TIME QUALITY CHECK	2	188	2026-01-08 11:29:22.012315	2026-01-08 11:29:22.012315	2025-26
+224	ON TIME RESOURCE PROVISION - MANPOWER	2	188	2026-01-08 11:29:36.079599	2026-01-08 11:29:36.079599	2025-26
+225	ON TIME RESOURCE PROVISION - GENERAL GOODS AND SERVICES	2	188	2026-01-08 11:29:47.56924	2026-01-08 11:29:47.56924	2025-26
+226	NON-REPORTABLE ACCIDENTS	1	7	2026-01-08 15:13:00.377754	2026-01-08 15:13:00.377754	2025-26
+227	NEAR MISS CASES	1	7	2026-01-08 15:13:16.492554	2026-01-08 15:13:16.492554	2025-26
+228	FIRST AID CASES	1	7	2026-01-08 15:13:32.024031	2026-01-08 15:13:32.024031	2025-26
+229	OCCUPATIONAL DISEASE CASES	1	7	2026-01-08 15:13:50.754553	2026-01-08 15:13:50.754553	2025-26
+230	FIRE LOAD REDUCTION	3	229	2026-01-08 15:14:17.258253	2026-01-08 15:14:17.258253	2025-26
+231	NUMBER OF INCIDENTS DUE TO LACK OF SKILLS	3	229	2026-01-08 15:14:39.506182	2026-01-08 15:14:39.506182	2025-26
+232	NUMBER OF INCIDENTS DUE TO INADEQUATE JH	3	229	2026-01-08 15:15:03.91984	2026-01-08 15:15:03.91984	2025-26
+233	SAFETY LEGAL COMPLIANCE	1	7	2026-01-08 15:15:28.257538	2026-01-08 15:15:28.257538	2025-26
+234	SAFETY LEGAL COMPLIANCE - MARKETING AND SALES	2	233	2026-01-08 15:15:49.385142	2026-01-08 15:15:49.385142	2025-26
+235	SAFETY LEGAL COMPLIANCE - DESIGN AND DEVELOPMENT	2	233	2026-01-08 15:16:09.372747	2026-01-08 15:16:09.372747	2025-26
+236	SAFETY LEGAL COMPLIANCE - PURCHASE	2	233	2026-01-08 15:16:30.623719	2026-01-08 15:16:30.623719	2025-26
+237	SAFETY LEGAL COMPLIANCE - PRODUCTION	2	233	2026-01-08 15:16:45.873743	2026-01-08 15:16:45.873743	2025-26
+238	SAFETY LEGAL COMPLIANCE - QA	2	233	2026-01-08 15:17:00.370603	2026-01-08 15:17:00.370603	2025-26
+239	SAFETY LEGAL COMPLIANCE - FORGE SHOP	2	233	2026-01-08 15:17:11.022215	2026-01-08 15:17:11.022215	2025-26
+240	SAFETY LEGAL COMPLIANCE - ADMINISTRATION	2	233	2026-01-08 15:17:27.513613	2026-01-08 15:17:27.513613	2025-26
+241	SAFETY LEGAL COMPLIANCE - HR	2	233	2026-01-08 15:20:32.505358	2026-01-08 15:20:32.505358	2025-26
+242	SAFETY LEGAL COMPLIANCE - ACCOUNTS AND FINANCE	2	233	2026-01-08 15:20:46.341917	2026-01-08 15:20:46.341917	2025-26
+243	SAFETY LEGAL COMPLIANCE - MR	2	233	2026-01-08 15:21:11.43195	2026-01-08 15:21:11.43195	2025-26
+244	HIRA SCORE	3	243	2026-01-08 15:21:43.869912	2026-01-08 15:21:43.869912	2025-26
+245	SHE PATROL ROUNDS / SHE AUDITS	5	244	2026-01-08 15:22:15.044785	2026-01-08 15:22:15.044785	2025-26
+246	HIRA SCORE - MARKETING AND SALES	2	233	2026-01-08 15:22:58.443145	2026-01-08 15:22:58.443145	2025-26
+247	HIRA SCORE - DESIGN AND DEVELOPMENT	2	233	2026-01-08 15:23:17.899867	2026-01-08 15:23:17.899867	2025-26
+248	HIRA SCORE - PURCHASE	2	233	2026-01-08 15:23:33.347446	2026-01-08 15:23:33.347446	2025-26
+249	HIRA SCORE - PRODUCTION	2	233	2026-01-08 15:23:44.662428	2026-01-08 15:23:44.662428	2025-26
+250	HIRA SCORE - QA	2	233	2026-01-08 15:23:57.119548	2026-01-08 15:23:57.119548	2025-26
+251	HIRA SCORE - FORGE SHOP	2	233	2026-01-08 15:24:09.68897	2026-01-08 15:24:09.68897	2025-26
+252	HIRA SCORE - ADMINISTRATION	2	233	2026-01-08 15:24:20.440645	2026-01-08 15:24:20.440645	2025-26
+253	HIRA SCORE - HR	2	233	2026-01-08 15:24:32.455682	2026-01-08 15:24:32.455682	2025-26
+254	HIRA SCORE - ACCOUNTS AND FINANCE	2	233	2026-01-08 15:24:44.374067	2026-01-08 15:24:44.374067	2025-26
+255	HIRA SCORE - MR	2	233	2026-01-08 15:25:01.38889	2026-01-08 15:25:01.38889	2025-26
+256	TPM TRACKER - WAITING FOR SETTING TIME	3	11	2026-01-09 16:55:17.638413	2026-01-09 16:55:17.638413	2025-26
+257	NUMBER OF KAIZEN IMPLEMENTED TO REDUCE WAITING FOR SETTING TIME	5	256	2026-01-09 17:00:53.354482	2026-01-09 17:00:53.354482	2025-26
+259	KAIZEN TO IMPROVE PE	5	43	2026-01-10 16:56:25.185434	2026-01-10 16:56:25.185434	2025-26
+\.
+
+
+--
+-- TOC entry 5098 (class 0 OID 115435)
+-- Dependencies: 241
+-- Data for Name: log; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.log (id, user_id, description, created_at) FROM stdin;
+1	\N	[PillarController.getAll] relation "pillars" does not exist\nStack: error: relation "pillars" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Pillar.getAll (file:///F:/Hyloc/server/src/models/pillar.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/pillar.js:7:23)	2026-01-09 12:44:32.532482
+2	\N	[PillarController.getAll] relation "pillars" does not exist\nStack: error: relation "pillars" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Pillar.getAll (file:///F:/Hyloc/server/src/models/pillar.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/pillar.js:7:23)	2026-01-09 12:44:32.533516
+3	\N	[PillarController.getAll] relation "pillars" does not exist\nStack: error: relation "pillars" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Pillar.getAll (file:///F:/Hyloc/server/src/models/pillar.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/pillar.js:7:23)	2026-01-09 12:44:46.640108
+4	\N	[PillarController.getAll] relation "pillars" does not exist\nStack: error: relation "pillars" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Pillar.getAll (file:///F:/Hyloc/server/src/models/pillar.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/pillar.js:7:23)	2026-01-09 12:44:46.718366
+5	\N	[KPIValueController.getAll] column "updated_at" does not exist\nStack: error: column "updated_at" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 15:17:04.662035
+6	\N	[KPIValueController.getAll] column "updated_at" does not exist\nStack: error: column "updated_at" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 15:17:04.771825
+7	\N	[KPIValueController.getAll] column "updated_at" does not exist\nStack: error: column "updated_at" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 15:17:34.75323
+8	\N	[KPIValueController.getAll] column "updated_at" does not exist\nStack: error: column "updated_at" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 15:18:07.738186
+9	\N	[KPIValueController.getAll] column "updated_at" does not exist\nStack: error: column "updated_at" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 15:18:07.758514
+10	\N	[KPIValueController.getAll] column "updated_at" does not exist\nStack: error: column "updated_at" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 15:37:01.51981
+11	\N	[KPIValueController.getAll] column "updated_at" does not exist\nStack: error: column "updated_at" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 15:37:01.63588
+12	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.539398
+13	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.574073
+15	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.588137
+14	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.588483
+16	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.593358
+17	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.593553
+18	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.595843
+20	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.648069
+22	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.652802
+25	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.705342
+26	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:49.162896
+30	\N	[KPIValueController.create] column "data operator" of relation "kpi_values" does not exist\nStack: error: column "data operator" of relation "kpi_values" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.create (file:///F:/Hyloc/server/src/models/kpi-value.js:33:20)\n    at async create (file:///F:/Hyloc/server/src/controllers/kpi-value.js:57:24)	2026-01-09 16:06:39.143624
+33	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:09:13.748987
+36	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:09:42.64894
+39	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:17:01.025359
+42	\N	[KPIValueController.create] insert or update on table "kpi_values" violates foreign key constraint "fk_kpi_values_data_operator"\nStack: error: insert or update on table "kpi_values" violates foreign key constraint "fk_kpi_values_data_operator"\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.create (file:///F:/Hyloc/server/src/models/kpi-value.js:33:20)\n    at async create (file:///F:/Hyloc/server/src/controllers/kpi-value.js:57:24)	2026-01-09 16:19:43.468151
+46	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 14:35:06.047289
+49	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:48:09.484318
+52	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:48:46.083241
+54	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:48:51.545012
+57	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:50:40.579038
+61	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:51:03.506336
+64	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:51:25.832631
+67	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:53:52.58065
+19	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.647838
+27	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:49.165369
+21	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.64796
+23	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.652215
+28	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:06:10.599602
+31	\N	[KPIValueController.create] column "data operator" of relation "kpi_values" does not exist\nStack: error: column "data operator" of relation "kpi_values" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.create (file:///F:/Hyloc/server/src/models/kpi-value.js:33:20)\n    at async create (file:///F:/Hyloc/server/src/controllers/kpi-value.js:57:24)	2026-01-09 16:07:37.856945
+34	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:09:19.563772
+37	\N	[KPIValueController.create] column "data operator" of relation "kpi_values" does not exist\nStack: error: column "data operator" of relation "kpi_values" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.create (file:///F:/Hyloc/server/src/models/kpi-value.js:33:20)\n    at async create (file:///F:/Hyloc/server/src/controllers/kpi-value.js:57:24)	2026-01-09 16:10:09.190712
+40	\N	[KPIValueController.create] column "data operator" of relation "kpi_values" does not exist\nStack: error: column "data operator" of relation "kpi_values" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.create (file:///F:/Hyloc/server/src/models/kpi-value.js:33:20)\n    at async create (file:///F:/Hyloc/server/src/controllers/kpi-value.js:57:24)	2026-01-09 16:17:19.598388
+43	\N	[KPIValueController.create] insert or update on table "kpi_values" violates foreign key constraint "fk_kpi_values_data_operator"\nStack: error: insert or update on table "kpi_values" violates foreign key constraint "fk_kpi_values_data_operator"\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.create (file:///F:/Hyloc/server/src/models/kpi-value.js:33:20)\n    at async create (file:///F:/Hyloc/server/src/controllers/kpi-value.js:57:24)	2026-01-09 16:19:59.557817
+44	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 14:34:50.809132
+47	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 14:35:25.457096
+50	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:48:09.634658
+55	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:49:15.194587
+58	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:50:40.613632
+60	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:50:45.079764
+62	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:51:03.567711
+65	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:52:37.423366
+68	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:53:52.583443
+24	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:05:40.690092
+29	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:06:10.600528
+32	\N	[KPIValueController.create] column "data operator" of relation "kpi_values" does not exist\nStack: error: column "data operator" of relation "kpi_values" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.create (file:///F:/Hyloc/server/src/models/kpi-value.js:33:20)\n    at async create (file:///F:/Hyloc/server/src/controllers/kpi-value.js:57:24)	2026-01-09 16:09:12.239212
+35	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:09:42.603277
+38	\N	[KPIValueController.getAll] column "data operator" does not exist\nStack: error: column "data operator" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:23:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:11:24)	2026-01-09 16:17:00.909986
+41	\N	[KPIValueController.create] column "data operator" of relation "kpi_values" does not exist\nStack: error: column "data operator" of relation "kpi_values" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.create (file:///F:/Hyloc/server/src/models/kpi-value.js:33:20)\n    at async create (file:///F:/Hyloc/server/src/controllers/kpi-value.js:57:24)	2026-01-09 16:17:30.448577
+45	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 14:34:50.869317
+48	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 14:35:33.334496
+51	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:48:46.023962
+53	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:48:51.523818
+56	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:49:15.255804
+59	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:50:45.079318
+63	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:51:25.814449
+66	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:52:37.430282
+69	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:54:15.196566
+70	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:54:20.938923
+83	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:26:07.340933
+71	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:54:20.946037
+72	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:54:28.208102
+73	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:54:40.670654
+74	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:54:40.750069
+75	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:54:47.75918
+76	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:54:47.773886
+77	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:56:58.67046
+78	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 15:56:58.72378
+79	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 16:01:06.861522
+80	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 16:01:06.874113
+81	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 16:01:17.163222
+82	\N	[KPIValueController.getAll] column "entry_type" does not exist\nStack: error: column "entry_type" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-10 16:01:17.173804
+84	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:26:07.444364
+85	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:26:08.21228
+86	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:26:08.221061
+87	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:26:18.309238
+88	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:26:18.417216
+89	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:26:19.588541
+90	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:26:19.594357
+91	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:26:43.091961
+92	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:26:43.092861
+93	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:26:44.49209
+94	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:26:44.52314
+95	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:27:15.89221
+96	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:27:15.958021
+97	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:27:16.845141
+98	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:27:16.858284
+99	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:27:40.825959
+100	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:27:40.826384
+101	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:27:42.060363
+102	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:27:42.066368
+103	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:28:08.222935
+104	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:28:08.25565
+105	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:28:09.554604
+106	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:28:09.555513
+107	\N	[RoleController.getAll] column "role" does not exist\nStack: error: column "role" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async Role.findAll (file:///F:/Hyloc/server/src/models/role.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/role.js:7:21)	2026-01-10 17:28:17.775733
+108	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 11:29:03.644215
+109	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 11:29:03.646377
+110	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:21:47.234366
+111	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:21:47.335531
+112	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:33:18.260119
+113	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:33:18.355747
+115	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:45:23.602524
+114	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:45:23.595758
+116	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:45:34.664576
+117	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:45:34.745635
+118	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:45:55.529353
+119	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:45:55.580888
+120	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:46:06.400248
+121	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:46:06.461099
+122	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:51:03.063301
+123	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:51:03.094572
+124	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:51:12.797853
+125	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:51:12.93838
+126	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:51:29.013765
+127	\N	[KPIController.getAll] column "data_entry_emp_id" does not exist\nStack: error: column "data_entry_emp_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 12:51:29.050048
+128	\N	[KPIController.getAll] column "unit_id" does not exist\nStack: error: column "unit_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 13:02:12.667586
+129	\N	[KPIController.getAll] column "unit_id" does not exist\nStack: error: column "unit_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 13:02:12.748314
+130	\N	[KPIController.getAll] column "unit_id" does not exist\nStack: error: column "unit_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 13:03:22.575196
+131	\N	[KPIController.getAll] column "unit_id" does not exist\nStack: error: column "unit_id" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPI.findAll (file:///F:/Hyloc/server/src/models/kpi.js:5:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi.js:7:20)	2026-01-12 13:03:22.610512
+132	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:04:34.920225
+133	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:04:34.957909
+134	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:04:34.994522
+135	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:04:35.029517
+136	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:04:40.852059
+137	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:04:41.705072
+138	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:04:42.599822
+139	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:04:54.649598
+140	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:04:58.288769
+141	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:05:02.214574
+142	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:05:05.851834
+143	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:05:07.996582
+144	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:02.581397
+145	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:02.621762
+146	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:02.631676
+147	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:02.766805
+148	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:02.783418
+149	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:02.807579
+150	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:02.821943
+151	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:02.857158
+152	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:02.950911
+153	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:02.985666
+154	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:02.997777
+155	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:03.020296
+156	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:03.033698
+157	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:03.054151
+158	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:08.274231
+159	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:19.730349
+160	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:22.693118
+161	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:25.905184
+162	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:28.632595
+163	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:32.427886
+164	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:07:35.687826
+165	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:05.935828
+166	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:05.959332
+167	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:05.980893
+168	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:06.003535
+169	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:06.026861
+170	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:06.043882
+171	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:06.07023
+172	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:06.082069
+173	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:06.112604
+174	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:06.11843
+175	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:06.128615
+176	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:06.160763
+177	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:06.166111
+178	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:09:06.195605
+179	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:01.477338
+180	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:01.517044
+181	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:01.663906
+182	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:01.71021
+183	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:01.80793
+184	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:01.855202
+185	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:01.872021
+186	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:01.920624
+187	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:01.975288
+188	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:02.015575
+189	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:02.043508
+190	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:02.064508
+191	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:02.102588
+192	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:02.122721
+193	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.409863
+194	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.443674
+195	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.483034
+196	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.516705
+197	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.553291
+198	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.586242
+199	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.623473
+200	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.660807
+201	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.702002
+202	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.7357
+203	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.771824
+204	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.805548
+205	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.916561
+206	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:10:23.955235
+207	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:13:40.268715
+208	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:13:48.825999
+209	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:17:13.2477
+210	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:17:19.104756
+211	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:18:14.59048
+212	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:18:17.158351
+213	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:18:18.911379
+214	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:21:34.15957
+215	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:21:34.185663
+216	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:21:34.205282
+217	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:21:34.222395
+218	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:21:36.735491
+219	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 13:21:37.865259
+220	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 14:34:20.908257
+221	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 14:34:20.947961
+222	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 14:34:22.584516
+223	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 14:34:23.612871
+224	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.157362
+225	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.165383
+226	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.173703
+227	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.208865
+228	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.247304
+229	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.282225
+230	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.390468
+231	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.435591
+232	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.446005
+233	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.477437
+234	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.483075
+235	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.488531
+236	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.621578
+237	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.662307
+238	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.66902
+239	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:04.672643
+240	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:06.728613
+241	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:27:13.839561
+242	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:30:35.041378
+243	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:38:31.86489
+244	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:38:31.922771
+245	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:38:31.975398
+246	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:38:32.025102
+247	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:38:32.078458
+248	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:38:32.125946
+249	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:38:32.176057
+250	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:38:32.226827
+251	\N	[EmployeeKPIController.getMonthlyData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:156:26)	2026-01-12 16:39:12.130792
+252	\N	[EmployeeKPIController.submitKPIData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async submitKPIData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:111:29)	2026-01-12 16:39:25.852242
+253	\N	[EmployeeKPIController.submitKPIData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async submitKPIData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:111:29)	2026-01-12 16:40:08.610051
+254	\N	[EmployeeKPIController.submitKPIData] relation "kpi_monthly_data" does not exist\nStack: error: relation "kpi_monthly_data" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async submitKPIData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:111:29)	2026-01-12 16:44:38.309614
+255	\N	[EmployeeKPIController.submitKPIData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async submitKPIData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:115:32)	2026-01-12 16:52:42.523322
+256	\N	[EmployeeKPIController.getMonthlyData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:194:26)	2026-01-12 16:53:56.859095
+257	\N	[EmployeeKPIController.getMonthlyData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:194:26)	2026-01-12 16:53:56.910912
+258	\N	[EmployeeKPIController.getMonthlyData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:194:26)	2026-01-12 16:53:56.958219
+259	\N	[EmployeeKPIController.getMonthlyData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:194:26)	2026-01-12 16:53:57.006841
+260	\N	[EmployeeKPIController.getMonthlyData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:194:26)	2026-01-12 16:53:57.057403
+261	\N	[EmployeeKPIController.getMonthlyData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:194:26)	2026-01-12 16:53:57.109872
+262	\N	[EmployeeKPIController.getMonthlyData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:194:26)	2026-01-12 16:53:57.151609
+263	\N	[EmployeeKPIController.getMonthlyData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:194:26)	2026-01-12 16:53:57.199841
+264	\N	[EmployeeKPIController.getMonthlyData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async getMonthlyData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:194:26)	2026-01-12 16:54:12.599778
+265	\N	[EmployeeKPIController.submitKPIData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async submitKPIData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:115:32)	2026-01-12 16:54:29.891373
+266	\N	[EmployeeKPIController.submitKPIData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async submitKPIData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:115:32)	2026-01-12 16:57:53.306584
+267	\N	[EmployeeKPIController.submitKPIData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async submitKPIData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:115:32)	2026-01-12 16:58:00.13826
+268	\N	[EmployeeKPIController.submitKPIData] malformed record literal: "target"\nStack: error: malformed record literal: "target"\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async submitKPIData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:115:32)	2026-01-12 16:58:55.308803
+269	\N	[EmployeeKPIController.submitKPIData] malformed record literal: "target"\nStack: error: malformed record literal: "target"\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async submitKPIData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:115:32)	2026-01-12 16:59:03.384375
+270	\N	[EmployeeKPIController.submitKPIData] malformed record literal: "target"\nStack: error: malformed record literal: "target"\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async submitKPIData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:115:32)	2026-01-12 16:59:13.686306
+271	\N	[EmployeeKPIController.submitKPIData] malformed record literal: "target"\nStack: error: malformed record literal: "target"\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async submitKPIData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:115:32)	2026-01-12 16:59:36.458152
+272	\N	[EmployeeKPIController.submitKPIData] input of anonymous composite types is not implemented\nStack: error: input of anonymous composite types is not implemented\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async submitKPIData (file:///F:/Hyloc/server/src/controllers/employee-kpi.js:115:32)	2026-01-12 17:02:06.263818
+273	\N	[KPIValueController.create] null value in column "data operator" of relation "kpi_values" violates not-null constraint\nStack: error: null value in column "data operator" of relation "kpi_values" violates not-null constraint\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.create (file:///F:/Hyloc/server/src/models/kpi-value.js:36:20)\n    at async create (file:///F:/Hyloc/server/src/controllers/kpi-value.js:63:24)	2026-01-16 10:57:29.798586
+274	\N	[KPIValueController.getAll] column "formula" does not exist\nStack: error: column "formula" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-19 10:29:00.752539
+275	\N	[KPIValueController.getAll] column "formula" does not exist\nStack: error: column "formula" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-19 10:29:00.774769
+276	\N	[KPIValueController.getAll] column "formula" does not exist\nStack: error: column "formula" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-19 10:29:06.690793
+277	\N	[KPIValueController.getAll] column "formula" does not exist\nStack: error: column "formula" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-19 10:29:06.718522
+278	\N	[KPIValueController.getAll] column "formula" does not exist\nStack: error: column "formula" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-19 10:29:17.941396
+279	\N	[KPIValueController.getAll] column "formula" does not exist\nStack: error: column "formula" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-19 10:29:17.956982
+280	\N	[KPIValueController.getAll] column "formula" does not exist\nStack: error: column "formula" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-19 10:29:44.05491
+281	\N	[KPIValueController.getAll] column "formula" does not exist\nStack: error: column "formula" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-19 10:29:44.055248
+282	\N	[KPIValueController.getAll] column "formula" does not exist\nStack: error: column "formula" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-19 10:30:55.246927
+283	\N	[KPIValueController.getAll] column "formula" does not exist\nStack: error: column "formula" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-19 10:30:55.252402
+284	\N	[KPIValueController.getAll] column "formula" does not exist\nStack: error: column "formula" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-19 10:36:38.337121
+285	\N	[KPIValueController.getAll] column "formula" does not exist\nStack: error: column "formula" does not exist\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.findByKPI (file:///F:/Hyloc/server/src/models/kpi-value.js:25:20)\n    at async getAll (file:///F:/Hyloc/server/src/controllers/kpi-value.js:12:24)	2026-01-19 10:36:38.401414
+286	\N	[KPIValueController.update] could not determine data type of parameter $6\nStack: error: could not determine data type of parameter $6\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.update (file:///F:/Hyloc/server/src/models/kpi-value.js:56:20)\n    at async update (file:///F:/Hyloc/server/src/controllers/kpi-value.js:128:24)	2026-01-19 11:50:07.746305
+287	\N	[KPIValueController.update] could not determine data type of parameter $6\nStack: error: could not determine data type of parameter $6\n    at F:\\Hyloc\\server\\node_modules\\pg-pool\\index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at async KPIValue.update (file:///F:/Hyloc/server/src/models/kpi-value.js:56:20)\n    at async update (file:///F:/Hyloc/server/src/controllers/kpi-value.js:128:24)	2026-01-19 11:50:13.381279
+\.
+
+
+--
+-- TOC entry 5101 (class 0 OID 118718)
+-- Dependencies: 244
+-- Data for Name: pillers; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.pillers (id, piller_name, short_name, created_at, updated_at) FROM stdin;
+1	Focused Improvement	KK	2026-01-09 12:43:51.357458+05:30	2026-01-09 12:43:51.357458+05:30
+2	Autonomous maintenance	JH	2026-01-09 12:43:51.357458+05:30	2026-01-09 12:43:51.357458+05:30
+3	Quality Maintenance	QM	2026-01-09 12:43:51.357458+05:30	2026-01-09 12:43:51.357458+05:30
+4	Planned Maintenance	PM	2026-01-09 12:43:51.357458+05:30	2026-01-09 12:43:51.357458+05:30
+5	Early management	EM	2026-01-09 12:43:51.357458+05:30	2026-01-09 12:43:51.357458+05:30
+6	Training and Education	ET	2026-01-09 12:43:51.357458+05:30	2026-01-09 12:43:51.357458+05:30
+7	Safety, Environment & Health	SHE	2026-01-09 12:43:51.357458+05:30	2026-01-09 12:43:51.357458+05:30
+8	Administrative TPM	OTPM	2026-01-09 12:43:51.357458+05:30	2026-01-09 12:43:51.357458+05:30
+9	Sort, Set in Order, Shine, Standardize, Sustain	5S	2026-01-13 11:42:04.382314+05:30	2026-01-13 11:42:04.382314+05:30
+\.
+
+
+--
+-- TOC entry 5094 (class 0 OID 115420)
+-- Dependencies: 237
+-- Data for Name: roles; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.roles (id, role_name, created_at, "Updated_at") FROM stdin;
+1	Management	2026-01-06 11:42:33.556932	2026-01-06 11:42:33.556932
+2	Employee	2026-01-06 11:46:01.856598	2026-01-06 11:46:01.856598
+3	admin	2026-01-10 17:30:36.678061	2026-01-10 17:30:36.678061
+\.
+
+
+--
+-- TOC entry 5090 (class 0 OID 115336)
+-- Dependencies: 233
+-- Data for Name: unit_master; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.unit_master (id, unit_name, symbol, created_at, updated_at) FROM stdin;
+1	Percentage	%	2026-01-05 12:25:25.084557	2026-01-05 12:25:25.084557
+2	Hours	Hrs.	2026-01-05 12:25:25.084557	2026-01-05 12:25:25.084557
+3	Minutes	Mins.	2026-01-05 12:25:25.084557	2026-01-05 12:25:25.084557
+4	Numbers	Nos.	2026-01-05 12:25:25.084557	2026-01-05 12:25:25.084557
+5	NO. OF EMPLOYEES	NO. OF EMPLOYEES	2026-01-05 12:25:25.084557	2026-01-05 12:25:25.084557
+6	Rupees	₹	2026-01-05 12:25:25.084557	2026-01-05 12:25:25.084557
+7	PPM	PPM	2026-01-05 12:25:25.084557	2026-01-05 12:25:25.084557
+8	METERS	METERS	2026-01-05 12:25:25.084557	2026-01-05 12:25:25.084557
+9	Days	Days	2026-01-05 12:25:25.084557	2026-01-05 12:25:25.084557
+10	NO. OF STARS	*	2026-01-05 12:25:25.084557	2026-01-05 12:25:25.084557
+11	KILOJOULES PER SQUARE METER	kJ/m²	2026-01-05 12:25:25.084557	2026-01-05 12:25:25.084557
+12	Score	Score	2026-01-05 12:25:25.084557	2026-01-05 12:25:25.084557
+\.
+
+
+--
+-- TOC entry 5096 (class 0 OID 115426)
+-- Dependencies: 239
+-- Data for Name: user_roles; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.user_roles (id, user_id, role_id, status, created_at, updated_at) FROM stdin;
+1	32	1	active	2026-01-10 17:32:49.537998	2026-01-10 17:32:49.537998
+2	31	1	active	2026-01-10 17:33:03.333804	2026-01-10 17:33:03.333804
+3	30	1	active	2026-01-10 17:33:11.551809	2026-01-10 17:33:11.551809
+4	23	2	active	2026-01-10 17:33:23.006487	2026-01-10 17:33:23.006487
+5	20	2	active	2026-01-10 17:33:31.001379	2026-01-10 17:33:31.001379
+6	22	2	active	2026-01-10 17:33:41.514558	2026-01-10 17:33:41.514558
+7	16	2	active	2026-01-10 17:34:07.570167	2026-01-10 17:34:07.570167
+8	17	2	active	2026-01-10 17:35:14.321905	2026-01-10 17:35:14.321905
+9	14	2	active	2026-01-10 17:35:47.277355	2026-01-10 17:35:47.277355
+10	18	2	active	2026-01-10 17:36:04.415547	2026-01-10 17:36:04.415547
+11	1	3	active	2026-01-10 17:38:29.895724	2026-01-10 17:38:29.895724
+12	6	2	active	2026-01-21 13:00:20.740719	2026-01-21 13:00:20.740719
+13	29	2	active	2026-01-21 13:00:44.423217	2026-01-21 13:00:44.423217
+14	28	2	active	2026-01-21 13:00:55.975365	2026-01-21 13:00:55.975365
+15	27	2	active	2026-01-21 13:01:06.285078	2026-01-21 13:01:06.285078
+16	26	2	active	2026-01-21 13:01:17.720434	2026-01-21 13:01:17.720434
+17	25	2	active	2026-01-21 13:01:24.990892	2026-01-21 13:01:24.990892
+18	24	2	active	2026-01-21 13:04:52.990374	2026-01-21 13:04:52.990374
+\.
+
+
+--
+-- TOC entry 5092 (class 0 OID 115344)
+-- Dependencies: 235
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.users (id, empid, department_id, phone, address, firstname, middlename, lastname, email, bloodgroup, password, created_at, updated_at) FROM stdin;
+1	10000	\N	\N	\N	Super	\N	Admin	admin@hyloc.co.in	\N	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-05 15:59:23.357581	2026-01-05 15:59:23.357581
+14	70055	1	9980385117	#656, Vimal Building, Ramghat Road,\nSukhasagar Colony, Ganeshpur,\nBelgaum – 591108.\n	Vilas	Keshav	Patil	vilaspatil2004@yahoo.com	O+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:48:37.642558	2026-01-06 12:48:37.642558
+5	10031	11	9845274858	Majukar Galli, Desur, Belgaum - 590014\n	Satish	Shivaji	Manwadkar	satishmanwandkar@gmail.com	B+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:20:03.290634	2026-01-06 12:20:03.290634
+6	10060	1	9164063380	At Daroli, Post Olamani, Tal: Khanapur, Dist:    Belgaum - 591345	Shrikant	Shamarao	Mutagekar	shrikantmutagekar1985@gmail.com	B+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:21:29.086319	2026-01-06 12:21:29.086319
+7	70005	4	9900488778	Flat No. G2, 'A' Wing, Shri Ganesh Arcade, New Goodshed Road, Belgaum - 590001	Gopal	Rangrao	Deshpande	deshyloc@gmail.com	AB+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:22:37.123178	2026-01-06 12:22:37.123178
+8	70007	7	9845554841	"Dwaraka Nivas, H. No. 3510, Haval Nagar,   \n2nd Cross, Machhe, Belgaum - 590014"	Anuraj	Krishna	Patil	anurajp1973@gmail.com	O+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:23:43.899075	2026-01-06 12:23:43.899075
+9	70010	5	9845554751	 "Mano - Giri", First Main, First Cross, Sadashiv Nagar, Belgaum - 590 001.	Vijaykumar	Manohar	Patil	junior1505@gmail.com	B+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:24:54.746778	2026-01-06 12:24:54.746778
+10	70013	11	9902742535	New Goodshed Road, Cross No-3,CCB No-93, Belgaum - 590 001.	Somnath	Dnyandev	Jadhav	somnathjadhav1516@gmail.com	AB+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:26:02.346794	2026-01-06 12:26:02.346794
+11	70024	7	9686603744	H. No.10, Kakar Street,Camp,\nBelgaum – 590 001.	Gracy	Marshal	Fernandes	gracy.fernandes71@gmail.com	B+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:27:14.3934	2026-01-06 12:27:14.3934
+12	70033	2	9901245687	Bhakti Prasad”,Kapileshwar Colony,\nBelgaum – 590 001.	Snehal	Sanjay	Farjand	snehalfarjand@yahoo.com	O+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:46:13.775257	2026-01-06 12:46:13.775257
+13	70034	4	9731565562	H. No. 472/B, CCB-882,\nPawar Chawl, Tilakwadi, \nBelgaum - 590006	Pavankumar	Raghavendra	Kulkarni	pavankle@gmail.com	B+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:47:26.452307	2026-01-06 12:47:26.452307
+15	70063	7	9535862940	301, C Wing Shri Ganesh Regency Near 2nd Railway Gate Hindunagar Belgaum - 59000	Rohan	Jagannath	Shanbhag	rohanshanbhag7@gmail.com	B+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:49:36.857804	2026-01-06 12:49:36.857804
+16	70074	12	7411534595	Plot No 220 KSRTC Colony Shindholi  Belgaum - 591124	Sumeet	Shrikant	Chadichal	sumeetchadichal2@gmail.com	B+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:50:47.053901	2026-01-06 12:51:12.746864
+17	70075	1	9986801554	H.No 351, Ayodhya Apartment Nehru road Tilakwadi Belgaum - 590006	Sandra	Rosy	Rozario	sandra.rozario@gmail.com	B+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:52:35.936073	2026-01-06 12:52:35.936073
+18	70076	1	8970465153	Nirasagar Road Dummavad Kalaghatagi Jammihal Dharwad - 580114	Basavanneppa	Kallappa	Tadasad	tbasavanneppa@gmail.com	B+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:53:40.160937	2026-01-06 12:53:40.160937
+19	70077	11	7760654463	187/3 Shivaji Nagar Bacholi Khanapur Belgaum - 591302	Pramod	Gangaram	Kolekar	sachinkolekar00@gmail.com	A+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:54:40.853687	2026-01-06 12:54:40.853687
+20	70078	1	7090094776	 Laxmi Nagar, Navage cross, Navage, Balagavi Belgaum - 590014	Sudarshan	Ladappa	Karlekar	sudarshankarlekar55@gmail.com	O+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:55:50.582409	2026-01-06 12:55:50.582409
+21	70079	2	9632782121	733/4, C/O Moresh Ambewadkar, Angol road, Belgaum - 590006	Sanjana	Santosh	Naik	sanjananaik2121@gmail.com	A+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:56:56.113538	2026-01-06 12:56:56.113538
+22	70080	1	7899597835	Flat No.S-6 Sairaj Phase - 1, Nehru Road  Near Lele Ground, Tilakwadi  Belgaum - 590006	Rupali	Amar	Malve	rupali9981@gmail.com	B+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:57:40.984192	2026-01-06 12:57:40.984192
+23	70082	1	9740230495	Gajanan Road, 3rd gate  Near 3rd Gate Tilakwadi Belgaum - 590006	Prashant	Vithal	Patil	prashant495patil@gmail.com	B+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:58:41.921894	2026-01-06 12:58:41.921894
+24	70084	2	9481655747	Flat No.003, Ground Floor Mahalaxmi Arcade Bhagyanagar Tilakwadi Belgaum - 590006	Manisha	Swanand	Godbole	manishagodbole01@gmail.com	A+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:59:50.888957	2026-01-06 12:59:50.888957
+25	70086	2	8217573563	H.NO. 194, Patil Galli,   Idalhonda Belgaum - 591302	Nagesh	Balkrishana	Patil	nageshpatil19448@gmail.com	A+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 13:00:47.878062	2026-01-06 13:00:47.878062
+26	70087	7	9503838863	Plot No.13, Jay Nagar  Vengurla Road, Vijay Nagar Belgaum - 591108	Ishani	Sudhir	Sardesai	ishanisardesai2000307@gmail.com	AB+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 13:01:53.081738	2026-01-06 13:01:53.081738
+27	70088	7	9449307208	H.No.598/7 , Rajhuns Galli,\nAngol, Belgaum 590006	Omkar	Fakira	Yallurkar	omkaryallurkar1998@gmail.com	A+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 13:02:58.952608	2026-01-06 13:02:58.952608
+28	70090	8	9986778721	CTS No. 314,\nSneha Apartment S1 Second Floor\nRoy Road\nTilakwadi Belgaum - 590006	Amol	Baburao	Bhalekar	amolbhalekar25@gmail.com	AB+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 13:04:07.242868	2026-01-06 13:04:07.242868
+29	70092	11	8792357576	H.No 256\nSai Building\nMavinkatti Road , Honihal\nBalekundri, Belgaum - 591103	Ranjeet	Suresh	Mane	ranjeetmane7576@gmail.com	A+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 13:05:33.498837	2026-01-06 13:05:33.498837
+30	70001	3	9448193035	292, Agarkar Road, Tilakwadi, Belgaum - 590006	Dilip	Shankar	Chitnis	dilip.chitnis@hyloc.co.in	A+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 13:11:50.12226	2026-01-06 13:11:50.12226
+31	70018	3	9845552800	292, Agarkar Road, Tilakwadi, Belgaum - 590006	Parag	Dilip	Chitnis	parag.chitnis@hyloc.co.in	B+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 13:13:13.928231	2026-01-06 13:13:13.928231
+32	70027	3	7829833169	292, Agarkar Road, Tilakwadi, Belgaum - 590006.	Swapna	Parag	Chitnis	swapna.chitnis@hyloc.co.in	B+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 13:14:17.224868	2026-01-06 13:14:17.224868
+4	10013	7	9164261001	H.No 1026 Laxmi Nagar 2nd Cross Kakati,  Belgaum - 590003	Rajesh	Kakasaheb 	Pawar	rajeshkakasahebpawar@gmail.com	O+	$2a$06$hA.f9wBfCklZCf4aRmi1aewZXiEyLZUrkMOpvsBkURVejW4nd8qNS	2026-01-06 12:17:30.084877	2026-01-06 12:17:30.084877
+\.
+
+
+--
+-- TOC entry 5114 (class 0 OID 0)
+-- Dependencies: 221
+-- Name: departments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.departments_id_seq', 12, true);
+
+
+--
+-- TOC entry 5115 (class 0 OID 0)
+-- Dependencies: 223
+-- Name: designations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.designations_id_seq', 1, false);
+
+
+--
+-- TOC entry 5116 (class 0 OID 0)
+-- Dependencies: 224
+-- Name: kpi_categories_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.kpi_categories_id_seq', 6, true);
+
+
+--
+-- TOC entry 5117 (class 0 OID 0)
+-- Dependencies: 246
+-- Name: kpi_data_value_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.kpi_data_value_id_seq', 193, true);
+
+
+--
+-- TOC entry 5118 (class 0 OID 0)
+-- Dependencies: 226
+-- Name: kpi_departments_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.kpi_departments_id_seq', 1, false);
+
+
+--
+-- TOC entry 5119 (class 0 OID 0)
+-- Dependencies: 228
+-- Name: kpi_emp_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.kpi_emp_id_seq', 1, false);
+
+
+--
+-- TOC entry 5120 (class 0 OID 0)
+-- Dependencies: 230
+-- Name: kpi_values_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.kpi_values_id_seq', 107, true);
+
+
+--
+-- TOC entry 5121 (class 0 OID 0)
+-- Dependencies: 232
+-- Name: kpis_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.kpis_id_seq', 260, true);
+
+
+--
+-- TOC entry 5122 (class 0 OID 0)
+-- Dependencies: 240
+-- Name: log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.log_id_seq', 287, true);
+
+
+--
+-- TOC entry 5123 (class 0 OID 0)
+-- Dependencies: 243
+-- Name: pillers_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.pillers_id_seq', 9, true);
+
+
+--
+-- TOC entry 5124 (class 0 OID 0)
+-- Dependencies: 242
+-- Name: roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.roles_id_seq', 3, true);
+
+
+--
+-- TOC entry 5125 (class 0 OID 0)
+-- Dependencies: 234
+-- Name: unit_master_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.unit_master_id_seq', 12, true);
+
+
+--
+-- TOC entry 5126 (class 0 OID 0)
+-- Dependencies: 238
+-- Name: user_roles_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.user_roles_id_seq', 18, true);
+
+
+--
+-- TOC entry 5127 (class 0 OID 0)
+-- Dependencies: 236
+-- Name: users_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.users_id_seq', 32, true);
+
+
+--
+-- TOC entry 4884 (class 2606 OID 115356)
+-- Name: departments departments_department_name_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.departments
+    ADD CONSTRAINT departments_department_name_key UNIQUE (department_name);
+
+
+--
+-- TOC entry 4886 (class 2606 OID 115358)
+-- Name: departments departments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.departments
+    ADD CONSTRAINT departments_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4888 (class 2606 OID 115360)
+-- Name: designations designations_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.designations
+    ADD CONSTRAINT designations_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4882 (class 2606 OID 115362)
+-- Name: categories kpi_categories_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.categories
+    ADD CONSTRAINT kpi_categories_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4918 (class 2606 OID 118757)
+-- Name: kpi_data_value kpi_data_value_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpi_data_value
+    ADD CONSTRAINT kpi_data_value_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4890 (class 2606 OID 115364)
+-- Name: kpi_departments kpi_departments_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpi_departments
+    ADD CONSTRAINT kpi_departments_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4892 (class 2606 OID 115366)
+-- Name: kpi_emp kpi_emp_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpi_emp
+    ADD CONSTRAINT kpi_emp_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4896 (class 2606 OID 115368)
+-- Name: kpi_values kpi_values_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpi_values
+    ADD CONSTRAINT kpi_values_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4898 (class 2606 OID 115370)
+-- Name: kpis kpis_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpis
+    ADD CONSTRAINT kpis_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4915 (class 2606 OID 118726)
+-- Name: pillers pillers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.pillers
+    ADD CONSTRAINT pillers_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4913 (class 2606 OID 115458)
+-- Name: roles roles_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.roles
+    ADD CONSTRAINT roles_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4905 (class 2606 OID 118728)
+-- Name: users unique_empid; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT unique_empid UNIQUE (empid);
+
+
+--
+-- TOC entry 4900 (class 2606 OID 115372)
+-- Name: unit_master unit_master_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.unit_master
+    ADD CONSTRAINT unit_master_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4907 (class 2606 OID 115374)
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+--
+-- TOC entry 4909 (class 2606 OID 115376)
+-- Name: users users_empid_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_empid_key UNIQUE (empid);
+
+
+--
+-- TOC entry 4911 (class 2606 OID 115378)
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- TOC entry 4916 (class 1259 OID 118770)
+-- Name: idx_kpi_data_value_unique; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE UNIQUE INDEX idx_kpi_data_value_unique ON public.kpi_data_value USING btree (kpi_value_id, month, year, value_type);
+
+
+--
+-- TOC entry 4893 (class 1259 OID 118769)
+-- Name: idx_kpi_values_source_deps; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_kpi_values_source_deps ON public.kpi_values USING gin (source_kpi_value_ids);
+
+
+--
+-- TOC entry 4894 (class 1259 OID 118768)
+-- Name: idx_kpi_values_type; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_kpi_values_type ON public.kpi_values USING btree (kpi_type);
+
+
+--
+-- TOC entry 4901 (class 1259 OID 115379)
+-- Name: idx_users_department_id; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_users_department_id ON public.users USING btree (department_id);
+
+
+--
+-- TOC entry 4902 (class 1259 OID 115380)
+-- Name: idx_users_email; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_users_email ON public.users USING btree (email);
+
+
+--
+-- TOC entry 4903 (class 1259 OID 115381)
+-- Name: idx_users_empid; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX idx_users_empid ON public.users USING btree (empid);
+
+
+--
+-- TOC entry 4919 (class 2606 OID 115382)
+-- Name: kpi_departments fk_kpi_dept_dept_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpi_departments
+    ADD CONSTRAINT fk_kpi_dept_dept_id FOREIGN KEY (department_id) REFERENCES public.departments(id) NOT VALID;
+
+
+--
+-- TOC entry 4920 (class 2606 OID 115387)
+-- Name: kpi_departments fk_kpi_dept_kpi_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpi_departments
+    ADD CONSTRAINT fk_kpi_dept_kpi_id FOREIGN KEY (kpi_id) REFERENCES public.kpis(id) NOT VALID;
+
+
+--
+-- TOC entry 4921 (class 2606 OID 115392)
+-- Name: kpi_emp fk_kpi_emp_emp_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpi_emp
+    ADD CONSTRAINT fk_kpi_emp_emp_id FOREIGN KEY (emp_id) REFERENCES public.users(empid);
+
+
+--
+-- TOC entry 4922 (class 2606 OID 115397)
+-- Name: kpi_emp fk_kpi_emp_kpi_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpi_emp
+    ADD CONSTRAINT fk_kpi_emp_kpi_id FOREIGN KEY (kpi_id) REFERENCES public.kpis(id);
+
+
+--
+-- TOC entry 4923 (class 2606 OID 115402)
+-- Name: kpi_values fk_kpi_value_kpi_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpi_values
+    ADD CONSTRAINT fk_kpi_value_kpi_id FOREIGN KEY (kpi_id) REFERENCES public.kpis(id);
+
+
+--
+-- TOC entry 4924 (class 2606 OID 118729)
+-- Name: kpi_values fk_kpi_values_data_operator; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpi_values
+    ADD CONSTRAINT fk_kpi_values_data_operator FOREIGN KEY ("data operator") REFERENCES public.users(empid) NOT VALID;
+
+
+--
+-- TOC entry 4925 (class 2606 OID 118743)
+-- Name: kpi_values fk_kpi_values_piller_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpi_values
+    ADD CONSTRAINT fk_kpi_values_piller_id FOREIGN KEY (piller_id) REFERENCES public.pillers(id) NOT VALID;
+
+
+--
+-- TOC entry 4926 (class 2606 OID 118734)
+-- Name: kpi_values fk_kpi_values_uom; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpi_values
+    ADD CONSTRAINT fk_kpi_values_uom FOREIGN KEY (uom) REFERENCES public.unit_master(id) NOT VALID;
+
+
+--
+-- TOC entry 4927 (class 2606 OID 115407)
+-- Name: kpis fk_kpis_category_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpis
+    ADD CONSTRAINT fk_kpis_category_id FOREIGN KEY (category_id) REFERENCES public.categories(id) NOT VALID;
+
+
+--
+-- TOC entry 4928 (class 2606 OID 115446)
+-- Name: kpis fk_kpis_parent_kpi_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.kpis
+    ADD CONSTRAINT fk_kpis_parent_kpi_id FOREIGN KEY (parent_kpi_id) REFERENCES public.kpis(id) NOT VALID;
+
+
+--
+-- TOC entry 4929 (class 2606 OID 115464)
+-- Name: user_roles fk_user_roles_role_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_roles
+    ADD CONSTRAINT fk_user_roles_role_id FOREIGN KEY (role_id) REFERENCES public.roles(id) NOT VALID;
+
+
+--
+-- TOC entry 4930 (class 2606 OID 115459)
+-- Name: user_roles fk_user_roles_user_id; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.user_roles
+    ADD CONSTRAINT fk_user_roles_user_id FOREIGN KEY (user_id) REFERENCES public.users(id) NOT VALID;
+
+
+-- Completed on 2026-01-21 13:05:54
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict xFhiejloWoQ2aCclyu6TP1dDHY52jbSLHUxmlcUbo1fFduhejmLsvFv85yFUCVK
+

@@ -18,22 +18,22 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    // Allow all origins in development
-    if (process.env.NODE_ENV === 'development') {
+    // Define allowed origins
+    const allowedOrigins = [
+      'https://hyloc.git.edu',
+      'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'http://localhost:5000',
+    ];
+    
+    // Check if origin is from intranet (10.x.x.x or 192.168.x.x)
+    const isIntranet = /^https?:\/\/(10\.\d+\.\d+\.\d+|192\.168\.\d+\.\d+)(:\d+)?$/.test(origin);
+    
+    // Allow all origins in development OR if origin is in allowed list OR intranet
+    if (process.env.NODE_ENV === 'development' || allowedOrigins.includes(origin) || isIntranet) {
       callback(null, true);
     } else {
-      // In production, check against allowed origins
-      const allowedOrigins = [
-        'https://hyloc.git.edu',
-        'http://localhost:3000',
-        'http://localhost:5000',
-      ];
-      
-      if (allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(null, true); // Still allow for now
-      }
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,

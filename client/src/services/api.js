@@ -9,12 +9,13 @@ if (!API_BASE_URL) {
   const protocol = window.location.protocol;
   const hostname = window.location.hostname;
   
-  // If running on localhost:3000 (development), API is on localhost:5000
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    API_BASE_URL = `${protocol}//localhost:5000/api`;
-  } else {
-    // For production/other hosts, use same host with /api path (nginx proxy)
+  // Check if it's production (hyloc.git.edu)
+  if (hostname === 'hyloc.git.edu') {
+    // Production: nginx proxies /api to backend
     API_BASE_URL = `${protocol}//${hostname}/api`;
+  } else {
+    // Development (localhost) or Intranet: direct to port 5000
+    API_BASE_URL = `${protocol}//${hostname}:5000/api`;
   }
 }
 

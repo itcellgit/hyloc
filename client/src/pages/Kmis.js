@@ -23,6 +23,8 @@ function Kmis() {
   const [kpis, setKpis] = useState([]);
   const [kpiTree, setKpiTree] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [departments, setDepartments] = useState([]);
+  const [employees, setEmployees] = useState([]);
   const [financialYears, setFinancialYears] = useState([]);
   const [selectedYear, setSelectedYear] = useState(getInitialYear());
   const [loading, setLoading] = useState(true);
@@ -33,7 +35,9 @@ function Kmis() {
     title: '',
     fin_year: '',
     category_id: '',
-    parent_kpi_id: null
+    parent_kpi_id: null,
+    department_id: null,
+    emp_id: null
   });
   const [expandedNodes, setExpandedNodes] = useState(new Set());
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
@@ -73,18 +77,29 @@ function Kmis() {
     setFinancialYears(years);
   }, []);
 
-  // Fetch categories once
+  // Fetch categories, departments, and employees
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadCategoriesAndDepartments = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/categories`);
-        setCategories(response.data.data || []);
+        const [categoriesRes, departmentsRes, usersRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/categories`),
+          axios.get(`${API_BASE_URL}/departments`),
+          axios.get(`${API_BASE_URL}/users`)
+        ]);
+        setCategories(categoriesRes.data.data || []);
+        const depts = departmentsRes.data.data || [];
+        console.log('Departments loaded:', depts);
+        setDepartments(depts);
+        const emps = usersRes.data.data || [];
+        console.log('Employees loaded:', emps);
+        setEmployees(emps);
       } catch (err) {
-        console.error('Failed to load categories', err);
+        console.error('Failed to load categories, departments or employees', err);
+        setError('Failed to load data');
       }
     };
 
-    loadCategories();
+    loadCategoriesAndDepartments();
   }, []);
 
   // Ensure form picks a sensible default category when categories load
@@ -227,7 +242,9 @@ function Kmis() {
       title: '',
       fin_year: selectedYear,
       category_id: getDefaultCategoryId(categories),
-      parent_kpi_id: null
+      parent_kpi_id: null,
+      department_id: null,
+      emp_id: null
     });
     setShowModal(true);
   };
@@ -238,7 +255,9 @@ function Kmis() {
       title: kmi.title || '',
       fin_year: kmi.fin_year || selectedYear,
       category_id: kmi.category_id || getDefaultCategoryId(categories),
-      parent_kpi_id: kmi.parent_kpi_id || null
+      parent_kpi_id: kmi.parent_kpi_id || null,
+      department_id: kmi.department_id || null,
+      emp_id: kmi.emp_id || null
     });
     setShowModal(true);
   };
@@ -249,7 +268,9 @@ function Kmis() {
       title: '',
       fin_year: parent.fin_year || selectedYear,
       category_id: getNextCategoryId(parent.category_id),
-      parent_kpi_id: parent.id
+      parent_kpi_id: parent.id,
+      department_id: null,
+      emp_id: null
     });
     setShowModal(true);
     setExpandedNodes((prev) => new Set(prev).add(parent.id));
@@ -278,13 +299,64 @@ function Kmis() {
     e.preventDefault();
     
     try {
+      let kpiId;
+      
       if (editingKmi) {
-        await axios.put(`${API_BASE_URL}/kpis/${editingKmi.id}`, formData);
+        await axios.put(`${API_BASE_URL}/kpis/${editingKmi.id}`, {
+          title: formData.title,
+          fin_year: formData.fin_year,
+          category_id: formData.category_id,
+          parent_kpi_id: formData.parent_kpi_id
+        });
+        kpiId = editingKmi.id;
         showNotification('KPI updated successfully!', 'success');
       } else {
-        await axios.post(`${API_BASE_URL}/kpis`, formData);
+        const response = await axios.post(`${API_BASE_URL}/kpis`, {
+          title: formData.title,
+          fin_year: formData.fin_year,
+          category_id: formData.category_id,
+          parent_kpi_id: formData.parent_kpi_id
+        });
+        kpiId = response.data.data.id;
         showNotification('KMI created successfully!', 'success');
       }
+
+      // Save KPI-Department mapping if Department KPI category is selected (category_id = 2)
+      if (formData.category_id === 2 || formData.category_id === '2') {
+        if (formData.department_id) {
+          try {
+            await axios.post(`${API_BASE_URL}/kpi-departments`, {
+              kpi_id: kpiId,
+              department_id: formData.department_id
+            });
+          } catch (err) {
+            console.error('Failed to save KPI-Department mapping:', err);
+            showNotification('KPI saved but failed to map department', 'error');
+          }
+        } else {
+          showNotification('Please select a department for Department KPI', 'error');
+          return;
+        }
+      }
+
+      // Save KPI-Employee mapping if Employee KPI category is selected (category_id = 4)
+      if (formData.category_id === 4 || formData.category_id === '4') {
+        if (formData.emp_id) {
+          try {
+            await axios.post(`${API_BASE_URL}/kpi-employees`, {
+              kpi_id: kpiId,
+              emp_id: formData.emp_id
+            });
+          } catch (err) {
+            console.error('Failed to save KPI-Employee mapping:', err);
+            showNotification('KPI saved but failed to map employee', 'error');
+          }
+        } else {
+          showNotification('Please select an employee for Employee KPI', 'error');
+          return;
+        }
+      }
+
       setShowModal(false);
       loadKpis(selectedYear);
     } catch (err) {
@@ -593,6 +665,40 @@ function Kmis() {
                   ))}
                 </select>
               </div>
+              {(formData.category_id === 2 || formData.category_id === '2') && (
+                <div className="form-group">
+                  <label>Department * <span style={{ color: '#ff6b6b' }}>(Required for Department KPI)</span></label>
+                  <select
+                    name="department_id"
+                    value={formData.department_id || ''}
+                    onChange={handleChange}
+                    required
+                    className="fin-year-select"
+                  >
+                    <option value="">Select Department</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>{dept.name || dept.department_name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {(formData.category_id === 4 || formData.category_id === '4') && (
+                <div className="form-group">
+                  <label>Employee * <span style={{ color: '#ff6b6b' }}>(Required for Employee KPI)</span></label>
+                  <select
+                    name="emp_id"
+                    value={formData.emp_id || ''}
+                    onChange={handleChange}
+                    required
+                    className="fin-year-select"
+                  >
+                    <option value="">Select Employee</option>
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>{emp.firstname} {emp.lastname} ({emp.empid})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div className="form-group">
                 <label>Parent KPI</label>
                 <input

@@ -380,7 +380,7 @@
 /* Charts Grid */
 .charts-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 20px;
 }
 
@@ -390,6 +390,7 @@
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden; /* Ensure chart content stays inside card */
 }
 
 .chart-card:hover {
@@ -406,9 +407,10 @@
 
 /* Bar Chart */
 .chart {
-  height: 250px;
+  height: 240px;
   display: flex;
   align-items: flex-end;
+  overflow: hidden; /* Prevent content overflow */
 }
 
 .bars {
@@ -416,8 +418,9 @@
   justify-content: space-around;
   align-items: flex-end;
   width: 100%;
-  height: 200px;
-  gap: 10px;
+  height: 180px;
+  gap: 8px;
+  box-sizing: border-box;
 }
 
 .bar-group {
@@ -430,16 +433,17 @@
 
 .bar-container {
   width: 100%;
-  height: 200px;
+  height: 180px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   background: #f9f9f9;
   border-radius: 4px 4px 0 0;
+  overflow: hidden;
 }
 
 .bar {
-  width: 80%;
+  width: 70%;
   border-radius: 4px 4px 0 0;
   display: flex;
   align-items: flex-end;
@@ -470,6 +474,81 @@
   text-overflow: ellipsis;
 }
 
+/* Horizontal Bar Chart */
+.hbar-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hbar-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.hbar-label { display: none; }
+
+.hbar-barwrap {
+  background: #f3f6f9;
+  border-radius: 4px;
+  height: 20px;
+  overflow: hidden;
+}
+
+.hbar-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+.hbar-barlabel {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #000000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: none;
+}
+
+.hbar-value {
+  font-size: 12px;
+  color: #000080;
+  font-weight: 600;
+}
+
+.hbar-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.hbar-toggle {
+  background: #41aafe;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.hbar-empty {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  background: #f9f9f9;
+  border-radius: 4px;
+}
+
 /* Line Chart */
 .line-chart {
   display: flex;
@@ -483,6 +562,7 @@
   border-radius: 4px;
   width: 100%;
   height: auto;
+  max-height: 220px;
 }
 
 .line-labels {
@@ -497,6 +577,57 @@
   color: #666;
   flex: 1;
   text-align: center;
+}
+
+/* Pie Chart */
+.pie-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.pie-svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.pie-empty {
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  background: #f9f9f9;
+  border-radius: 4px;
+  width: 100%;
+}
+
+.pie-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px 16px;
+  width: 100%;
+}
+
+.pie-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pie-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+}
+
+.pie-legend-label {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Summary Card */

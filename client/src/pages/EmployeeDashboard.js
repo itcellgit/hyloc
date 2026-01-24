@@ -17,6 +17,7 @@ function EmployeeDashboard() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeView, setActiveView] = useState('dashboard'); // 'dashboard' or 'kpis'
   const dropdownRef = useRef(null);
 
   // Financial year months (April to March)
@@ -30,6 +31,20 @@ function EmployeeDashboard() {
     // fyMonthIndex 0 = April (month 4), 1 = May (month 5), etc.
     const calendarMonth = (fyMonthIndex + 4) % 12;
     return calendarMonth === 0 ? 12 : calendarMonth;
+  };
+
+  const updateFinancialYear = (year) => {
+    setSelectedYear(year);
+
+    if (selectedKPI) {
+      const kpiValuesForSelected = assignedKPIValues.filter(kv => kv.kpi_id === selectedKPI.id);
+      kpiValuesForSelected.forEach(value => loadMonthlyData(value.id, year));
+    }
+  };
+
+  const changeYear = (delta) => {
+    const newYear = selectedYear + delta;
+    updateFinancialYear(newYear);
   };
 
   useEffect(() => {
@@ -149,7 +164,7 @@ function EmployeeDashboard() {
         empId: user.empid,
         month: calendarMonth,
         year: calendarYear,
-        targetValue: targetValue || null,
+        targetValue: targetValue || null, 
         actualValue: actualValue || null
       };
       
@@ -249,8 +264,24 @@ function EmployeeDashboard() {
       <div className="main-container">
         <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
           <div className="sidebar-header">
-            <h3>My KPIs/KAIs</h3>
+            <h3>Menu</h3>
           </div>
+          <nav className="sidebar-nav">
+            <button 
+              className={`sidebar-item ${activeView === 'dashboard' ? 'active' : ''}`}
+              onClick={() => setActiveView('dashboard')}
+            >
+              <span className="sidebar-icon">📊</span>
+              <span className="sidebar-label">Dashboard</span>
+            </button>
+            <button 
+              className={`sidebar-item ${activeView === 'kpis' ? 'active' : ''}`}
+              onClick={() => setActiveView('kpis')}
+            >
+              <span className="sidebar-icon">📈</span>
+              <span className="sidebar-label">My KPIs/KAIs</span>
+            </button>
+          </nav>
         </aside>
 
         <main className={`content ${sidebarOpen ? 'expanded' : 'full'}`}>
@@ -262,6 +293,93 @@ function EmployeeDashboard() {
             </div>
           )}
           
+          {activeView === 'dashboard' ? (
+            <div className="dashboard-view">
+              <div className="dashboard-header">
+                <h2>Dashboard</h2>
+                <p className="dashboard-subtitle">Your KPI/KAI Overview</p>
+              </div>
+              
+              {loading ? (
+                <div className="loading-text">Loading dashboard...</div>
+              ) : (
+                <div className="dashboard-grid">
+                  <div className="stat-card">
+                    <div className="stat-card-content">
+                      <div className="stat-icon">📊</div>
+                      <div className="stat-info">
+                        <h3>Total KPIs/KAIs</h3>
+                        <p className="stat-number">{kpis.length}</p>
+                        <p className="stat-description">Assigned to you</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="stat-card">
+                    <div className="stat-card-content">
+                      <div className="stat-icon">✓</div>
+                      <div className="stat-info">
+                        <h3>Total Values Assigned</h3>
+                        <p className="stat-number">{assignedKPIValues.length}</p>
+                        <p className="stat-description">Measurement points</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="stat-card">
+                    <div className="stat-card-content">
+                      <div className="stat-icon">📈</div>
+                      <div className="stat-info">
+                        <h3>Data Entries</h3>
+                        <p className="stat-number">{Object.values(monthlyData).flat().length}</p>
+                        <p className="stat-description">Monthly records</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="stat-card">
+                    <div className="stat-card-content">
+                      <div className="stat-icon">⏳</div>
+                      <div className="stat-info">
+                        <h3>Current Year</h3>
+                        <p className="stat-number">{selectedYear}-{String(selectedYear + 1).slice(-2)}</p>
+                        <p className="stat-description">Financial Year</p>
+                        <div className="year-controls">
+                          <button
+                            className="year-btn"
+                            onClick={() => changeYear(-1)}
+                            aria-label="Previous financial year"
+                          >
+                            ← Prev
+                          </button>
+                          <button
+                            className="year-btn"
+                            onClick={() => changeYear(1)}
+                            aria-label="Next financial year"
+                          >
+                            Next →
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {!loading && kpis.length > 0 && (
+                <div className="dashboard-section">
+                  <h3>Quick Actions</h3>
+                  <button 
+                    className="action-button"
+                    onClick={() => setActiveView('kpis')}
+                  >
+                    View All KPIs/KAIs →
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
           {!selectedKPI ? (
             <div className="kpi-page">
               <div className="kpi-page-header">
@@ -345,15 +463,10 @@ function EmployeeDashboard() {
                 <label>Financial Year: </label>
                 <select 
                   value={selectedYear} 
-                  onChange={(e) => {
-                    const year = parseInt(e.target.value);
-                    setSelectedYear(year);
-                    const kpiValuesForSelected = assignedKPIValues.filter(kv => kv.kpi_id === selectedKPI.id);
-                    kpiValuesForSelected.forEach(value => loadMonthlyData(value.id, year));
-                  }}
+                  onChange={(e) => updateFinancialYear(parseInt(e.target.value))}
                 >
                   {[...Array(5)].map((_, i) => {
-                    const year = new Date().getFullYear() - 2 + i;
+                    const year = selectedYear - 2 + i;
                     return <option key={year} value={year}>{year}-{String(year + 1).slice(-2)}</option>;
                   })}
                 </select>
@@ -415,6 +528,8 @@ function EmployeeDashboard() {
                 </div>
               ))}
             </div>
+          )}
+            </>
           )}
         </main>
       </div>

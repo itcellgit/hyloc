@@ -1,6 +1,7 @@
 /**
  * Formula Evaluator for KPI Calculations
  * Supports: arithmetic (+,-,*,/), AVERAGE, SUM, MIN, MAX, IF conditions
+ * Note: CUMSUM(v<ID>) is preprocessed in KPICalculationService and replaced with a numeric value.
  */
 
 class FormulaEvaluator {
@@ -72,6 +73,8 @@ class FormulaEvaluator {
       const parts = args.split(',').map(s => s.trim());
       return `(${parts.join('+')})`;
     });
+
+    // CUMSUM(...) is handled upstream and replaced with a number; no-op here
 
     // MIN(a,b,c) -> Math.min(a,b,c)
     expr = expr.replace(/MIN\(([^)]+)\)/gi, (match, args) => {
@@ -163,7 +166,7 @@ class FormulaEvaluator {
       if (count !== 0) return false;
 
       // Check for valid function names and syntax
-      const validPattern = /^[v\d\s+\-*/.(),%AVERAGESUMMINMAXIFROUNDABS≥≤=<>!&|]+$/i;
+      const validPattern = /^[v\d\s+\-*/.(),%AVERAGESUMMINMAXIFROUNDABSCUMSUM≥≤=<>!&|]+$/i;
       if (!validPattern.test(formula)) return false;
 
       // Check for valid variable references (v followed by digits)
