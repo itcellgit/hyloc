@@ -4,7 +4,21 @@ import { authService } from '../services/auth';
 import axios from 'axios';
 import '../styles/Kmis.css';
 
-const API_BASE_URL = 'http://localhost:5000/api';
+// Determine API URL based on environment
+let API_BASE_URL = process.env.REACT_APP_API_URL;
+
+if (!API_BASE_URL) {
+  const protocol = window.location.protocol;
+  const hostname = window.location.hostname;
+  
+  if (hostname === 'hyloc.git.edu') {
+    // Production: nginx proxies /api to backend
+    API_BASE_URL = `${protocol}//${hostname}/api`;
+  } else {
+    // Development or Intranet: direct to port 5000
+    API_BASE_URL = `${protocol}//${hostname}:5000/api`;
+  }
+}
 
 const getInitialYear = () => {
   const currentDate = new Date();
