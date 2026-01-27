@@ -466,45 +466,6 @@ function Dashboard() {
             />
           </div>
 
-          {/* Charts Grid */}
-          <div className="charts-grid">
-            <HorizontalBarChart
-              title="Employees by Department"
-              data={departmentData.labels.length ? departmentData : { labels: [], values: [] }}
-              color="#41aafe"
-              maxItems={12}
-            />
-            <PieChart
-              title="Quarterly Performance"
-              data={performanceData}
-            />
-            <BarChart
-              title="KPI Achievement Rate"
-              data={kpiAchievementData.labels.length ? kpiAchievementData : { labels: ['No Data'], values: [0] }}
-              color="#FF9800"
-            />
-            <div className="chart-card summary-card">
-              <h3>Summary</h3>
-              <div className="summary-content">
-                <div className="summary-item">
-                  <span className="label">Total KMIs:</span>
-                  <span className="value">{loadingStats ? 'Loading…' : (activeKpiCount ?? '—')}</span>
-                </div>
-                <div className="summary-item">
-                  <span className="label">Active KAIs:</span>
-                  <span className="value">—</span>
-                </div>
-                <div className="summary-item">
-                  <span className="label">Completion Rate:</span>
-                  <span className="value">{loadingStats ? 'Loading…' : (avgPerformance != null ? `${avgPerformance}%` : '—')}</span>
-                </div>
-                <div className="summary-item">
-                  <span className="label">Last Updated:</span>
-                  <span className="value">{new Date().toLocaleDateString()}</span>
-                </div>
-              </div>
-            </div>
-          </div>
         </main>
       </div>
     </div>

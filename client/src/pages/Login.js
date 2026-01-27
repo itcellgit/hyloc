@@ -77,13 +77,16 @@ function Login() {
         const userRoles = user.roles || [];
         const hasAdminRole = userRoles.some(r => r.role_name && r.role_name.toLowerCase() === 'admin');
         const hasEmployeeRole = userRoles.some(r => r.role_name && r.role_name.toLowerCase() === 'employee');
+        const hasManagementRole = userRoles.some(r => r.role_name && ['management', 'manager'].includes(r.role_name.toLowerCase()));
         
         if (hasAdminRole) {
           navigate('/dashboard');
         } else if (hasEmployeeRole) {
           navigate('/employee-dashboard');
+        } else if (hasManagementRole) {
+          navigate('/user-dashboard');
         } else {
-          navigate('/dashboard');
+          navigate('/user-dashboard');
         }
       } else {
         setError(response.data.error || 'An error occurred');

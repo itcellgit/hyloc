@@ -12,12 +12,51 @@ import UserRoles from './pages/admin/UserRoles';
 import Unauthorized from './pages/Unauthorized';
 import Login from './pages/Login';
 import EmployeeDashboard from './pages/EmployeeDashboard';
+import UserDashboard from './pages/UserDashboard';
+import UserKmis from './pages/UserKmis';
+import UserKmiDetail from './pages/UserKmiDetail';
+import UserPillars from './pages/UserPillars';
 import { authService } from './services/auth';
 import './styles/App.css';
 
-function ProtectedRoute({ children }) {
+const getStoredRoles = () => {
+  try {
+    const storedUser = localStorage.getItem('user');
+    if (!storedUser) return [];
+    const user = JSON.parse(storedUser);
+    return (user?.roles || [])
+      .map(r => r.role_name?.toLowerCase())
+      .filter(Boolean);
+  } catch (err) {
+    return [];
+  }
+};
+
+const getDefaultRoute = (rolesOverride = null) => {
+  const roles = rolesOverride || getStoredRoles();
+  const hasAdminRole = roles.includes('admin');
+  const hasEmployeeRole = roles.includes('employee');
+  const hasManagementRole = roles.some(r => ['management', 'manager'].includes(r));
+
+  if (hasAdminRole) return '/dashboard';
+  if (hasEmployeeRole) return '/employee-dashboard';
+  if (hasManagementRole) return '/user-dashboard';
+  return '/user-dashboard';
+};
+
+function ProtectedRoute({ children, allowedRoles }) {
   const isAuthenticated = authService.isAuthenticated();
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
+  if (allowedRoles && allowedRoles.length > 0) {
+    const roles = getStoredRoles();
+    const hasAccess = roles.some(r => allowedRoles.includes(r));
+    if (!hasAccess) {
+      return <Navigate to={getDefaultRoute(roles)} replace />;
+    }
+  }
+
+  return children;
 }
 
 function App() {
@@ -32,7 +71,7 @@ function App() {
             path="/" 
             element={
               isAuthenticated ? (
-                <Navigate to="/dashboard" replace />
+                <Navigate to={getDefaultRoute()} replace />
               ) : (
                 <Navigate to="/login" replace />
               )
@@ -41,7 +80,7 @@ function App() {
           <Route 
             path="/dashboard" 
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <Dashboard />
               </ProtectedRoute>
             } 
@@ -49,7 +88,7 @@ function App() {
           <Route 
             path="/employee-dashboard" 
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['employee']}>
                 <EmployeeDashboard />
               </ProtectedRoute>
             } 
@@ -57,7 +96,7 @@ function App() {
           <Route 
             path="/departments" 
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <Departments />
               </ProtectedRoute>
             } 
@@ -65,7 +104,7 @@ function App() {
           <Route 
             path="/users" 
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <Users />
               </ProtectedRoute>
             } 
@@ -73,7 +112,7 @@ function App() {
           <Route 
             path="/kmis" 
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <Kmis />
               </ProtectedRoute>
             } 
@@ -81,7 +120,7 @@ function App() {
           <Route 
             path="/pillers" 
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <Pillers />
               </ProtectedRoute>
             } 
@@ -89,7 +128,7 @@ function App() {
           <Route 
             path="/kmis/:id" 
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <KmiDetail />
               </ProtectedRoute>
             } 
@@ -97,7 +136,7 @@ function App() {
           <Route 
             path="/roles" 
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <Roles />
               </ProtectedRoute>
             } 
@@ -105,8 +144,40 @@ function App() {
           <Route 
             path="/user-roles" 
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['admin']}>
                 <UserRoles />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/user-dashboard" 
+            element={
+              <ProtectedRoute allowedRoles={['management', 'manager']}>
+                <UserDashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/user-kmis" 
+            element={
+              <ProtectedRoute allowedRoles={['management', 'manager']}>
+                <UserKmis />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/user-kmis/:id" 
+            element={
+              <ProtectedRoute allowedRoles={['management', 'manager']}>
+                <UserKmiDetail />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/user-pillars" 
+            element={
+              <ProtectedRoute allowedRoles={['management', 'manager']}>
+                <UserPillars />
               </ProtectedRoute>
             } 
           />

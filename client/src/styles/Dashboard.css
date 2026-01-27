@@ -665,6 +665,184 @@
   font-weight: 700;
 }
 
+/* Industry 4.0 Line Chart */
+.industry40-section {
+  margin-top: 24px;
+  margin-bottom: 40px;
+}
+
+.industry40-chart-wrapper {
+  background: white;
+  border-radius: 14px;
+  padding: 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border: 2px solid #41aafe;
+}
+
+.industry40-chart-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 20px 0;
+  padding-bottom: 12px;
+  border-bottom: 3px solid #41aafe;
+  text-align: center;
+}
+
+.industry40-chart-svg {
+  width: 100%;
+  height: auto;
+  min-height: 380px;
+  display: block;
+  margin: 20px 0;
+}
+
+.industry40-legend {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.industry40-legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.industry40-legend .legend-line {
+  display: inline-block;
+  width: 24px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.industry40-legend .legend-line.actual {
+  background: #41aafe;
+}
+
+.industry40-legend .legend-line.target {
+  background: #ffb74d;
+}
+
+/* KPI Charts */
+.kpi-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.kpi-chart-card {
+  background: white;
+  border-radius: 10px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e5e7eb;
+}
+
+.kpi-chart-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 12px;
+}
+
+.kpi-chart-title {
+  font-weight: 700;
+  font-size: 16px;
+  color: #1f2937;
+}
+
+.kpi-chart-legend {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 13px;
+  color: #4b5563;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+.legend-actual {
+  background: #41aafe;
+}
+
+.legend-target {
+  background: #ffb74d;
+}
+
+.kpi-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 200px;
+  padding: 4px 0;
+}
+
+.kpi-chart-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 40px;
+}
+
+.bar-pair {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.kpi-chart-bar {
+  width: 18px;
+  border-radius: 4px 4px 0 0;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  color: #111827;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px;
+  box-sizing: border-box;
+}
+
+.kpi-chart-bar.actual {
+  background: #41aafe;
+}
+
+.kpi-chart-bar.target {
+  background: #ffb74d;
+}
+
+.bar-value {
+  position: absolute;
+  top: -18px;
+  font-size: 11px;
+  color: #111827;
+}
+
+.kpi-chart-label {
+  font-size: 12px;
+  color: #4b5563;
+  text-align: center;
+}
+
 /* Scrollbar Styling */
 .sidebar::-webkit-scrollbar {
   width: 6px;
@@ -799,4 +977,129 @@
     min-width: 200px;
     right: -10px;
   }
+}
+
+/* Speedometer Styles */
+.speedometer-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+}
+
+.speedometer-display-wrapper {
+  display: flex;
+  justify-content: center;
+  padding: 20px 0;
+}
+
+.speedometer-nav-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+}
+
+.nav-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid #41aafe;
+  background: white;
+  color: #41aafe;
+  font-size: 28px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.nav-arrow:hover {
+  background: #41aafe;
+  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(65, 170, 254, 0.3);
+}
+
+.nav-arrow:active {
+  transform: scale(0.95);
+}
+
+.nav-arrow:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: #ccc;
+  color: #ccc;
+}
+
+.nav-arrow:disabled:hover {
+  background: white;
+  color: #ccc;
+  transform: none;
+  box-shadow: none;
+}
+
+.speedometer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  background: linear-gradient(135deg, #f8f9fa 0%, #f0f4f8 100%);
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.speedometer-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #41aafe;
+  margin: 0;
+}
+
+.speedometer-svg {
+  width: 300px;
+  height: 200px;
+  max-width: 100%;
+}
+
+.speedometer-display {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.efficiency-value {
+  font-size: 36px;
+  font-weight: 700;
+  color: #41aafe;
+}
+
+.efficiency-status {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.efficiency-status.status-excellent {
+  color: #22c55e;
+}
+
+.efficiency-status.status-good {
+  color: #eab308;
+}
+
+.efficiency-status.status-poor {
+  color: #ef4444;
 }
