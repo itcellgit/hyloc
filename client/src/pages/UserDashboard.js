@@ -416,32 +416,32 @@ function UserDashboard() {
       const kpiValuesRes = await api.get('/kpi-values');
       const kpiValues = kpiValuesRes.data?.data || [];
 
-      const sample = kpiValues.slice(0, 5); // limit to avoid heavy load
-
-      const charts = await Promise.all(sample.map(async (kv) => {
+      // Build up to 6 charts that actually have data (skip empty ones)
+      const charts = [];
+      for (const kv of kpiValues) {
+        if (charts.length >= 6) break; // cap to avoid heavy load
         try {
           const resp = await api.get(`/kpi-values/${kv.id}/monthly-data/${currentYear}`);
           const rows = resp.data?.data || [];
-          if (!rows.length) return null;
+          if (!rows.length) continue;
 
           const labels = rows.map(r => MONTH_LABELS[(Number(r.month) || 1) - 1] || `M${r.month}`);
           const actuals = rows.map(r => Number(r.actual_value || 0));
           const targets = rows.map(r => Number(r.target_value || 0));
 
-          return {
+          charts.push({
             id: kv.id,
             title: lookup?.[kv.kpi_id] || kv.data || `KPI ${kv.kpi_id || kv.id}`,
             labels,
             actuals,
             targets,
-          };
+          });
         } catch (err) {
           console.error('Failed to load monthly data for KPI value', kv.id, err);
-          return null;
         }
-      }));
+      }
 
-      setKpiCharts(charts.filter(Boolean));
+      setKpiCharts(charts);
     } catch (err) {
       console.error('Failed to load KPI charts', err);
       setKpiCharts([]);
@@ -637,60 +637,6 @@ function UserDashboard() {
               )}
             </div>
 
-            <div className="dashboard-section">
-              <div className="section-header">
-                <div>
-                  <h3>KPI Performance (Current Year)</h3>
-                  <p className="section-subtitle">Actual vs Target from KPI data values</p>
-                </div>
-              </div>
-
-              {chartsLoading ? (
-                <div className="loading">Loading KPI graphs...</div>
-              ) : kpiCharts.length === 0 ? (
-                <div className="no-data">No KPI data available for graphs</div>
-              ) : (
-                <div className="kpi-charts-grid">
-                  {kpiCharts.map((chart) => {
-                    const maxVal = Math.max(...chart.actuals, ...chart.targets, 1);
-                    return (
-                      <div key={chart.id} className="kpi-chart-card">
-                        <div className="kpi-chart-card-header">
-                          <div className="kpi-chart-title">{chart.title}</div>
-                          <div className="kpi-chart-legend">
-                            <span className="legend-dot legend-actual"></span> Actual
-                            <span className="legend-dot legend-target"></span> Target
-                          </div>
-                        </div>
-                        <div className="kpi-chart-bars">
-                          {chart.labels.map((label, idx) => (
-                            <div key={label + idx} className="kpi-chart-group">
-                              <div className="bar-pair">
-                                <div
-                                  className="kpi-chart-bar actual"
-                                  style={{ height: `${(chart.actuals[idx] / maxVal) * 160}px` }}
-                                  title={`Actual: ${chart.actuals[idx]}`}
-                                >
-                                  <span className="bar-value">{chart.actuals[idx]}</span>
-                                </div>
-                                <div
-                                  className="kpi-chart-bar target"
-                                  style={{ height: `${(chart.targets[idx] / maxVal) * 160}px` }}
-                                  title={`Target: ${chart.targets[idx]}`}
-                                >
-                                  <span className="bar-value">{chart.targets[idx]}</span>
-                                </div>
-                              </div>
-                              <div className="kpi-chart-label">{label}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
           </div>
         </main>
       </div>
