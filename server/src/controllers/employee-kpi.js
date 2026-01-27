@@ -19,7 +19,7 @@ export class EmployeeKPIController {
         `SELECT kv.id, kv.data, kv.kpi_id, kv."data operator", kv.target_required, 
                 kv.uom, kv.kpi_type, kv.piller_id, kv.formula, kv.source_kpi_value_ids,
                 kv.created_at, kv.updated_at,
-                k.title as kpi_title, u.unit_name
+                k.title as kpi_title, u.unit_name, u.symbol as unit_symbol
          FROM kpi_values kv
          JOIN kpis k ON k.id = kv.kpi_id
          LEFT JOIN unit_master u ON u.id = kv.uom
@@ -82,7 +82,7 @@ export class EmployeeKPIController {
         `SELECT kv.id, kv.data, kv.kpi_id, kv."data operator", kv.target_required, 
                 kv.uom, kv.kpi_type, kv.piller_id, kv.formula, kv.source_kpi_value_ids,
                 kv.created_at, kv.updated_at,
-                k.title as kpi_title, u.unit_name
+                k.title as kpi_title, u.unit_name, u.symbol as unit_symbol
          FROM kpi_values kv
          JOIN kpis k ON k.id = kv.kpi_id
          LEFT JOIN unit_master u ON u.id = kv.uom

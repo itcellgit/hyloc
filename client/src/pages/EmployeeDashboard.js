@@ -216,6 +216,19 @@ function EmployeeDashboard() {
     return data.find(d => d.month === calendarMonth) || {};
   };
 
+  // Helper function to format numeric values to 3 decimal places
+  const formatValue = (value) => {
+    if (value === null || value === undefined || value === '') return '-';
+    const numValue = parseFloat(value);
+    if (isNaN(numValue)) return value;
+    
+    // Check if the number has decimal places
+    if (numValue % 1 !== 0) {
+      return numValue.toFixed(3);
+    }
+    return numValue.toString();
+  };
+
   return (
     <div className="employee-dashboard-layout">
       <header className="header">
@@ -270,6 +283,7 @@ function EmployeeDashboard() {
             <button 
               className={`sidebar-item ${activeView === 'dashboard' ? 'active' : ''}`}
               onClick={() => setActiveView('dashboard')}
+              title="Dashboard"
             >
               <span className="sidebar-icon">📊</span>
               <span className="sidebar-label">Dashboard</span>
@@ -277,6 +291,7 @@ function EmployeeDashboard() {
             <button 
               className={`sidebar-item ${activeView === 'kpis' ? 'active' : ''}`}
               onClick={() => setActiveView('kpis')}
+              title="My KPIs/KAIs"
             >
               <span className="sidebar-icon">📈</span>
               <span className="sidebar-label">My KPIs/KAIs</span>
@@ -477,7 +492,7 @@ function EmployeeDashboard() {
                   <h3>{kpiValue.data}</h3>
                   <p className="kpi-meta">
                     Type: <span className="badge">{kpiValue.kpi_type}</span>
-                    {kpiValue.unit_name && <> | Unit: <span className="badge">{kpiValue.unit_name}</span></>}
+                    {kpiValue.unit_symbol && <> | Unit: <span className="badge">{kpiValue.unit_symbol}</span></>}
                     {kpiValue.kpi_type === 'computed' && kpiValue.formula && (
                       <> | Formula: <code className="formula-display">{kpiValue.formula}</code></>
                     )}
@@ -496,6 +511,7 @@ function EmployeeDashboard() {
                             targetRequired={kpiValue.target_required}
                             initialTarget={monthData.target_value || ''}
                             initialActual={monthData.actual_value || ''}
+                            unitSymbol={kpiValue.unit_symbol}
                             onSubmit={handleDataSubmit}
                           />
                         );
@@ -511,12 +527,14 @@ function EmployeeDashboard() {
                             <div className="data-display">
                               {kpiValue.target_required && (
                                 <p className="data-row">
-                                  <strong>Target:</strong> {monthData.target_value || '-'}
+                                  <strong>Target:</strong> {formatValue(monthData.target_value)}
+                                  {kpiValue.unit_symbol && <span className="unit-label"> {kpiValue.unit_symbol}</span>}
                                 </p>
                               )}
                               <p className="data-row">
                                 <strong>Calculated:</strong> 
-                                <span className="computed-value">{monthData.actual_value || '-'}</span>
+                                <span className="computed-value">{formatValue(monthData.actual_value)}</span>
+                                {kpiValue.unit_symbol && <span className="unit-label"> {kpiValue.unit_symbol}</span>}
                               </p>
                               <p className="computed-note">\u2699\uFE0F Auto-calculated</p>
                             </div>
@@ -538,7 +556,7 @@ function EmployeeDashboard() {
 }
 
 // Monthly Data Form Component
-function MonthlyDataForm({ month, monthIndex, kpiValueId, targetRequired, initialTarget, initialActual, onSubmit }) {
+function MonthlyDataForm({ month, monthIndex, kpiValueId, targetRequired, initialTarget, initialActual, unitSymbol, onSubmit }) {
   const [targetValue, setTargetValue] = useState(initialTarget);
   const [actualValue, setActualValue] = useState(initialActual);
   const [isEditing, setIsEditing] = useState(false);
@@ -586,9 +604,15 @@ function MonthlyDataForm({ month, monthIndex, kpiValueId, targetRequired, initia
       ) : (
         <div className="data-display">
           {targetRequired && (
-            <p className="data-row"><strong>Target:</strong> {targetValue || '-'}</p>
+            <p className="data-row">
+              <strong>Target:</strong> {targetValue || '-'}
+              {unitSymbol && <span className="unit-label"> {unitSymbol}</span>}
+            </p>
           )}
-          <p className="data-row"><strong>Actual:</strong> {actualValue || '-'}</p>
+          <p className="data-row">
+            <strong>Actual:</strong> {actualValue || '-'}
+            {unitSymbol && <span className="unit-label"> {unitSymbol}</span>}
+          </p>
           <button className="btn-edit" onClick={() => setIsEditing(true)}>
             {targetValue || actualValue ? 'Edit' : 'Add Data'}
           </button>
