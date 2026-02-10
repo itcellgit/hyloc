@@ -20,6 +20,9 @@ class FormulaEvaluator {
       throw new Error('Invalid formula');
     }
 
+    // Check if formula contains AVERAGE or division (ratio calculation)
+    const hasAverageOrRatio = /AVERAGE\(/i.test(formula) || /\//.test(formula);
+
     // Replace KPI references (v1, v2, etc.) with actual values
     let expr = this.replaceKpiReferences(formula);
     
@@ -27,17 +30,27 @@ class FormulaEvaluator {
     expr = this.replaceFunctions(expr);
     
     // Safely evaluate the mathematical expression
-    return this.safeEval(expr);
+    let result = this.safeEval(expr);
+    
+    // Round to nearest whole number for averages and ratios
+    if (hasAverageOrRatio) {
+      result = Math.round(result);
+    }
+    
+    return result;
   }
 
   /**
    * Replace vXX references with actual numeric values
+   * Supports: v123, v123:actual, v123:target
    */
   replaceKpiReferences(formula) {
-    return formula.replace(/v(\d+)/g, (match, kpiValueId) => {
-      const value = this.values[parseInt(kpiValueId)];
+    return formula.replace(/v(\d+)(?::(\w+))?/g, (match, kpiValueId, suffix) => {
+      const key = suffix ? `${kpiValueId}:${suffix}` : parseInt(kpiValueId);
+      const value = this.values[key];
+      
       if (value === undefined || value === null || value === '') {
-        console.warn(`KPI Value ${kpiValueId} not found or empty in values map`);
+        console.warn(`KPI Value ${match} not found or empty in values map. Available keys:`, Object.keys(this.values));
         return '0'; // Default to 0 for missing values
       }
       // Handle non-numeric values
@@ -140,8 +153,12 @@ class FormulaEvaluator {
   static extractSourceKpiIds(formula) {
     if (!formula) return [];
     
-    const matches = formula.match(/v(\d+)/g) || [];
-    const ids = matches.map(m => parseInt(m.substring(1)));
+    // Match v123, v123:actual, v123:target patterns
+    const matches = formula.match(/v(\d+)(?::(?:actual|target))?/gi) || [];
+    const ids = matches.map(m => {
+      const idMatch = /v(\d+)/i.exec(m);
+      return idMatch ? parseInt(idMatch[1]) : null;
+    }).filter(id => id !== null);
     
     // Return unique IDs
     return [...new Set(ids)];
@@ -165,12 +182,12 @@ class FormulaEvaluator {
       }
       if (count !== 0) return false;
 
-      // Check for valid function names and syntax
-      const validPattern = /^[v\d\s+\-*/.(),%AVERAGESUMMINMAXIFROUNDABSCUMSUM≥≤=<>!&|]+$/i;
+      // Check for valid function names and syntax (added support for :actual and :target)
+      const validPattern = /^[v\d\s+\-*/.(),%:AVERAGESUMMINMAXIFROUNDABSCUMSUM≥≤=<>!&|actualtarget]+$/i;
       if (!validPattern.test(formula)) return false;
 
-      // Check for valid variable references (v followed by digits)
-      const varPattern = /v\d+/g;
+      // Check for valid variable references (v followed by digits, optionally :actual or :target)
+      const varPattern = /v\d+(?::(?:actual|target))?/gi;
       const vars = formula.match(varPattern);
       if (!vars || vars.length === 0) return false;
 

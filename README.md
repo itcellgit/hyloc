@@ -157,6 +157,66 @@ NODE_ENV=development
 ### Client (.env)
 No additional environment variables needed. API base URL is configured in `src/services/api.js`
 
+## Production Deployment
+
+For production deployment and troubleshooting 502 Bad Gateway errors, see [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md).
+
+### Quick Start for Production
+```bash
+# 1. Set up environment variables
+cp server/.env.example server/.env
+# Edit server/.env with your production database credentials
+
+# 2. Install dependencies
+cd server && npm install
+cd ../client && npm install
+
+# 3. Start server
+cd ../server && npm start
+# Or use PM2 for auto-restart:
+# npm install -g pm2
+# pm2 start "npm start" --name hyloc-server
+
+# 4. Verify health
+curl https://your-domain.com/health
+```
+
+## Troubleshooting
+
+### 502 Bad Gateway Error
+
+**This is the most common production issue.** The server cannot be reached or has crashed.
+
+**Quick fix:**
+1. Check if database is running and credentials in `.env` are correct
+2. Verify `.env` file exists in `server/` directory
+3. Run `npm install` in server directory
+4. Restart the Node.js process
+
+For detailed troubleshooting, see [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md).
+
+### Other Common Issues
+
+**Port Already in Use**
+```bash
+# Kill the process using port 5000
+lsof -i :5000
+kill -9 <PID>
+```
+
+**Cannot Connect to Database**
+```bash
+# Test database connection
+psql -U postgres -d hyloc_db -c "SELECT NOW();"
+```
+
+**Missing Dependencies**
+```bash
+cd server
+rm -rf node_modules package-lock.json
+npm install
+```
+
 ## Future Enhancements
 
 - Authentication & Authorization

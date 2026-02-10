@@ -46,7 +46,7 @@ export class KPIValueController {
 
   static async create(req, res) {
     try {
-      const { data, kpi_id, data_operator, target_required, uom, kpi_type, piller_id, formula, source_kpi_value_ids, default_target_value } = req.body;
+      const { data, kpi_id, data_operator, target_required, uom, kpi_type, piller_id, formula, source_kpi_value_ids, default_target_value, target_formula, target_source_kpi_value_ids } = req.body;
 
       if (!kpi_id) {
         return res.status(400).json({ success: false, error: 'kpi_id is required' });
@@ -61,18 +61,34 @@ export class KPIValueController {
       }
 
       // If computed, validate formula
-      if (kpi_type === 'computed') {
-        if (!formula) {
-          return res.status(400).json({ success: false, error: 'Formula is required for computed KPI' });
-        }
+      if (String(kpi_type || '').toLowerCase() === 'computed') {
+        // If target_formula is provided (Option 3), formula for actual is not required
+        const hasTargetFormula = target_formula && target_formula.trim() !== '';
+        
+        if (!hasTargetFormula) {
+          // Options 1 & 2: formula is required
+          if (!formula) {
+            return res.status(400).json({ success: false, error: 'Formula is required for computed KPI' });
+          }
 
-        if (!source_kpi_value_ids || source_kpi_value_ids.length === 0) {
-          return res.status(400).json({ success: false, error: 'Source KPI value IDs are required for computed KPI' });
-        }
+          if (!source_kpi_value_ids || source_kpi_value_ids.length === 0) {
+            return res.status(400).json({ success: false, error: 'Source KPI value IDs are required for computed KPI' });
+          }
 
-        const validation = await KPICalculationService.validateFormula(formula, source_kpi_value_ids);
-        if (!validation.valid) {
-          return res.status(400).json({ success: false, error: validation.error });
+          const validation = await KPICalculationService.validateFormula(formula, source_kpi_value_ids);
+          if (!validation.valid) {
+            return res.status(400).json({ success: false, error: validation.error });
+          }
+        } else {
+          // Option 3: target_formula is required, validate it
+          if (!target_source_kpi_value_ids || target_source_kpi_value_ids.length === 0) {
+            return res.status(400).json({ success: false, error: 'Target source KPI value IDs are required when using target formula' });
+          }
+          
+          const targetValidation = await KPICalculationService.validateFormula(target_formula, target_source_kpi_value_ids);
+          if (!targetValidation.valid) {
+            return res.status(400).json({ success: false, error: `Target formula validation failed: ${targetValidation.error}` });
+          }
         }
       }
 
@@ -86,7 +102,9 @@ export class KPIValueController {
         piller_id: piller_id || null,
         formula: formula || null,
         source_kpi_value_ids: source_kpi_value_ids || null,
-        default_target_value: default_target_value || null
+        default_target_value: default_target_value || null,
+        target_formula: target_formula || null,
+        target_source_kpi_value_ids: target_source_kpi_value_ids || null
       });
       res.status(201).json({ success: true, data: kpiValue });
     } catch (error) {
@@ -97,7 +115,7 @@ export class KPIValueController {
 
   static async update(req, res) {
     try {
-      const { data, kpi_id, data_operator, target_required, uom, kpi_type, piller_id, formula, source_kpi_value_ids, default_target_value } = req.body;
+      const { data, kpi_id, data_operator, target_required, uom, kpi_type, piller_id, formula, source_kpi_value_ids, default_target_value, target_formula, target_source_kpi_value_ids } = req.body;
 
       // Validate kpi_type if provided
       if (kpi_type && !['manual', 'computed'].includes(String(kpi_type).toLowerCase())) {
@@ -112,6 +130,18 @@ export class KPIValueController {
             return res.status(400).json({ success: false, error: validation.error });
           }
         }
+        
+        // If target_formula is provided, validate it
+        if (target_formula && target_formula.trim() !== '') {
+          if (!target_source_kpi_value_ids || target_source_kpi_value_ids.length === 0) {
+            return res.status(400).json({ success: false, error: 'Target source KPI value IDs are required when target_formula is provided' });
+          }
+          
+          const targetValidation = await KPICalculationService.validateFormula(target_formula, target_source_kpi_value_ids);
+          if (!targetValidation.valid) {
+            return res.status(400).json({ success: false, error: `Target formula validation failed: ${targetValidation.error}` });
+          }
+        }
       }
 
       const updateData = {
@@ -124,7 +154,9 @@ export class KPIValueController {
         piller_id,
         formula,
         source_kpi_value_ids,
-        default_target_value
+        default_target_value,
+        target_formula,
+        target_source_kpi_value_ids
       };
 
       const kpiValue = await KPIValue.update(req.params.id, updateData);

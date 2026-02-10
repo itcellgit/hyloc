@@ -24,11 +24,20 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    // Get user from localStorage
-    const userData = localStorage.getItem('user');
-    if (userData) {
+    // Verify user is still authenticated
+    const verifyAuth = async () => {
+      const token = authService.getToken();
+      const userData = localStorage.getItem('user');
+      
+      if (!token || !userData) {
+        navigate('/login', { replace: true });
+        return;
+      }
+
       setUser(JSON.parse(userData));
-    }
+    };
+
+    verifyAuth();
 
     // Close dropdown when clicking outside
     const handleClickOutside = (event) => {
@@ -39,7 +48,7 @@ function Dashboard() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     // Fetch stats and charts
@@ -148,7 +157,7 @@ function Dashboard() {
     { id: 4, label: 'KMIs', icon: '📈', path: '/kmis' },
     { id: 7, label: 'Pillers', icon: '🏛️', path: '/pillers' },
     { id: 5, label: 'Roles', icon: '🔐', path: '/roles' },
-    { id: 6, label: 'User Roles', icon: '🧩', path: '/user-roles' },
+    { id: 7, label: 'User Roles', icon: '🔐', path: '/user-roles' },
   ];
 
   // Placeholder for quarterly performance until aggregated endpoint is available

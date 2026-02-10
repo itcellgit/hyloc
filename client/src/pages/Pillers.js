@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '../services/auth';
 import { pillerService } from '../services/api';
 import '../styles/Pillers.css';
@@ -20,6 +20,7 @@ function Pillers() {
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const menuItems = [
     { id: 1, label: 'Dashboard', icon: '📊', path: '/dashboard' },
@@ -28,7 +29,7 @@ function Pillers() {
     { id: 4, label: 'KMIs', icon: '📈', path: '/kmis' },
     { id: 5, label: 'Pillers', icon: '🏛️', path: '/pillers' },
     { id: 6, label: 'Roles', icon: '🎭', path: '/roles' },
-    { id: 7, label: 'User Roles', icon: '🧩', path: '/user-roles' },
+    { id: 7, label: 'User Roles', icon: '🔐', path: '/user-roles' },
   ];
 
   const showNotification = (message, type = 'success') => {
@@ -39,10 +40,15 @@ function Pillers() {
   };
 
   useEffect(() => {
+    const token = authService.getToken();
     const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
+    
+    if (!token || !userData) {
+      navigate('/login', { replace: true });
+      return;
     }
+
+    setUser(JSON.parse(userData));
 
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -52,7 +58,7 @@ function Pillers() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     fetchPillers();
@@ -200,7 +206,7 @@ function Pillers() {
               <a
                 key={item.id}
                 href={item.path}
-                className={`nav-item ${item.path === '/pillers' ? 'active' : ''}`}
+                className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
                 onClick={(e) => {
                   e.preventDefault();
                   navigate(item.path);

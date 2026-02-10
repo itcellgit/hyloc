@@ -403,8 +403,10 @@
   font-size: 18px;
   color: #000080;
   font-weight: 600;
+  /*height: 100%;
+  min-height: 280px;*/
 }
-
+  
 /* Bar Chart */
 .chart {
   height: 240px;
@@ -665,53 +667,324 @@
   font-weight: 700;
 }
 
+/* 4-Column Dashboard Grid */
+.dashboard-four-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.dashboard-grid-item {
+  min-width: 0;
+}
+
+
+
+.chart-card {
+  background: white;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 2px solid #41aafe;
+  height: 100%;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chart-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 6px 0;
+  padding-bottom: 4px;
+  border-bottom: 2px solid #41aafe;
+  text-align: center;
+}
+
+.chart-card-split {
+  background: white;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 2px solid #41aafe;
+  height: 100%;
+  min-height: 280px;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+}
+
+.chart-card-split.clickable {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.chart-card-split.clickable:hover {
+  box-shadow: 0 4px 16px rgba(65, 170, 254, 0.2);
+  transform: translateY(-2px);
+  border-color: #2a8fd9;
+}
+
+.split-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.split-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 6px 0;
+  padding-bottom: 4px;
+  border-bottom: 2px solid #41aafe;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.split-divider {
+  width: 1px;
+  background: #e5e7eb;
+  margin: 0 8px;
+}
+
+.profitability-display {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  padding: 12px 0;
+}
+
+.pie-chart-with-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1;
+}
+
+.pie-chart-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.pie-month-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #41aafe;
+  margin: 0 0 4px 0;
+}
+
+.profit-pie-chart {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.profit-pie-svg {
+  width: 100%;
+  max-width: 120px;
+  height: auto;
+}
+
+.pie-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.pie-legend-compact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 9px;
+}
+
+.pie-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pie-legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.pie-legend-label {
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.speedometer-compact {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px;
+  flex: 1;
+}
+
+.nav-arrow-compact {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #41aafe;
+  background: white;
+  color: #41aafe;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-arrow-compact:hover:not(:disabled) {
+  background: #41aafe;
+  color: white;
+}
+
+.nav-arrow-compact:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1400px) {
+  .dashboard-four-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-four-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Industry 4.0 Line Chart */
+.dashboard-dual-section {
+  display: flex;
+  gap: 24px;
+  align-items: stretch;
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
+.dashboard-dual-item {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.dashboard-dual-item .industry40-section {
+  margin-top: 0;
+  margin-bottom: 0;
+  height: 100%;
+}
+
+.dashboard-dual-item .dashboard-section {
+  margin-top: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-dual-item .speedometer-nav-wrapper {
+  height: 100%;
+  flex: 1;
+}
+
+.dashboard-dual-item .industry40-chart-wrapper,
+.dashboard-dual-item .speedometer-nav-wrapper {
+  height: 100%;
+  min-height: 380px;
+}
+
+.dashboard-dual-item .industry40-chart-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-dual-item .industry40-chart-svg {
+  min-height: 220px;
+  flex: 1;
+}
+
+.dashboard-dual-item .speedometer-display-wrapper {
+  min-height: 220px;
+}
+
 .industry40-section {
   margin-top: 24px;
   margin-bottom: 40px;
 }
 
+.zero-quality-section {
+  margin-top: 16px;
+  margin-bottom: 16px;
+}
+
 .industry40-chart-wrapper {
-  background: white;
-  border-radius: 14px;
-  padding: 28px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  border: 2px solid #41aafe;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 .industry40-chart-title {
-  font-size: 24px;
+  font-size: 14px;
   font-weight: 700;
   color: #1f2937;
-  margin: 0 0 20px 0;
-  padding-bottom: 12px;
-  border-bottom: 3px solid #41aafe;
+  margin: 0 0 8px 0;
+  padding-bottom: 6px;
+  border-bottom: 2px solid #41aafe;
   text-align: center;
 }
 
 .industry40-chart-svg {
   width: 100%;
   height: auto;
-  min-height: 380px;
+  min-height: 140px;
   display: block;
-  margin: 20px 0;
+  margin: 8px 0;
+  flex: 1;
 }
 
 .industry40-legend {
   display: flex;
-  gap: 30px;
+  gap: 12px;
   justify-content: center;
-  padding: 16px;
+  padding: 6px;
   background: #f9fafb;
   border-radius: 8px;
-  margin-top: 16px;
+  margin-top: 8px;
 }
 
 .industry40-legend .legend-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 15px;
+  gap: 8px;
+  font-size: 12px;
   font-weight: 600;
   color: #1f2937;
 }
@@ -729,6 +1002,40 @@
 
 .industry40-legend .legend-line.target {
   background: #ffb74d;
+}
+
+/* Chart Header with Subtitle */
+.chart-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.chart-subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0;
+  text-align: center;
+}
+
+/* Full-width Grid Item */
+.dashboard-grid-item.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Green Factory Item - spans 4 columns */
+.dashboard-grid-item.green-factory-item {
+  grid-column: 2 / -1;
+}
+
+/* Legend Color Box */
+.industry40-legend .legend-color {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
 }
 
 /* KPI Charts */
@@ -977,6 +1284,10 @@
     min-width: 200px;
     right: -10px;
   }
+
+  .dashboard-dual-section {
+    flex-direction: column;
+  }
 }
 
 /* Speedometer Styles */
@@ -992,7 +1303,7 @@
 .speedometer-display-wrapper {
   display: flex;
   justify-content: center;
-  padding: 20px 0;
+  padding: 12px 0;
 }
 
 .speedometer-nav-wrapper {
@@ -1000,7 +1311,7 @@
   align-items: center;
   justify-content: center;
   gap: 20px;
-  padding: 20px;
+  padding: 12px;
   background: white;
   border-radius: 8px;
 }
@@ -1051,24 +1362,25 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 15px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #f0f4f8 100%);
-  padding: 20px;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  gap: 6px;
+  background: transparent;
+  padding: 6px;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  flex: 1;
 }
 
 .speedometer-title {
-  font-size: 18px;
+  font-size: 14px;
   font-weight: 600;
   color: #41aafe;
   margin: 0;
 }
 
 .speedometer-svg {
-  width: 300px;
-  height: 200px;
+  width: 160px;
+  height: 107px;
   max-width: 100%;
 }
 
@@ -1080,7 +1392,7 @@
 }
 
 .efficiency-value {
-  font-size: 36px;
+  font-size: 22px;
   font-weight: 700;
   color: #41aafe;
 }
@@ -1102,4 +1414,35 @@
 
 .efficiency-status.status-poor {
   color: #ef4444;
+}
+
+/* 2x2 Grid for Environment & Safety Blocks */
+.environment-safety-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.environment-safety-grid-item {
+  display: flex;
+}
+
+.environment-safety-grid-item .chart-card {
+  width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .environment-safety-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .environment-safety-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }

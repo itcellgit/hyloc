@@ -31,10 +31,15 @@ function Roles() {
   ];
 
   useEffect(() => {
+    const token = authService.getToken();
     const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
+    
+    if (!token || !userData) {
+      navigate('/login', { replace: true });
+      return;
     }
+
+    setUser(JSON.parse(userData));
 
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -44,7 +49,7 @@ function Roles() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     fetchRoles();

@@ -1,8 +1,87 @@
+/* Employee Dashboard Layout */
 .employee-dashboard-layout {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
   background-color: #f5f6fa;
+}
+
+/* Page Header and Breadcrumb Styles */
+.page-header {
+  margin-bottom: 1.5rem;
+}
+
+.heading-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.breadcrumb-container {
+  flex: 1;
+  min-width: 0;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #001f3f 0%, #003366 100%);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 31, 63, 0.3);
+  border: 1px solid rgba(0, 51, 102, 0.5);
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.breadcrumb-type-badge {
+  background-color: rgba(52, 152, 219, 0.9);
+  color: #ffffff;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.breadcrumb-text {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.breadcrumb-separator {
+  color: rgba(52, 152, 219, 0.8);
+  font-size: 1.5rem;
+  font-weight: 400;
+  margin: 0 0.5rem;
+}
+
+.back-btn {
+  padding: 0.5rem 1rem;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.back-btn:hover {
+  background-color: #2980b9;
+  transform: translateX(-2px);
 }
 
 .header {
@@ -243,6 +322,130 @@
   font-weight: 500;
 }
 
+/* KPI Values Cards Container */
+.kpi-values-cards-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-top: 1.5rem;
+}
+
+/* Individual KPI Value Card */
+.kpi-value-card {
+  background: #fff;
+  border: 1px solid #e1e8ed;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.kpi-value-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  border-color: #3498db;
+}
+
+.kpi-value-header {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #f1f3f5 100%);
+  border-bottom: 1px solid #e1e8ed;
+}
+
+.kpi-value-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.kpi-value-title {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.kpi-value-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.type-badge,
+.unit-badge,
+.target-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background-color: #ecf0f1;
+  color: #34495e;
+}
+
+.type-badge {
+  background-color: #e8f4f8;
+  color: #0288d1;
+}
+
+.unit-badge {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.target-badge {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+
+.formula-section {
+  padding: 1.5rem;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e1e8ed;
+  border-top: 1px solid #e1e8ed;
+}
+
+.formula-label {
+  margin: 0 0 0.5rem 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.formula-display {
+  display: block;
+  padding: 0.75rem;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #2c3e50;
+  overflow-x: auto;
+}
+
+.monthly-data-section {
+  padding: 1.5rem;
+}
+
+.monthly-section-title {
+  margin: 0 0 1.5rem 0;
+  color: #2c3e50;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.no-values-message {
+  padding: 2rem;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  color: #7f8c8d;
+}
+
 .monthly-data-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -334,8 +537,8 @@
 }
 
 .btn-edit {
-  background-color: #3498db;
-  color: #fff;
+  background-color: #fef08a;
+  color: #854d0e;
   padding: 0.625rem 1.25rem;
   border-radius: 6px;
   font-weight: 600;
@@ -349,7 +552,7 @@
 }
 
 .btn-edit:hover {
-  background-color: #2980b9;
+  background-color: #fde047;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
@@ -816,12 +1019,25 @@
 
 /* Computed KPI Month Card Styling */
 .month-card.computed {
+  border: 1px solid #dfe6e9;
+}
+
+.month-card.computed.has-value {
   background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
   border: 1px solid #a5d6a7;
 }
 
-.month-card.computed h4 {
+.month-card.computed.has-value h4 {
   color: #2e7d32;
+}
+
+.month-card.computed.missing-value {
+  background: linear-gradient(135deg, #fff8e1 0%, #fffde7 100%);
+  border: 1px solid #ffe082;
+}
+
+.month-card.computed.missing-value h4 {
+  color: #f57f17;
 }
 
 .computed-value {
@@ -829,6 +1045,11 @@
   font-weight: bold;
   color: #1b5e20;
   margin-left: 8px;
+}
+
+.formula-tooltip-container {
+  cursor: default;
+  position: relative;
 }
 
 .computed-note {
@@ -840,6 +1061,183 @@
   color: #2e7d32;
   text-align: center;
   font-weight: 500;
+}
+
+.month-card.computed.missing-value .computed-note {
+  background: rgba(255, 193, 7, 0.15);
+  color: #f57f17;
+}
+
+/* Option 3 KPI Month Card Styling (Manual Actual + Computed Target) */
+.month-card.option3 {
+  border: 1px solid #81c3d7;
+  background: linear-gradient(135deg, #e0f2f1 0%, #e0f7fa 100%);
+}
+
+.month-card.option3 h4 {
+  color: #00695c;
+}
+
+.month-card.option3.has-value {
+  border: 1px solid #4db8d7;
+  box-shadow: 0 2px 8px rgba(0, 150, 136, 0.15);
+}
+
+.month-card.option3 .data-display {
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 0.75rem;
+  border-radius: 4px;
+  border-left: 3px solid #0097a7;
+}
+
+.month-card.option3 .data-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5rem 0;
+}
+
+.month-card.option3 .target-computed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #b3e5fc;
+  color: #01579b;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.month-card.option3 .target-label {
+  font-weight: 600;
+  color: #00695c;
+}
+
+.month-card.option3 .actual-label {
+  font-weight: 600;
+  color: #00695c;
+}
+
+.month-card.option3 .actual-value,
+.month-card.option3 .target-value {
+  font-weight: 500;
+  color: #004d40;
+}
+
+.month-card.option3 .target-formula-info {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background-color: rgba(0, 150, 136, 0.08);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #00695c;
+  font-style: italic;
+  border-left: 2px solid #0097a7;
+}
+
+.month-card.option3 .form-inputs input {
+  border-color: #80deea;
+}
+
+.month-card.option3 .form-inputs input:focus {
+  border-color: #0097a7;
+  box-shadow: 0 0 0 3px rgba(0, 150, 136, 0.1);
+}
+
+.month-card.option3 .btn-save {
+  background-color: #0097a7;
+}
+
+.month-card.option3 .btn-save:hover {
+  background-color: #00838f;
+}
+
+/* Option 2 KPI Month Card Styling (Computed Actual + Manual Target) */
+.month-card.option2 {
+  border: 1px solid #fbc02d;
+  background: linear-gradient(135deg, #fff8e1 0%, #fffde7 100%);
+}
+
+.month-card.option2 h4 {
+  color: #f57f17;
+}
+
+.month-card.option2.has-value {
+  border: 1px solid #f9a825;
+  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.15);
+}
+
+.month-card.option2 .data-display {
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 0.75rem;
+  border-radius: 4px;
+  border-left: 3px solid #ff9800;
+}
+
+.month-card.option2 .data-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0.5rem 0;
+}
+
+.month-card.option2 .actual-computed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: #ffe0b2;
+  color: #e65100;
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+.month-card.option2 .target-label {
+  font-weight: 600;
+  color: #f57f17;
+}
+
+.month-card.option2 .actual-label {
+  font-weight: 600;
+  color: #f57f17;
+}
+
+.month-card.option2 .actual-value,
+.month-card.option2 .target-value {
+  font-weight: 500;
+  color: #e65100;
+}
+
+.month-card.option2 .formula-info {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background-color: rgba(255, 152, 0, 0.08);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #f57f17;
+  font-style: italic;
+  border-left: 2px solid #ff9800;
+}
+
+.month-card.option2 .form-inputs input {
+  border-color: #ffe082;
+}
+
+.month-card.option2 .form-inputs input:focus {
+  border-color: #ff9800;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
+}
+
+.month-card.option2 .btn-save {
+  background-color: #ff9800;
+}
+
+.month-card.option2 .btn-save:hover {
+  background-color: #f57c00;
 }
 
 /* new code added for sidebar  */
@@ -1032,3 +1430,391 @@
 .action-button:active {
   transform: translateY(0);
 }
+/* KPI Hierarchy Styles */
+.kpi-hierarchy-wrapper {
+  margin-top: 2rem;
+}
+
+.kpi-hierarchy-section {
+  margin-bottom: 2.5rem;
+}
+
+.kpi-hierarchy-divider {
+  height: 2px;
+  background: linear-gradient(90deg, #3498db 0%, transparent 100%);
+  margin: 1.5rem 0 1.5rem 0;
+  border-radius: 1px;
+}
+
+.kpi-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e1e8ed;
+}
+
+.kpi-section-title {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.4rem;
+  font-weight: 600;
+  flex: 1;
+}
+
+.hierarchy-level-badge {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  background-color: #e8f4f8;
+  color: #0288d1;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpi-children-container {
+  margin-top: 2.5rem;
+  padding-left: 0;
+}
+
+/* Scroll to Top Button */
+.scroll-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  width: 50px;
+  height: 50px;
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
+  transition: all 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scroll-to-top:hover {
+  background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(52, 152, 219, 0.5);
+}
+
+.scroll-to-top:active {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(52, 152, 219, 0.3);
+}
+
+/* Default Value Badge Styles */
+.default-value-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-radius: 6px;
+  font-weight: 500;
+  border: 1px solid #81c784;
+}
+
+.badge-text {
+  font-size: 0.75rem;
+  font-style: italic;
+  opacity: 0.85;
+}
+
+/* Month Card Header with Eye Button */
+.month-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.month-card-header h4 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.formula-view-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s;
+  opacity: 0.7;
+}
+
+.formula-view-btn:hover {
+  opacity: 1;
+  background-color: rgba(52, 152, 219, 0.1);
+  transform: scale(1.1);
+}
+
+/* Formula Details Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  backdrop-filter: blur(3px);
+}
+
+.formula-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  max-width: 700px;
+  width: 90%;
+  max-height: 85vh;
+  overflow-y: auto;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.formula-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  border-bottom: 2px solid #e1e8ed;
+  background: linear-gradient(135deg, #001f3f 0%, #003366 100%);
+  border-radius: 12px 12px 0 0;
+}
+
+.formula-modal-header h3 {
+  margin: 0;
+  color: white;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+  line-height: 1;
+}
+
+.modal-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
+}
+
+.formula-modal-body {
+  padding: 1.5rem;
+}
+
+.formula-section {
+  margin-bottom: 1.5rem;
+}
+
+.formula-section h4 {
+  color: #2c3e50;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.formula-code {
+  display: block;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-left: 4px solid #3498db;
+  padding: 1rem;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.95rem;
+  color: #2c3e50;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.formula-code.computed {
+  background-color: #e8f5e9;
+  border-left-color: #4caf50;
+  color: #1b5e20;
+  font-weight: 600;
+}
+
+/* Dependencies Table */
+.dependencies-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.dependencies-table thead {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+}
+
+.dependencies-table th {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dependencies-table tbody tr {
+  border-bottom: 1px solid #e1e8ed;
+  transition: background-color 0.2s;
+}
+
+.dependencies-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.dependencies-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.dependencies-table td {
+  padding: 0.875rem 1rem;
+  font-size: 0.95rem;
+  color: #2c3e50;
+}
+
+.dependencies-table td code {
+  background-color: #e8f5e9;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #1b5e20;
+  font-weight: 600;
+}
+
+.dependencies-table .unit {
+  color: #7f8c8d;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.dependencies-table tr.no-data {
+  background-color: #fff3e0;
+}
+
+.dependencies-table .no-data-text {
+  color: #e65100;
+  font-style: italic;
+  font-weight: 500;
+}
+
+/* Recently Updated Computed KPIs */
+.recently-updated-kpis {
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+  border: 2px solid #4caf50;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+  animation: slideInFromTop 0.4s ease-out;
+}
+
+@keyframes slideInFromTop {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.updated-kpis-title {
+  color: #2e7d32;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.updated-kpis-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.updated-kpi-item {
+  background: white;
+  padding: 0.875rem 1.25rem;
+  border-radius: 8px;
+  border-left: 4px solid #4caf50;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.updated-kpi-item:hover {
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.2);
+  transform: translateX(4px);
+}
+
+.updated-kpi-name {
+  font-weight: 600;
+  color: #1b5e20;
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.updated-kpi-value {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #2e7d32;
+  white-space: nowrap;
+}
+

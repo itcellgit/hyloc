@@ -2,7 +2,7 @@ import { Auth } from '../models/auth.js';
 import { logError } from '../utils/logger.js';
 
 export class AuthController {
-  static async login(req, res) {
+  static async login(req, res, next) {
     try {
       const { empid, password } = req.body;
       
@@ -13,6 +13,7 @@ export class AuthController {
         });
       }
 
+      console.log(`Login attempt for empid: ${empid}`);
       const user = await Auth.login(empid, password);
       
       if (!user) {
@@ -34,12 +35,13 @@ export class AuthController {
         }
       });
     } catch (error) {
-      await logError(error, 'AuthController.login', req.user?.id);
-      res.status(500).json({ success: false, error: error.message });
+      console.error('Login error:', error.message);
+      await logError(error, 'AuthController.login', req.body?.empid);
+      next(error); // Pass to global error handler
     }
   }
 
-  static async register(req, res) {
+  static async register(req, res, next) {
     try {
       const {
         empid,
@@ -92,21 +94,23 @@ export class AuthController {
         }
       });
     } catch (error) {
-      await logError(error, 'AuthController.register', req.user?.id);
-      res.status(500).json({ success: false, error: error.message });
+      console.error('Register error:', error.message);
+      await logError(error, 'AuthController.register', req.body?.empid);
+      next(error); // Pass to global error handler
     }
   }
 
-  static async logout(req, res) {
+  static async logout(req, res, next) {
     try {
       res.json({ success: true, message: 'Logged out successfully' });
     } catch (error) {
+      console.error('Logout error:', error.message);
       await logError(error, 'AuthController.logout', req.user?.id);
-      res.status(500).json({ success: false, error: error.message });
+      next(error); // Pass to global error handler
     }
   }
 
-  static async verify(req, res) {
+  static async verify(req, res, next) {
     try {
       const token = req.headers.authorization?.split(' ')[1];
       
@@ -117,8 +121,9 @@ export class AuthController {
       const verified = await Auth.verifyToken(token);
       res.json({ success: true, data: verified });
     } catch (error) {
+      console.error('Verify error:', error.message);
       await logError(error, 'AuthController.verify', req.user?.id);
-      res.status(401).json({ success: false, error: error.message });
+      next(error); // Pass to global error handler
     }
   }
 }

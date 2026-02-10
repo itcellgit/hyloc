@@ -231,12 +231,12 @@
 }
 
 .btn-edit {
-  background: #3498db;
-  color: white;
+  background: #fef08a;
+  color: #854d0e;
 }
 
 .btn-edit:hover {
-  background: #2980b9;
+  background: #fde047;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }

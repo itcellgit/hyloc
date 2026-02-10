@@ -56,6 +56,13 @@ function Kmis() {
   const [expandedNodes, setExpandedNodes] = useState(new Set());
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const [searchQuery, setSearchQuery] = useState('');
+  const [showReplicateModal, setShowReplicateModal] = useState(false);
+  const [replicateFromYear, setReplicateFromYear] = useState('');
+  const [previousYearKpis, setPreviousYearKpis] = useState([]);
+  const [previousYearTree, setPreviousYearTree] = useState([]);
+  const [selectedKpisToReplicate, setSelectedKpisToReplicate] = useState(new Set());
+  const [replicateLoading, setReplicateLoading] = useState(false);
+  const [replicateExpandedNodes, setReplicateExpandedNodes] = useState(new Set());
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -70,10 +77,15 @@ function Kmis() {
   ];
 
   useEffect(() => {
+    const token = authService.getToken();
     const userData = localStorage.getItem('user');
-    if (userData) {
-      setUser(JSON.parse(userData));
+    
+    if (!token || !userData) {
+      navigate('/login', { replace: true });
+      return;
     }
+
+    setUser(JSON.parse(userData));
 
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -83,7 +95,7 @@ function Kmis() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [navigate]);
 
   // Generate financial years on component mount
   useEffect(() => {
@@ -139,8 +151,12 @@ function Kmis() {
       }
     });
 
+    // Get the category ID for "KMI / GLOBAL OBJECTIVES"
+    const globalObjectivesCategoryId = categories.find((c) => c.category_name === 'KMI / GLOBAL OBJECTIVES')?.id;
+
+    // If categories aren't loaded yet, fall back to all top-level KMIs
     const roots = Array.from(map.values())
-      .filter((node) => !node.parent_kpi_id)
+      .filter((node) => !node.parent_kpi_id && (!globalObjectivesCategoryId || node.category_id === globalObjectivesCategoryId))
       .sort((a, b) => a.title.localeCompare(b.title));
 
     const sortChildren = (node) => {
@@ -255,12 +271,63 @@ function Kmis() {
     setFormData({ 
       title: '',
       fin_year: selectedYear,
-      category_id: getDefaultCategoryId(categories),
+      category_id: getDefaultCategoryId(categories), // This will be "KMI / GLOBAL OBJECTIVES" category
       parent_kpi_id: null,
       department_id: null,
       emp_id: null
     });
     setShowModal(true);
+  };
+
+  const handleOpenReplicateModal = async () => {
+    const previousYears = financialYears.filter(year => {
+      // Extract start year from format "YYYY-YY"
+      const yearNum = parseInt(year.split('-')[0]);
+      const selectedYearNum = parseInt(selectedYear.split('-')[0]);
+      return yearNum < selectedYearNum;
+    });
+    if (previousYears.length === 0) {
+      showNotification('No previous financial years available to replicate from', 'error');
+      return;
+    }
+    
+    // Check if current year already has KMIs
+    const existingKmis = kpis.filter(k => k.fin_year === selectedYear);
+    if (existingKmis.length > 0) {
+      const confirmReplicate = window.confirm(
+        `⚠️ Warning: ${existingKmis.length} KMI(s) already exist for ${selectedYear}.\n\n` +
+        `Replicating will ADD new KMIs without removing existing ones.\n\n` +
+        `For best results, delete all existing ${selectedYear} KMIs first, then replicate.\n\n` +
+        `Do you want to continue anyway?`
+      );
+      if (!confirmReplicate) {
+        return;
+      }
+    }
+    
+    // Get the most recent previous year
+    setReplicateFromYear(previousYears[previousYears.length - 1]);
+    await loadPreviousYearKpis(previousYears[previousYears.length - 1]);
+    setShowReplicateModal(true);
+    setSelectedKpisToReplicate(new Set());
+    setReplicateExpandedNodes(new Set());
+  };
+
+  const loadPreviousYearKpis = async (year) => {
+    try {
+      setReplicateLoading(true);
+      const response = await axios.get(`${API_BASE_URL}/kpis`);
+      const data = response.data.data || [];
+      const filtered = data.filter(kpi => kpi.fin_year === year);
+      const tree = buildTree(filtered, year);
+      setPreviousYearKpis(filtered);
+      setPreviousYearTree(tree);
+    } catch (err) {
+      showNotification('Failed to load previous year KMIs', 'error');
+      console.error(err);
+    } finally {
+      setReplicateLoading(false);
+    }
   };
 
   const handleEdit = (kmi) => {
@@ -487,6 +554,245 @@ function Kmis() {
     );
   };
 
+  const toggleReplicateNodeExpand = (id) => {
+    setReplicateExpandedNodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleReplicateNodeSelection = (id, allDescendants = []) => {
+    setSelectedKpisToReplicate((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+        // Deselect all descendants
+        allDescendants.forEach(descId => next.delete(descId));
+      } else {
+        next.add(id);
+        // Also select all descendants
+        allDescendants.forEach(descId => next.add(descId));
+      }
+      return next;
+    });
+  };
+
+  const getNodeAndDescendants = (node) => {
+    const ids = [node.id];
+    const collectIds = (n) => {
+      if (n.children && n.children.length > 0) {
+        n.children.forEach(child => {
+          ids.push(child.id);
+          collectIds(child);
+        });
+      }
+    };
+    collectIds(node);
+    return ids;
+  };
+
+  const renderReplicateNode = (node, depth = 0) => {
+    const isExpanded = replicateExpandedNodes.has(node.id);
+    const hasChildren = (node.children || []).length > 0;
+    const isSelected = selectedKpisToReplicate.has(node.id);
+    const allDescendants = getNodeAndDescendants(node).slice(1);
+
+    return (
+      <div key={node.id} className="replicate-kpi-node" style={{ marginLeft: depth * 16 }}>
+        <div className="replicate-kpi-node-header">
+          <div className="replicate-node-left">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => toggleReplicateNodeSelection(node.id, allDescendants)}
+              className="node-checkbox"
+            />
+            <button
+              className={`accordion-toggle ${hasChildren ? '' : 'empty'}`}
+              onClick={() => hasChildren && toggleReplicateNodeExpand(node.id)}
+              type="button"
+            >
+              {hasChildren ? (isExpanded ? '▼' : '▶') : '•'}
+            </button>
+          </div>
+          <div className="replicate-kpi-node-body">
+            <div className="kpi-node-title">{node.title}</div>
+            <div className="kpi-node-meta">
+              <span className="badge">{getCategoryNameById(node.category_id)}</span>
+            </div>
+          </div>
+        </div>
+        {hasChildren && isExpanded && (
+          <div className="replicate-kpi-children">
+            {node.children.map((child) => renderReplicateNode(child, depth + 1))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const handleReplicateKmis = async () => {
+    if (selectedKpisToReplicate.size === 0) {
+      showNotification('Please select at least one KMI to replicate', 'error');
+      return;
+    }
+
+    try {
+      setReplicateLoading(true);
+      
+      // Map old KPI IDs to new KPI IDs for parent reference updates
+      const idMapping = {};
+      const newKpiIds = [];
+      
+      // Ensure all parent KPIs are included in selection
+      const ensureParentsIncluded = (kpiId, kpiList, included = new Set()) => {
+        if (included.has(kpiId)) return;
+        const kpi = kpiList.find(k => k.id === kpiId);
+        if (!kpi) return;
+        
+        included.add(kpiId);
+        if (kpi.parent_kpi_id) {
+          ensureParentsIncluded(kpi.parent_kpi_id, kpiList, included);
+        }
+      };
+      
+      // Build complete set of KPIs to replicate (including all parents)
+      const completeKpiSet = new Set(selectedKpisToReplicate);
+      selectedKpisToReplicate.forEach(kpiId => {
+        ensureParentsIncluded(kpiId, previousYearKpis, completeKpiSet);
+      });
+      
+      // Calculate depth for each KPI to ensure proper sorting
+      const calculateDepth = (kpiId, kpiList, memo = {}) => {
+        if (memo[kpiId] !== undefined) return memo[kpiId];
+        const kpi = kpiList.find(k => k.id === kpiId);
+        if (!kpi || !kpi.parent_kpi_id) {
+          memo[kpiId] = 0;
+          return 0;
+        }
+        const depth = 1 + calculateDepth(kpi.parent_kpi_id, kpiList, memo);
+        memo[kpiId] = depth;
+        return depth;
+      };
+      
+      const depthMemo = {};
+      
+      // Sort KPIs by depth (top-level first) to ensure parents are created before children at all levels
+      const sortedKpis = previousYearKpis
+        .filter(kpi => completeKpiSet.has(kpi.id))
+        .map(kpi => ({
+          ...kpi,
+          depth: calculateDepth(kpi.id, previousYearKpis, depthMemo)
+        }))
+        .sort((a, b) => a.depth - b.depth);
+
+      console.log('=== REPLICATION DEBUG ===');
+      console.log(`Total KPIs to replicate: ${sortedKpis.length}`);
+      console.log('KPIs sorted by depth:', sortedKpis.map(k => `${k.title} (ID:${k.id}, Parent:${k.parent_kpi_id || 'none'}, Depth:${k.depth})`));
+
+      for (const kpi of sortedKpis) {
+        // Determine new parent_kpi_id using the mapping
+        let newParentId = null;
+        if (kpi.parent_kpi_id) {
+          newParentId = idMapping[kpi.parent_kpi_id];
+          if (!newParentId) {
+            console.error(`❌ FATAL: Parent KPI ${kpi.parent_kpi_id} not found in mapping for KPI ${kpi.id} (${kpi.title})`);
+            console.error('Available mappings:', idMapping);
+            throw new Error(`Parent KPI not created before child. This should not happen.`);
+          }
+        }
+
+        console.log(`Creating: "${kpi.title}" (oldID:${kpi.id}) with parent ${newParentId || 'NONE'}`);
+
+        const response = await axios.post(`${API_BASE_URL}/kpis`, {
+          title: kpi.title,
+          fin_year: selectedYear,
+          category_id: kpi.category_id,
+          parent_kpi_id: newParentId
+        });
+
+        const newKpiId = response.data.data.id;
+        idMapping[kpi.id] = newKpiId;
+        newKpiIds.push(newKpiId);
+        
+        console.log(`✅ Created: "${kpi.title}" newID:${newKpiId}, parent:${newParentId || 'NONE'}`);
+
+        // Replicate department mapping if exists
+        if (kpi.category_id === 2 || kpi.category_id === '2') {
+          try {
+            const deptRes = await axios.get(`${API_BASE_URL}/kpi-departments?kpi_id=${kpi.id}`);
+            const deptMappings = deptRes.data.data || [];
+            for (const mapping of deptMappings) {
+              await axios.post(`${API_BASE_URL}/kpi-departments`, {
+                kpi_id: newKpiId,
+                department_id: mapping.department_id
+              });
+            }
+          } catch (err) {
+            console.error('Failed to replicate department mapping:', err);
+          }
+        }
+
+        // Replicate employee mapping if exists
+        if (kpi.category_id === 4 || kpi.category_id === '4') {
+          try {
+            const empRes = await axios.get(`${API_BASE_URL}/kpi-employees?kpi_id=${kpi.id}`);
+            const empMappings = empRes.data.data || [];
+            for (const mapping of empMappings) {
+              await axios.post(`${API_BASE_URL}/kpi-employees`, {
+                kpi_id: newKpiId,
+                emp_id: mapping.emp_id
+              });
+            }
+          } catch (err) {
+            console.error('Failed to replicate employee mapping:', err);
+          }
+        }
+      }
+
+      // Reload KPIs to show new data
+      const response = await axios.get(`${API_BASE_URL}/kpis`);
+      const allKpis = response.data.data || [];
+      const yearFilteredKpis = allKpis.filter(k => k.fin_year === selectedYear);
+      const tree = buildTree(allKpis, selectedYear);
+      setKpis(allKpis);
+      setKpiTree(tree);
+      setError('');
+
+      // Close modal after refreshing
+      setShowReplicateModal(false);
+      
+      // Clear search to show all new KMIs
+      setSearchQuery('');
+      
+      // Auto-expand all replicated nodes to show full hierarchy
+      const newExpandedSet = new Set();
+      
+      // Expand all newly created KMIs that have children
+      newKpiIds.forEach(newId => {
+        const hasChildren = yearFilteredKpis.some(k => k.parent_kpi_id === newId);
+        if (hasChildren) {
+          newExpandedSet.add(newId);
+        }
+      });
+      
+      setExpandedNodes(newExpandedSet);
+
+      showNotification(`✅ Successfully replicated ${selectedKpisToReplicate.size} KMI(s) with complete hierarchy for FY ${selectedYear}!`, 'success');
+    } catch (err) {
+      const errorMsg = 'Failed to replicate KMIs: ' + (err.response?.data?.error || err.message);
+      showNotification(errorMsg, 'error');
+      console.error(err);
+    } finally {
+      setReplicateLoading(false);
+    }
+  };
+
   return (
     <div className="kmis-layout">
       <header className="header">
@@ -570,9 +876,14 @@ function Kmis() {
           <div className="page-header">
             <div className="heading-section">
               <h2>Key Management Indicators (KMIs)</h2>
-              <button className="btn-primary" onClick={handleAddNew}>
-                <span>+</span> Add KMI
-              </button>
+              <div className="header-buttons">
+                <button className="btn-primary" onClick={handleAddNew}>
+                  <span>+</span> Add KMI
+                </button>
+                <button className="btn-secondary" onClick={handleOpenReplicateModal}>
+                  <span>📋</span> Replicate from Previous Year
+                </button>
+              </div>
             </div>
           </div>
 
@@ -715,11 +1026,23 @@ function Kmis() {
               )}
               <div className="form-group">
                 <label>Parent KPI</label>
-                <input
-                  type="text"
-                  value={formData.parent_kpi_id ? (kpis.find((k) => k.id === formData.parent_kpi_id)?.title || `ID ${formData.parent_kpi_id}`) : 'None (Top-level KMI)'}
-                  readOnly
-                />
+                <select
+                  name="parent_kpi_id"
+                  value={formData.parent_kpi_id || ''}
+                  onChange={handleChange}
+                  className="fin-year-select"
+                >
+                  <option value="">None (Top-level KPI)</option>
+                  {kpis
+                    .filter((k) => 
+                      k.fin_year === formData.fin_year && 
+                      k.id !== editingKmi?.id
+                    )
+                    .sort((a, b) => a.title.localeCompare(b.title))
+                    .map((k) => (
+                      <option key={k.id} value={k.id}>{k.title}</option>
+                    ))}
+                </select>
               </div>
               <div className="form-group">
                 <label>KMI Title *</label>
@@ -741,6 +1064,61 @@ function Kmis() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {showReplicateModal && (
+        <div className="modal-overlay" onClick={() => setShowReplicateModal(false)}>
+          <div className="modal-content large-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Replicate KMIs from Previous Year</h3>
+              <button className="modal-close" onClick={() => setShowReplicateModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              {replicateLoading ? (
+                <div className="loading">Loading KMIs from {replicateFromYear}...</div>
+              ) : (
+                <>
+                  <div className="replicate-info">
+                    <p>Select KMIs from <strong>{replicateFromYear}</strong> to replicate into <strong>{selectedYear}</strong></p>
+                    <p className="info-text">✓ Selecting a parent KMI will automatically select all its child KMIs</p>
+                    <p className="info-text">✓ Only KMI structure will be copied (no data points)</p>
+                    <p className="info-text">✓ Department and Employee mappings will be replicated as well</p>
+                  </div>
+                  
+                  {previousYearTree.length === 0 ? (
+                    <div className="no-data">No KMIs available in {replicateFromYear}</div>
+                  ) : (
+                    <div className="replicate-tree-container">
+                      {previousYearTree.map((node) => renderReplicateNode(node))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="modal-actions">
+              <div className="selection-summary">
+                {selectedKpisToReplicate.size > 0 && (
+                  <span>{selectedKpisToReplicate.size} KMI(s) selected</span>
+                )}
+              </div>
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={() => setShowReplicateModal(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="btn-primary"
+                onClick={handleReplicateKmis}
+                disabled={selectedKpisToReplicate.size === 0 || replicateLoading}
+              >
+                Replicate Selected KMIs
+              </button>
+            </div>
           </div>
         </div>
       )}

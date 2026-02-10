@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { authService } from '../../services/auth';
@@ -23,6 +23,8 @@ function UserRoles() {
   const [notification, setNotification] = useState({ show: false, message: '', type: '' });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -198,11 +200,86 @@ function UserRoles() {
     return role ? role.role_name : 'Unknown Role';
   };
 
+  // Search and filter logic
+  const filteredUserRoles = userRoles.filter((ur) => {
+    if (!searchQuery) return true;
+    
+    const query = searchQuery.toLowerCase();
+    const userName = getUserName(ur.user_id).toLowerCase();
+    const roleName = getRoleName(ur.role_id).toLowerCase();
+    const status = (ur.status || 'active').toLowerCase();
+    const date = ur.created_at ? new Date(ur.created_at).toLocaleDateString().toLowerCase() : '';
+    
+    return (
+      userName.includes(query) ||
+      roleName.includes(query) ||
+      status.includes(query) ||
+      date.includes(query)
+    );
+  });
+
+  // Sort logic
+  const sortedUserRoles = useMemo(() => {
+    let sortableItems = [...filteredUserRoles];
+    
+    if (sortConfig.key) {
+      sortableItems.sort((a, b) => {
+        let aValue, bValue;
+        
+        switch (sortConfig.key) {
+          case 'user':
+            aValue = getUserName(a.user_id);
+            bValue = getUserName(b.user_id);
+            break;
+          case 'role':
+            aValue = getRoleName(a.role_id);
+            bValue = getRoleName(b.role_id);
+            break;
+          case 'status':
+            aValue = a.status || 'active';
+            bValue = b.status || 'active';
+            break;
+          case 'date':
+            aValue = a.created_at ? new Date(a.created_at).getTime() : 0;
+            bValue = b.created_at ? new Date(b.created_at).getTime() : 0;
+            break;
+          default:
+            return 0;
+        }
+        
+        if (aValue < bValue) {
+          return sortConfig.direction === 'asc' ? -1 : 1;
+        }
+        if (aValue > bValue) {
+          return sortConfig.direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    
+    return sortableItems;
+  }, [filteredUserRoles, sortConfig, users, roles]);
+
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortIcon = (columnKey) => {
+    if (sortConfig.key !== columnKey) {
+      return ' ⇅';
+    }
+    return sortConfig.direction === 'asc' ? ' ▲' : ' ▼';
+  };
+
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentUserRoles = userRoles.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(userRoles.length / itemsPerPage);
+  const currentUserRoles = sortedUserRoles.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(sortedUserRoles.length / itemsPerPage);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
@@ -211,6 +288,11 @@ function UserRoles() {
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value));
     setCurrentPage(1);
+  };
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page on search
   };
 
   const getPageNumbers = () => {
@@ -351,8 +433,18 @@ function UserRoles() {
                   </select>
                   <label> entries</label>
                 </div>
+                <div className="search-box">
+                  <input
+                    type="text"
+                    placeholder="Search by user, role, status..."
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    className="search-input"
+                  />
+                  <span className="search-icon">🔍</span>
+                </div>
                 <div className="table-info">
-                  Showing {userRoles.length === 0 ? 0 : indexOfFirstItem + 1} to {Math.min(indexOfLastItem, userRoles.length)} of {userRoles.length} role assignments
+                  Showing {sortedUserRoles.length === 0 ? 0 : indexOfFirstItem + 1} to {Math.min(indexOfLastItem, sortedUserRoles.length)} of {sortedUserRoles.length} role assignments
                 </div>
               </div>
 
@@ -361,10 +453,18 @@ function UserRoles() {
                   <thead>
                     <tr>
                       <th>S.No</th>
-                      <th>User</th>
-                      <th>Role</th>
-                      <th>Status</th>
-                      <th>Assigned At</th>
+                      <th onClick={() => handleSort('user')} style={{ cursor: 'pointer' }}>
+                        User{getSortIcon('user')}
+                      </th>
+                      <th onClick={() => handleSort('role')} style={{ cursor: 'pointer' }}>
+                        Role{getSortIcon('role')}
+                      </th>
+                      <th onClick={() => handleSort('status')} style={{ cursor: 'pointer' }}>
+                        Status{getSortIcon('status')}
+                      </th>
+                      <th onClick={() => handleSort('date')} style={{ cursor: 'pointer' }}>
+                        Assigned At{getSortIcon('date')}
+                      </th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -406,7 +506,7 @@ function UserRoles() {
                 </table>
               </div>
 
-              {userRoles.length > 0 && totalPages > 1 && (
+              {sortedUserRoles.length > 0 && totalPages > 1 && (
                 <div className="pagination">
                   <button 
                     className="pagination-btn" 

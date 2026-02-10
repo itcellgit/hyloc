@@ -18,7 +18,8 @@ export class EmployeeKPIController {
       const valuesResult = await pool.query(
         `SELECT kv.id, kv.data, kv.kpi_id, kv."data operator", kv.target_required, 
                 kv.uom, kv.kpi_type, kv.piller_id, kv.formula, kv.source_kpi_value_ids,
-                kv.created_at, kv.updated_at,
+                kv.computation_type, kv.target_formula, kv.target_source_kpi_value_ids,
+                kv.default_target_value, kv.created_at, kv.updated_at,
                 k.title as kpi_title, u.unit_name, u.symbol as unit_symbol
          FROM kpi_values kv
          JOIN kpis k ON k.id = kv.kpi_id
@@ -81,7 +82,8 @@ export class EmployeeKPIController {
       const valuesResult = await pool.query(
         `SELECT kv.id, kv.data, kv.kpi_id, kv."data operator", kv.target_required, 
                 kv.uom, kv.kpi_type, kv.piller_id, kv.formula, kv.source_kpi_value_ids,
-                kv.created_at, kv.updated_at,
+                kv.computation_type, kv.target_formula, kv.target_source_kpi_value_ids,
+                kv.default_target_value, kv.created_at, kv.updated_at,
                 k.title as kpi_title, u.unit_name, u.symbol as unit_symbol
          FROM kpi_values kv
          JOIN kpis k ON k.id = kv.kpi_id
@@ -110,10 +112,44 @@ export class EmployeeKPIController {
         });
       }
 
+      // Get KPI value details to check if it's computed or has target formula
+      const kpiValueResult = await pool.query(
+        `SELECT kpi_type, default_target_value, target_formula, target_source_kpi_value_ids FROM kpi_values WHERE id = $1`,
+        [kpiValueId]
+      );
+      const kpiValueData = kpiValueResult.rows[0];
+      const isComputed = kpiValueData && (kpiValueData.kpi_type || '').toLowerCase() === 'computed';
+      const defaultTargetValue = kpiValueData?.default_target_value;
+      const targetFormula = kpiValueData?.target_formula;
+      const formula = kpiValueData?.formula;
+      const hasTargetFormula = targetFormula !== null && targetFormula !== undefined && targetFormula.trim() !== '';
+      const hasFormula = formula !== null && formula !== undefined && formula.trim() !== '';
+
       const results = [];
+      let shouldRecalculate = false;
+      let shouldComputeTarget = false;
+      let shouldComputeActual = false;
 
       // Handle target value
-      if (targetValue !== null && targetValue !== undefined && targetValue !== '') {
+      let resolvedTargetValue = targetValue;
+      
+      // For computed KPIs with empty target, use default_target_value if available
+      // BUT: if target_formula exists, we'll compute it instead (option 3)
+      if (isComputed && (targetValue === null || targetValue === undefined || targetValue === '') && !hasTargetFormula && defaultTargetValue !== null && defaultTargetValue !== undefined) {
+        resolvedTargetValue = defaultTargetValue;
+      }
+      
+      // For computed/manual KPIs with target_formula but no targetValue provided, mark for computation (Option 3)
+      if (hasTargetFormula && (targetValue === null || targetValue === undefined || targetValue === '')) {
+        shouldComputeTarget = true;
+      }
+
+      // For computed KPIs with formula but no actualValue provided, mark for computation (Option 2)
+      if (isComputed && hasFormula && (actualValue === null || actualValue === undefined || actualValue === '') && (targetValue !== null && targetValue !== undefined && targetValue !== '')) {
+        shouldComputeActual = true;
+      }
+
+      if (resolvedTargetValue !== null && resolvedTargetValue !== undefined && resolvedTargetValue !== '') {
         // Check if target entry exists
         const existingTarget = await pool.query(
           `SELECT id FROM kpi_data_value 
@@ -128,18 +164,20 @@ export class EmployeeKPIController {
              SET value = $1, updated_at = CURRENT_TIMESTAMP
              WHERE id = $2
              RETURNING *`,
-            [parseFloat(targetValue), existingTarget.rows[0].id]
+            [parseFloat(resolvedTargetValue), existingTarget.rows[0].id]
           );
           results.push(targetResult.rows[0]);
+          shouldRecalculate = true;
         } else {
           // Insert new target
           const targetResult = await pool.query(
             `INSERT INTO kpi_data_value (kpi_value_id, value, value_type, month, year)
              VALUES ($1, $2, $3, $4, $5)
              RETURNING *`,
-            [kpiValueId, parseFloat(targetValue), 'target', month, year]
+            [kpiValueId, parseFloat(resolvedTargetValue), 'target', month, year]
           );
           results.push(targetResult.rows[0]);
+          shouldRecalculate = true;
         }
       }
 
@@ -162,6 +200,7 @@ export class EmployeeKPIController {
             [parseFloat(actualValue), existingActual.rows[0].id]
           );
           results.push(actualResult.rows[0]);
+          shouldRecalculate = true;
         } else {
           // Insert new actual
           const actualResult = await pool.query(
@@ -171,20 +210,121 @@ export class EmployeeKPIController {
             [kpiValueId, parseFloat(actualValue), 'actual', month, year]
           );
           results.push(actualResult.rows[0]);
+          shouldRecalculate = true;
         }
+        
+        // If this KPI has a target_formula (option 3), compute and save target
+        if (shouldComputeTarget) {
+          try {
+            console.log(`[OPTION3] Computing target for KPI Value ${kpiValueId} using target_formula`);
+            const computedTarget = await KPICalculationService.calculateKPIValue(kpiValueId, month, year, empId, 'target');
+            
+            if (computedTarget !== null && computedTarget !== undefined && !Number.isNaN(computedTarget)) {
+              // Check if target entry exists
+              const existingTarget = await pool.query(
+                `SELECT id FROM kpi_data_value 
+                 WHERE kpi_value_id = $1 AND month = $2 AND year = $3 AND value_type = $4`,
+                [kpiValueId, month, year, 'target']
+              );
 
-        // After saving actual value, recalculate dependent computed KPIs
+              if (existingTarget.rows.length > 0) {
+                // Update existing target
+                const targetResult = await pool.query(
+                  `UPDATE kpi_data_value
+                   SET value = $1, updated_at = CURRENT_TIMESTAMP
+                   WHERE id = $2
+                   RETURNING *`,
+                  [parseFloat(computedTarget), existingTarget.rows[0].id]
+                );
+                results.push(targetResult.rows[0]);
+                console.log(`[OPTION3] Updated target value: ${computedTarget}`);
+              } else {
+                // Insert new target
+                const targetResult = await pool.query(
+                  `INSERT INTO kpi_data_value (kpi_value_id, value, value_type, month, year)
+                   VALUES ($1, $2, $3, $4, $5)
+                   RETURNING *`,
+                  [kpiValueId, parseFloat(computedTarget), 'target', month, year]
+                );
+                results.push(targetResult.rows[0]);
+                console.log(`[OPTION3] Inserted computed target value: ${computedTarget}`);
+              }
+            }
+          } catch (error) {
+            console.error(`[OPTION3] Error computing target for KPI Value ${kpiValueId}:`, error);
+            // Don't fail the request if target computation fails
+          }
+        }
+      }
+
+      // If this is Option 2 (compute actual value), do it now
+      if (shouldComputeActual) {
         try {
+          console.log(`[OPTION2] Computing actual for KPI Value ${kpiValueId} using formula`);
+          const computedActual = await KPICalculationService.calculateKPIValue(kpiValueId, month, year, empId, 'actual');
+          
+          if (computedActual !== null && computedActual !== undefined && !Number.isNaN(computedActual)) {
+            // Check if actual entry exists
+            const existingActual = await pool.query(
+              `SELECT id FROM kpi_data_value 
+               WHERE kpi_value_id = $1 AND month = $2 AND year = $3 AND value_type = $4`,
+              [kpiValueId, month, year, 'actual']
+            );
+
+            if (existingActual.rows.length > 0) {
+              // Update existing actual
+              const actualResult = await pool.query(
+                `UPDATE kpi_data_value
+                 SET value = $1, updated_at = CURRENT_TIMESTAMP
+                 WHERE id = $2
+                 RETURNING *`,
+                [parseFloat(computedActual), existingActual.rows[0].id]
+              );
+              results.push(actualResult.rows[0]);
+              console.log(`[OPTION2] Updated actual value: ${computedActual}`);
+            } else {
+              // Insert new actual
+              const actualResult = await pool.query(
+                `INSERT INTO kpi_data_value (kpi_value_id, value, value_type, month, year)
+                 VALUES ($1, $2, $3, $4, $5)
+                 RETURNING *`,
+                [kpiValueId, parseFloat(computedActual), 'actual', month, year]
+              );
+              results.push(actualResult.rows[0]);
+              console.log(`[OPTION2] Inserted computed actual value: ${computedActual}`);
+            }
+          }
+        } catch (error) {
+          console.error(`[OPTION2] Error computing actual for KPI Value ${kpiValueId}:`, error);
+          // Don't fail the request if actual computation fails
+        }
+      }
+
+      // After saving target/actual values, recalculate dependent computed KPIs once
+      if (shouldRecalculate) {
+        try {
+          console.log(`[AUTO-CALC] ========================================`);
+          console.log(`[AUTO-CALC] Triggering recalculation`);
+          console.log(`[AUTO-CALC] KPI Value ID: ${kpiValueId}`);
+          console.log(`[AUTO-CALC] Month: ${month}, Year: ${year}`);
+          console.log(`[AUTO-CALC] Employee ID: ${empId}`);
+          console.log(`[AUTO-CALC] ========================================`);
+          
           await KPICalculationService.recalculateDependentKPIs(
             parseInt(kpiValueId),
             parseInt(month),
             parseInt(year),
             parseInt(empId)
           );
+          console.log(`[AUTO-CALC] ✓ Recalculation completed successfully`);
         } catch (calcError) {
-          console.error('Error recalculating dependent KPIs:', calcError);
+          console.error('[AUTO-CALC] ✗ Error recalculating dependent KPIs:', calcError);
+          console.error('[AUTO-CALC] Error message:', calcError.message);
+          console.error('[AUTO-CALC] Stack:', calcError.stack);
           // Don't fail the request if calculation fails
         }
+      } else {
+        console.log(`[AUTO-CALC] No recalculation needed (shouldRecalculate=${shouldRecalculate})`);
       }
 
       res.json({ success: true, data: results });

@@ -28,8 +28,8 @@
 
 .btn-edit {
   padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #fef08a;
+  color: #854d0e;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -42,8 +42,9 @@
 }
 
 .btn-edit:hover {
+  background: #fde047;
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .profile-content {

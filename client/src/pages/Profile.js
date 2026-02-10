@@ -42,13 +42,18 @@ function Profile() {
   ];
 
   useEffect(() => {
+    const token = authService.getToken();
     const userData = localStorage.getItem('user');
-    if (userData) {
-      const parsedUser = JSON.parse(userData);
-      setUser(parsedUser);
-      loadUserProfile(parsedUser.id);
+    
+    if (!token || !userData) {
+      navigate('/login', { replace: true });
+      return;
     }
-  }, []);
+
+    const parsedUser = JSON.parse(userData);
+    setUser(parsedUser);
+    loadUserProfile(parsedUser.id);
+  }, [navigate]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

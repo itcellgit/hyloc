@@ -48,11 +48,19 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Only clear token and redirect to login if:
+    // 1. Status is 401 (Unauthorized)
+    // 2. It's not a login request
+    // 3. It's not already redirecting to login
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      authService.removeToken();
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      const currentPath = window.location.pathname;
+      
+      // Don't redirect if already on login page
+      if (currentPath !== '/login') {
+        authService.removeToken();
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

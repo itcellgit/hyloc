@@ -52,25 +52,64 @@ app.options('*', cors(corsOptions));
 app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  next();
+});
+
 // Routes
 app.use('/api', routes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'Server is running' });
+  res.json({ status: 'Server is running', timestamp: new Date() });
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ error: err.message || 'Internal Server Error' });
-});
-
-// 404 handler
+// 404 handler (before error handler)
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ error: 'Route not found', path: req.path, method: req.method });
 });
 
-app.listen(PORT, HOST, () => {
+// Global error handler (must be last)
+app.use((err, req, res, next) => {
+  // Log error details
+  console.error('=== ERROR ===');
+  console.error('Timestamp:', new Date().toISOString());
+  console.error('Method:', req.method);
+  console.error('Path:', req.path);
+  console.error('Error Message:', err.message);
+  console.error('Error Stack:', err.stack);
+  console.error('Body:', req.body);
+  console.error('==============');
+
+  // Determine status code
+  const statusCode = err.statusCode || err.status || 500;
+  
+  // Send error response
+  res.status(statusCode).json({
+    success: false,
+    error: err.message || 'Internal Server Error',
+    ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+  });
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't crash the server, just log it
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  // Log but don't exit - this might be recoverable
+});
+
+const server = app.listen(PORT, HOST, () => {
   console.log(`Server running on http://${HOST}:${PORT}`);
 });
+
+// Set request timeout to 30 seconds to prevent hanging requests
+server.setTimeout(30000);
+
