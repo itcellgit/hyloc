@@ -695,6 +695,63 @@
   padding: 20px;
 }
 
+.replicate-config {
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.replicate-config-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.replicate-config-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.replicate-config-item label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #374151;
+}
+
+.config-input-disabled,
+.config-select {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  background-color: white;
+}
+
+.config-input-disabled {
+  background-color: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.config-select {
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.config-select:hover {
+  border-color: #9ca3af;
+}
+
+.config-select:focus {
+  outline: none;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+}
+
 .replicate-info {
   background-color: #f0f9ff;
   border-left: 4px solid #0284c7;

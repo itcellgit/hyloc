@@ -24,6 +24,8 @@ const Industry40LineChart = ({
   yAxisFormatter,
   showAxisLabels = true,
   showPointLabels = false,
+  xAxisTitle = 'Month',
+  yAxisTitle = 'Value',
 }) => {
   const svgWidth = 900;
   const svgHeight = 350;
@@ -126,6 +128,26 @@ const Industry40LineChart = ({
             );
           })}
 
+        {/* Axis titles */}
+        {showAxisLabels && (
+          <>
+            <text x={svgWidth / 2} y={svgHeight - 8} textAnchor="middle" fontSize="12" fontWeight="600" fill="#374151">
+              {xAxisTitle}
+            </text>
+            <text
+              x={20}
+              y={svgHeight / 2}
+              textAnchor="middle"
+              fontSize="12"
+              fontWeight="600"
+              fill="#374151"
+              transform={`rotate(-90 20 ${svgHeight / 2})`}
+            >
+              {yAxisTitle}
+            </text>
+          </>
+        )}
+
         {/* Data labels */}
         {showPointLabels &&
           actuals.map((val, idx) => (
@@ -173,7 +195,7 @@ const Industry40LineChart = ({
 };
 
 // Bar Chart Component for Green Factory
-const GreenFactoryBarChart = ({ title, subtitle, labels, values }) => {
+const GreenFactoryBarChart = ({ title, subtitle, labels, values, showAxisLabels = true, xAxisTitle = 'Month', yAxisTitle = 'Value' }) => {
   const svgWidth = 900;
   const svgHeight = 350;
   const padding = 60;
@@ -246,30 +268,52 @@ const GreenFactoryBarChart = ({ title, subtitle, labels, values }) => {
         ))}
 
         {/* X-axis labels */}
-        {labels.map((label, idx) => (
-          <text
-            key={`x-label-${idx}`}
-            x={padding + (idx * plotWidth) / labels.length + (plotWidth / labels.length / 2)}
-            y={svgHeight - padding + 30}
-            textAnchor="middle"
-            fontSize="11"
-            fontWeight="500"
-            fill="#4b5563"
-          >
-            {label}
-          </text>
-        ))}
+        {showAxisLabels &&
+          labels.map((label, idx) => (
+            <text
+              key={`x-label-${idx}`}
+              x={padding + (idx * plotWidth) / labels.length + (plotWidth / labels.length / 2)}
+              y={svgHeight - padding + 30}
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="500"
+              fill="#4b5563"
+            >
+              {label}
+            </text>
+          ))}
 
         {/* Y-axis labels */}
-        {[0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, i) => {
-          const val = Math.round(minVal + ratio * range);
-          const y = svgHeight - padding - ratio * plotHeight;
-          return (
-            <text key={`y-label-${i}`} x={padding - 15} y={y + 5} textAnchor="end" fontSize="12" fontWeight="500" fill="#4b5563">
-              {val}%
+        {showAxisLabels &&
+          [0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, i) => {
+            const val = Math.round(minVal + ratio * range);
+            const y = svgHeight - padding - ratio * plotHeight;
+            return (
+              <text key={`y-label-${i}`} x={padding - 15} y={y + 5} textAnchor="end" fontSize="12" fontWeight="500" fill="#4b5563">
+                {val}%
+              </text>
+            );
+          })}
+
+        {/* Axis titles */}
+        {showAxisLabels && (
+          <>
+            <text x={svgWidth / 2} y={svgHeight - 8} textAnchor="middle" fontSize="12" fontWeight="600" fill="#374151">
+              {xAxisTitle}
             </text>
-          );
-        })}
+            <text
+              x={20}
+              y={svgHeight / 2}
+              textAnchor="middle"
+              fontSize="12"
+              fontWeight="600"
+              fill="#374151"
+              transform={`rotate(-90 20 ${svgHeight / 2})`}
+            >
+              {yAxisTitle}
+            </text>
+          </>
+        )}
       </svg>
 
       {/* Legend */}
@@ -284,7 +328,7 @@ const GreenFactoryBarChart = ({ title, subtitle, labels, values }) => {
 };
 
 // Bar Chart Component for On Time Delivery (Target vs Achieved)
-const Box4ThemeBarChart = ({ title, subtitle, labels, values }) => {
+const Box4ThemeBarChart = ({ title, subtitle, labels, values, showAxisLabels = true, xAxisTitle = 'Month', yAxisTitle = 'Value', showHeader = true }) => {
   const svgWidth = 900;
   const svgHeight = 350;
   const padding = 60;
@@ -302,10 +346,12 @@ const Box4ThemeBarChart = ({ title, subtitle, labels, values }) => {
 
   return (
     <div className="industry40-chart-wrapper">
-      <div className="chart-header">
-        <h2 className="industry40-chart-title">{title}</h2>
-        <p className="chart-subtitle">{subtitle}</p>
-      </div>
+      {showHeader && (
+        <div className="chart-header">
+          <h2 className="industry40-chart-title">{title}</h2>
+          <p className="chart-subtitle">{subtitle}</p>
+        </div>
+      )}
       <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="industry40-chart-svg">
         {/* Grid lines */}
         {[0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, i) => {
@@ -357,30 +403,52 @@ const Box4ThemeBarChart = ({ title, subtitle, labels, values }) => {
         ))}
 
         {/* X-axis labels */}
-        {labels.map((label, idx) => (
-          <text
-            key={`x-label-${idx}`}
-            x={padding + (idx * plotWidth) / labels.length + (plotWidth / labels.length / 2)}
-            y={svgHeight - padding + 30}
-            textAnchor="middle"
-            fontSize="11"
-            fontWeight="500"
-            fill="#4b5563"
-          >
-            {label}
-          </text>
-        ))}
+        {showAxisLabels &&
+          labels.map((label, idx) => (
+            <text
+              key={`x-label-${idx}`}
+              x={padding + (idx * plotWidth) / labels.length + (plotWidth / labels.length / 2)}
+              y={svgHeight - padding + 30}
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="500"
+              fill="#4b5563"
+            >
+              {label}
+            </text>
+          ))}
 
         {/* Y-axis labels */}
-        {[0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, i) => {
-          const val = Math.round(minVal + ratio * range);
-          const y = svgHeight - padding - ratio * plotHeight;
-          return (
-            <text key={`y-label-${i}`} x={padding - 15} y={y + 5} textAnchor="end" fontSize="12" fontWeight="500" fill="#4b5563">
-              {val}
+        {showAxisLabels &&
+          [0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, i) => {
+            const val = Math.round(minVal + ratio * range);
+            const y = svgHeight - padding - ratio * plotHeight;
+            return (
+              <text key={`y-label-${i}`} x={padding - 15} y={y + 5} textAnchor="end" fontSize="12" fontWeight="500" fill="#4b5563">
+                {val}
+              </text>
+            );
+          })}
+
+        {/* Axis titles */}
+        {showAxisLabels && (
+          <>
+            <text x={svgWidth / 2} y={svgHeight - 8} textAnchor="middle" fontSize="12" fontWeight="600" fill="#374151">
+              {xAxisTitle}
             </text>
-          );
-        })}
+            <text
+              x={20}
+              y={svgHeight / 2}
+              textAnchor="middle"
+              fontSize="12"
+              fontWeight="600"
+              fill="#374151"
+              transform={`rotate(-90 20 ${svgHeight / 2})`}
+            >
+              {yAxisTitle}
+            </text>
+          </>
+        )}
       </svg>
 
       {/* Legend */}
@@ -394,7 +462,7 @@ const Box4ThemeBarChart = ({ title, subtitle, labels, values }) => {
   );
 };
 
-const Box4EmployeesLineChart = ({ title, subtitle, labels, values }) => {
+const Box4EmployeesLineChart = ({ title, subtitle, labels, values, showAxisLabels = true, xAxisTitle = 'Month', yAxisTitle = 'Value', showHeader = true }) => {
   const svgWidth = 900;
   const svgHeight = 350;
   const padding = 60;
@@ -420,10 +488,12 @@ const Box4EmployeesLineChart = ({ title, subtitle, labels, values }) => {
 
   return (
     <div className="industry40-chart-wrapper">
-      <div className="chart-header">
-        <h2 className="industry40-chart-title">{title}</h2>
-        {subtitle && <p className="chart-subtitle">{subtitle}</p>}
-      </div>
+      {showHeader && (
+        <div className="chart-header">
+          <h2 className="industry40-chart-title">{title}</h2>
+          {subtitle && <p className="chart-subtitle">{subtitle}</p>}
+        </div>
+      )}
       <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="industry40-chart-svg">
         {/* Grid lines */}
         {[0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, i) => {
@@ -471,30 +541,52 @@ const Box4EmployeesLineChart = ({ title, subtitle, labels, values }) => {
         ))}
 
         {/* X-axis labels */}
-        {labels.map((label, idx) => (
-          <text
-            key={`x-label-${idx}`}
-            x={padding + (idx / (labels.length - 1 || 1)) * plotWidth}
-            y={svgHeight - padding + 30}
-            textAnchor="middle"
-            fontSize="11"
-            fontWeight="500"
-            fill="#4b5563"
-          >
-            {label}
-          </text>
-        ))}
+        {showAxisLabels &&
+          labels.map((label, idx) => (
+            <text
+              key={`x-label-${idx}`}
+              x={padding + (idx / (labels.length - 1 || 1)) * plotWidth}
+              y={svgHeight - padding + 30}
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="500"
+              fill="#4b5563"
+            >
+              {label}
+            </text>
+          ))}
 
         {/* Y-axis labels */}
-        {uniqueYTicks.map((val, i) => {
-          const ratio = (val - minVal) / range;
-          const y = svgHeight - padding - ratio * plotHeight;
-          return (
-            <text key={`y-label-${i}`} x={padding - 15} y={y + 5} textAnchor="end" fontSize="12" fontWeight="500" fill="#4b5563">
-              {val}
+        {showAxisLabels &&
+          uniqueYTicks.map((val, i) => {
+            const ratio = (val - minVal) / range;
+            const y = svgHeight - padding - ratio * plotHeight;
+            return (
+              <text key={`y-label-${i}`} x={padding - 15} y={y + 5} textAnchor="end" fontSize="12" fontWeight="500" fill="#4b5563">
+                {val}
+              </text>
+            );
+          })}
+
+        {/* Axis titles */}
+        {showAxisLabels && (
+          <>
+            <text x={svgWidth / 2} y={svgHeight - 8} textAnchor="middle" fontSize="12" fontWeight="600" fill="#374151">
+              {xAxisTitle}
             </text>
-          );
-        })}
+            <text
+              x={20}
+              y={svgHeight / 2}
+              textAnchor="middle"
+              fontSize="12"
+              fontWeight="600"
+              fill="#374151"
+              transform={`rotate(-90 20 ${svgHeight / 2})`}
+            >
+              {yAxisTitle}
+            </text>
+          </>
+        )}
       </svg>
 
       {/* Legend */}
@@ -508,7 +600,7 @@ const Box4EmployeesLineChart = ({ title, subtitle, labels, values }) => {
   );
 };
 
-const OnTimeDeliveryBarChart = ({ title, subtitle, labels, actuals, targets }) => {
+const OnTimeDeliveryBarChart = ({ title, subtitle, labels, actuals, targets, showAxisLabels = true, xAxisTitle = 'Month', yAxisTitle = 'Value' }) => {
   const svgWidth = 900;
   const svgHeight = 350;
   const padding = 60;
@@ -608,30 +700,52 @@ const OnTimeDeliveryBarChart = ({ title, subtitle, labels, actuals, targets }) =
         })}
 
         {/* X-axis labels */}
-        {labels.map((label, idx) => (
-          <text
-            key={`x-label-${idx}`}
-            x={padding + idx * groupWidth + groupWidth / 2}
-            y={svgHeight - padding + 30}
-            textAnchor="middle"
-            fontSize="11"
-            fontWeight="500"
-            fill="#4b5563"
-          >
-            {label}
-          </text>
-        ))}
+        {showAxisLabels &&
+          labels.map((label, idx) => (
+            <text
+              key={`x-label-${idx}`}
+              x={padding + idx * groupWidth + groupWidth / 2}
+              y={svgHeight - padding + 30}
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="500"
+              fill="#4b5563"
+            >
+              {label}
+            </text>
+          ))}
 
         {/* Y-axis labels */}
-        {[0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, i) => {
-          const val = Math.round(minVal + ratio * range);
-          const y = svgHeight - padding - ratio * plotHeight;
-          return (
-            <text key={`y-label-${i}`} x={padding - 15} y={y + 5} textAnchor="end" fontSize="12" fontWeight="500" fill="#4b5563">
-              {val}
+        {showAxisLabels &&
+          [0, 0.2, 0.4, 0.6, 0.8, 1].map((ratio, i) => {
+            const val = Math.round(minVal + ratio * range);
+            const y = svgHeight - padding - ratio * plotHeight;
+            return (
+              <text key={`y-label-${i}`} x={padding - 15} y={y + 5} textAnchor="end" fontSize="12" fontWeight="500" fill="#4b5563">
+                {val}
+              </text>
+            );
+          })}
+
+        {/* Axis titles */}
+        {showAxisLabels && (
+          <>
+            <text x={svgWidth / 2} y={svgHeight - 8} textAnchor="middle" fontSize="12" fontWeight="600" fill="#374151">
+              {xAxisTitle}
             </text>
-          );
-        })}
+            <text
+              x={20}
+              y={svgHeight / 2}
+              textAnchor="middle"
+              fontSize="12"
+              fontWeight="600"
+              fill="#374151"
+              transform={`rotate(-90 20 ${svgHeight / 2})`}
+            >
+              {yAxisTitle}
+            </text>
+          </>
+        )}
       </svg>
 
       {/* Legend */}
@@ -2062,14 +2176,20 @@ function UserDashboard() {
 
               <div className="dashboard-grid-item">
                 <div
-                  className="chart-card-split clickable"
+                  className="chart-card-split clickable cost-split-card"
                   onClick={() => openExpandedChart('salesProfit', { monthlySalesData, selectedSalesIndex, monthlyProfitData, selectedProfitIndex })}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === 'Enter' && openExpandedChart('salesProfit', { monthlySalesData, selectedSalesIndex, monthlyProfitData, selectedProfitIndex })}
                 >
-                  <div className="split-section">
-                    <h4 className="split-section-title">REVENUE</h4>
+                  <div className="split-card-heading">
+                    <h4 className="split-card-title">COST</h4>
+                  </div>
+                  <div className="split-card-body">
+                    <div className="split-section">
+                      <div className="split-section-heading">
+                        <h5 className="split-section-subtitle">REVENUE</h5>
+                      </div>
                     {salesLoading ? (
                       <div className="loading">Loading...</div>
                     ) : (
@@ -2198,11 +2318,13 @@ function UserDashboard() {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="split-divider"></div>
-                  
+
                   <div className="split-section">
-                    <h4 className="split-section-title">PROFITABILITY (YTD)</h4>
+                    <div className="split-section-heading">
+                      <h5 className="split-section-subtitle">PROFITABILITY (YTD)</h5>
+                    </div>
                     {profitabilityLoading ? (
                       <div className="loading">Loading...</div>
                     ) : (
@@ -2301,6 +2423,7 @@ function UserDashboard() {
                         </button>
                       </div>
                     )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2349,6 +2472,8 @@ function UserDashboard() {
                       yAxisFormatter={(val) => Math.round(val)}
                       showAxisLabels={true}
                       showPointLabels={true}
+                      xAxisTitle="Month"
+                      yAxisTitle="Count"
                     />
                   ) : (
                     <Industry40LineChart
@@ -2362,6 +2487,8 @@ function UserDashboard() {
                       yAxisFormatter={(val) => Math.round(val)}
                       showAxisLabels={true}
                       showPointLabels={true}
+                      xAxisTitle="Month"
+                      yAxisTitle="Count"
                     />
                   )}
                 </div>
@@ -2403,6 +2530,9 @@ function UserDashboard() {
                       subtitle={greenFactoryChart.subtitle}
                       labels={greenFactoryChart.labels}
                       values={greenFactoryChart.values}
+                      showAxisLabels={true}
+                      xAxisTitle="Month"
+                      yAxisTitle="Percent"
                     />
                   ) : (
                     <GreenFactoryBarChart
@@ -2412,6 +2542,9 @@ function UserDashboard() {
                         entry => `${MONTH_LABELS[entry.month - 1]} ${entry.year}`
                       )}
                       values={Array(12).fill(0)}
+                      showAxisLabels={true}
+                      xAxisTitle="Month"
+                      yAxisTitle="Percent"
                     />
                   )}
                 </div>
@@ -2456,6 +2589,9 @@ function UserDashboard() {
                       labels={onTimeDeliveryChart.labels}
                       actuals={onTimeDeliveryChart.actuals}
                       targets={onTimeDeliveryChart.targets}
+                      showAxisLabels={true}
+                      xAxisTitle="Month"
+                      yAxisTitle="Percent"
                     />
                   ) : (
                     <OnTimeDeliveryBarChart
@@ -2466,106 +2602,139 @@ function UserDashboard() {
                       )}
                       actuals={Array(12).fill(0)}
                       targets={Array(12).fill(0)}
+                      showAxisLabels={true}
+                      xAxisTitle="Month"
+                      yAxisTitle="Percent"
                     />
                   )}
                 </div>
               </div>
 
               <div className="environment-safety-grid-item">
-                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px'}}>
-                  <div
-                    className="chart-card clickable"
-                    onClick={() => openExpandedChart(
-                      'themeChart',
-                      themeChart || {
-                        title: 'Theme Of The Year 2025-26',
-                        subtitle: 'Unlock The Power of You',
-                        labels: FISCAL_MONTH_SEQUENCE.map(
-                          entry => `${MONTH_LABELS[entry.month - 1]} ${entry.year}`
-                        ),
-                        values: Array(12).fill(0)
-                      }
-                    )}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' && openExpandedChart(
-                      'themeChart',
-                      themeChart || {
-                        title: 'Theme Of The Year 2025-26',
-                        subtitle: 'Unlock The Power of You',
-                        labels: FISCAL_MONTH_SEQUENCE.map(
-                          entry => `${MONTH_LABELS[entry.month - 1]} ${entry.year}`
-                        ),
-                        values: Array(12).fill(0)
-                      }
-                    )}
-                  >
-                    {themeChartLoading ? (
-                      <div className="loading">Loading...</div>
-                    ) : themeChart ? (
-                      <Box4ThemeBarChart
-                        title={themeChart.title}
-                        subtitle={themeChart.subtitle}
-                        labels={themeChart.labels}
-                        values={themeChart.values}
-                      />
-                    ) : (
-                      <Box4ThemeBarChart
-                        title="Theme Of The Year 2025-26"
-                        subtitle="Unlock The Power of You"
-                        labels={FISCAL_MONTH_SEQUENCE.map(
-                          entry => `${MONTH_LABELS[entry.month - 1]} ${entry.year}`
-                        )}
-                        values={Array(12).fill(0)}
-                      />
-                    )}
+                <div className="chart-card-split morale-split-card">
+                  <div className="split-card-heading">
+                    <h4 className="split-card-title">MORALE</h4>
                   </div>
-                  <div
-                    className="chart-card clickable"
-                    onClick={() => openExpandedChart(
-                      'employeesChart',
-                      employeesChart || {
-                        title: 'No. of Employees Who Left',
-                        subtitle: 'Monthly Attrition',
-                        labels: FISCAL_MONTH_SEQUENCE.map(
-                          entry => `${MONTH_LABELS[entry.month - 1]} ${entry.year}`
-                        ),
-                        values: Array(12).fill(0)
-                      }
-                    )}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === 'Enter' && openExpandedChart(
-                      'employeesChart',
-                      employeesChart || {
-                        title: 'No. of Employees Who Left',
-                        subtitle: 'Monthly Attrition',
-                        labels: FISCAL_MONTH_SEQUENCE.map(
-                          entry => `${MONTH_LABELS[entry.month - 1]} ${entry.year}`
-                        ),
-                        values: Array(12).fill(0)
-                      }
-                    )}
-                  >
-                    {employeesChartLoading ? (
-                      <div className="loading">Loading...</div>
-                    ) : employeesChart ? (
-                      <Box4EmployeesLineChart
-                        title={employeesChart.title}
-                        subtitle={employeesChart.subtitle}
-                        labels={employeesChart.labels}
-                        values={employeesChart.values}
-                      />
-                    ) : (
-                      <Box4EmployeesLineChart
-                        title="No. of Employees Who Left"
-                        subtitle="Monthly Attrition"
-                        labels={FISCAL_MONTH_SEQUENCE.map(
-                          entry => `${MONTH_LABELS[entry.month - 1]} ${entry.year}`
-                        )}
-                        values={Array(12).fill(0)}
-                      />
-                    )}
+                  <div className="split-card-body">
+                    <div
+                      className="split-section clickable"
+                      onClick={() => openExpandedChart(
+                        'themeChart',
+                        themeChart || {
+                          title: 'Theme Of The Year 2025-26',
+                          subtitle: 'Unlock The Power of You',
+                          labels: FISCAL_MONTH_SEQUENCE.map(
+                            entry => `${MONTH_LABELS[entry.month - 1]} ${entry.year}`
+                          ),
+                          values: Array(12).fill(0)
+                        }
+                      )}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === 'Enter' && openExpandedChart(
+                        'themeChart',
+                        themeChart || {
+                          title: 'Theme Of The Year 2025-26',
+                          subtitle: 'Unlock The Power of You',
+                          labels: FISCAL_MONTH_SEQUENCE.map(
+                            entry => `${MONTH_LABELS[entry.month - 1]} ${entry.year}`
+                          ),
+                          values: Array(12).fill(0)
+                        }
+                      )}
+                    >
+                      <div className="split-section-heading">
+                        <h5 className="split-section-subtitle">THEME OF THE YEAR 2025-26</h5>
+                      </div>
+                      {themeChartLoading ? (
+                        <div className="loading">Loading...</div>
+                      ) : themeChart ? (
+                        <Box4ThemeBarChart
+                          title={themeChart.title}
+                          subtitle={themeChart.subtitle}
+                          labels={themeChart.labels}
+                          values={themeChart.values}
+                          showAxisLabels={true}
+                          xAxisTitle="Month"
+                          yAxisTitle="Value"
+                          showHeader={false}
+                        />
+                      ) : (
+                        <Box4ThemeBarChart
+                          title="Theme Of The Year 2025-26"
+                          subtitle="Unlock The Power of You"
+                          labels={FISCAL_MONTH_SEQUENCE.map(
+                            entry => `${MONTH_LABELS[entry.month - 1]} ${entry.year}`
+                          )}
+                          values={Array(12).fill(0)}
+                          showAxisLabels={true}
+                          xAxisTitle="Month"
+                          yAxisTitle="Value"
+                          showHeader={false}
+                        />
+                      )}
+                    </div>
+
+                    <div className="split-divider"></div>
+
+                    <div
+                      className="split-section clickable"
+                      onClick={() => openExpandedChart(
+                        'employeesChart',
+                        employeesChart || {
+                          title: 'No. of Employees Who Left',
+                          subtitle: 'Monthly Attrition',
+                          labels: FISCAL_MONTH_SEQUENCE.map(
+                            entry => `${MONTH_LABELS[entry.month - 1]} ${entry.year}`
+                          ),
+                          values: Array(12).fill(0)
+                        }
+                      )}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === 'Enter' && openExpandedChart(
+                        'employeesChart',
+                        employeesChart || {
+                          title: 'No. of Employees Who Left',
+                          subtitle: 'Monthly Attrition',
+                          labels: FISCAL_MONTH_SEQUENCE.map(
+                            entry => `${MONTH_LABELS[entry.month - 1]} ${entry.year}`
+                          ),
+                          values: Array(12).fill(0)
+                        }
+                      )}
+                    >
+                      <div className="split-section-heading">
+                        <h5 className="split-section-subtitle">NO. OF EMPLOYEES WHO LEFT</h5>
+                      </div>
+                      {employeesChartLoading ? (
+                        <div className="loading">Loading...</div>
+                      ) : employeesChart ? (
+                        <Box4EmployeesLineChart
+                          title={employeesChart.title}
+                          subtitle={employeesChart.subtitle}
+                          labels={employeesChart.labels}
+                          values={employeesChart.values}
+                          showAxisLabels={true}
+                          xAxisTitle="Month"
+                          yAxisTitle="Count"
+                          showHeader={false}
+                        />
+                      ) : (
+                        <Box4EmployeesLineChart
+                          title="No. of Employees Who Left"
+                          subtitle="Monthly Attrition"
+                          labels={FISCAL_MONTH_SEQUENCE.map(
+                            entry => `${MONTH_LABELS[entry.month - 1]} ${entry.year}`
+                          )}
+                          values={Array(12).fill(0)}
+                          showAxisLabels={true}
+                          xAxisTitle="Month"
+                          yAxisTitle="Count"
+                          showHeader={false}
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -2666,9 +2835,15 @@ function UserDashboard() {
                 )}
 
                 {expandedChart === 'salesProfit' && expandedChartData && (
-                  <div className="chart-card-split">
-                    <div className="split-section">
-                      <h4 className="split-section-title">REVENUE</h4>
+                  <div className="chart-card-split cost-split-card">
+                    <div className="split-card-heading">
+                      <h4 className="split-card-title">COST</h4>
+                    </div>
+                    <div className="split-card-body">
+                      <div className="split-section">
+                        <div className="split-section-heading">
+                          <h5 className="split-section-subtitle">REVENUE</h5>
+                        </div>
                       {salesLoading ? (
                         <div className="loading">Loading...</div>
                       ) : (
@@ -2796,12 +2971,14 @@ function UserDashboard() {
                           </button>
                         </div>
                       )}
-                    </div>
+                      </div>
 
-                    <div className="split-divider"></div>
+                      <div className="split-divider"></div>
 
-                    <div className="split-section">
-                      <h4 className="split-section-title">PROFITABILITY (YTD)</h4>
+                      <div className="split-section">
+                        <div className="split-section-heading">
+                          <h5 className="split-section-subtitle">PROFITABILITY (YTD)</h5>
+                        </div>
                       {profitabilityLoading ? (
                         <div className="loading">Loading...</div>
                       ) : (
@@ -2900,6 +3077,7 @@ function UserDashboard() {
                           </button>
                         </div>
                       )}
+                      </div>
                     </div>
                   </div>
                 )}
@@ -2914,6 +3092,8 @@ function UserDashboard() {
                     yAxisFormatter={(val) => Math.round(val)}
                     showAxisLabels={true}
                     showPointLabels={true}
+                    xAxisTitle="Month"
+                    yAxisTitle="Value"
                   />
                 )}
                 {expandedChart === 'greenFactory' && expandedChartData && (
@@ -2922,6 +3102,9 @@ function UserDashboard() {
                     subtitle={expandedChartData.subtitle}
                     labels={expandedChartData.labels}
                     values={expandedChartData.values}
+                    showAxisLabels={true}
+                    xAxisTitle="Month"
+                    yAxisTitle="Percent"
                   />
                 )}
 
@@ -2932,6 +3115,9 @@ function UserDashboard() {
                     labels={expandedChartData.labels}
                     actuals={expandedChartData.actuals}
                     targets={expandedChartData.targets}
+                    showAxisLabels={true}
+                    xAxisTitle="Month"
+                    yAxisTitle="Percent"
                   />
                 )}
 
@@ -2941,6 +3127,9 @@ function UserDashboard() {
                     subtitle={expandedChartData.subtitle}
                     labels={expandedChartData.labels}
                     values={expandedChartData.values}
+                    showAxisLabels={true}
+                    xAxisTitle="Month"
+                    yAxisTitle="Value"
                   />
                 )}
 
@@ -2950,6 +3139,9 @@ function UserDashboard() {
                     subtitle={expandedChartData.subtitle}
                     labels={expandedChartData.labels}
                     values={expandedChartData.values}
+                    showAxisLabels={true}
+                    xAxisTitle="Month"
+                    yAxisTitle="Count"
                   />
                 )}
               </div>
